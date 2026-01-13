@@ -431,7 +431,17 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
                 </div>
                 <div>
                     <label class="font-bold text-gray-600">Alasan *</label>
-                    <textarea name="keterangan" rows="1" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" placeholder="Alasan..." required></textarea>
+                    <textarea 
+                        name="keterangan" 
+                        rows="1" 
+                        class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" 
+                        placeholder="Alasan..." 
+                        required
+                        {{-- Mencegah input angka secara real-time --}}
+                        oninput="this.value = this.value.replace(/[0-9]/g, '')"
+                        {{-- Validasi regex: hanya huruf dan spasi, minimal 5 karakter --}}
+                        pattern="^[a-zA-Z\s]+$"
+                        title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
                 </div>
             </div>
 

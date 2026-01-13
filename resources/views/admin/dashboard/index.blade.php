@@ -154,8 +154,6 @@
                             <th class="px-2 py-1 border w-36">Alasan</th>
                             <th class="px-2 py-1 border w-28">Tanggal</th>
                             <th class="px-2 py-1 border w-14 text-center">Hari</th>
-                            <th class="px-2 py-1 border w-20">Atasan</th>
-                            <th class="px-2 py-1 border w-20">Pemberi</th>
                             <th class="px-2 py-1 border w-20 text-center">Status</th>
                         </tr>
                     </thead>
@@ -196,10 +194,6 @@
                                 </td>
 
                                 <td class="px-2 py-1 border text-center">{{ $c->jumlah_hari }}</td>
-
-                                <td class="px-2 py-1 border">{{ $c->atasanLangsung->nama_atasan }}</td>
-
-                                <td class="px-2 py-1 border">{{ $c->pejabatPemberiCuti->nama_pejabat }}</td>
 
                                 <td class="px-2 py-1 border text-center">
                                     @if ($c->status === 'menunggu')

@@ -89,8 +89,6 @@
                             <th class="px-2 py-2 border">Selesai</th>
                             <th class="px-2 py-2 border">Hari</th>
                             <th class="px-2 py-2 border">Alasan</th>
-                            <th class="px-2 py-2 border">Atasan</th>
-                            <th class="px-2 py-2 border">Pemberi</th>
                             <th class="px-2 py-2 border">Status</th>
                         </tr>
                     </thead>
@@ -108,8 +106,6 @@
                             <td class="px-2 py-1 border text-center">{{ $c->tanggal_selesai?->format('d-m-Y') }}</td>
                             <td class="px-2 py-1 border text-center">{{ $c->jumlah_hari ?? '-' }}</td>
                             <td class="px-2 py-1 border truncate">{{ $c->keterangan ?? '-' }}</td>
-                            <td class="px-2 py-1 border">{{ $c->atasanLangsung->nama_atasan ?? '-' }}</td>
-                            <td class="px-2 py-1 border">{{ $c->pejabatPemberiCuti->nama_pejabat ?? '-' }}</td>
                             <td class="px-2 py-1 border text-center">
                                 @if ($c->status === 'disetujui')
                                     <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">Disetujui</span>
