@@ -8,6 +8,7 @@ use App\Models\Cuti;
 use App\Models\Pegawai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class PegawaiController extends Controller
 {
@@ -69,30 +70,46 @@ class PegawaiController extends Controller
             'password'   => 'required|string|min:8',
         ]);
 
-        // Buat user
-        $user = User::create([
-            'name'     => $validated['nama'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role'     => $validated['role'],
-        ]);
+        // Mulai Transaksi Database
+        DB::beginTransaction();
 
-        // Buat data pegawai
-        Pegawai::create([
-            'user_id'    => $user->id,
-            'nama'       => $validated['nama'],
-            'nip'        => $validated['nip'] ?? null,
-            'jabatan'    => $validated['jabatan'] ?? null,
-            'unit_kerja' => $validated['unit_kerja'] ?? null,
-            'status'     => $validated['status'],
-            'telepon'    => $validated['telepon'] ?? null,
-        ]);
+        try {
+            // 1. Buat Pegawai terlebih dahulu
+            $pegawai = Pegawai::create([
+                'nama'       => $validated['nama'],
+                'email'      => $validated['email'],
+                'nip'        => $validated['nip'] ?? null,
+                'jabatan'    => $validated['jabatan'] ?? null,
+                'unit_kerja' => $validated['unit_kerja'] ?? null,
+                'status'     => $validated['status'],
+                'telepon'    => $validated['telepon'] ?? null,
+            ]);
 
-        return redirect()->back()->with('success', 'Pegawai berhasil ditambahkan.');
+            // 2. Buat User dengan referensi ke pegawai yang baru dibuat
+            $user = User::create([
+                'name'       => $validated['nama'],
+                'email'      => $validated['email'],
+                'password'   => Hash::make($validated['password']),
+                'role'       => $validated['role'],
+                'id_pegawai' => $pegawai->id, // Hubungkan ke pegawai
+            ]);
+
+            // Jika semua sukses, simpan permanen
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Pegawai berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            // Jika ada error di tengah jalan, batalkan SEMUANYA (Hapus user yang sempat dibuat)
+            DB::rollBack();
+            
+            // Kembalikan error ke halaman
+            return redirect()->back()->with('error', 'Gagal menambah data: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Update data pegawai
+     * Update data pegawai (PERLU UPDATE EMAIL JUGA DI TABEL PEGAWAI)
      */
     public function update(Request $request, $id)
     {
@@ -109,44 +126,49 @@ class PegawaiController extends Controller
             'password'   => 'nullable|min:8',
         ]);
 
-        // Update user
-        $pegawai->user->update([
-            'name'  => $validated['nama'],
-            'email' => $validated['email'],
-            'role'  => $validated['role'],
-        ]);
+        DB::beginTransaction(); // Pakai transaction juga di sini biar aman
 
-        if (!empty($validated['password'])) {
-            $pegawai->user->update([
-                'password' => Hash::make($validated['password']),
+        try {
+            // Update User
+            $userData = [
+                'name'  => $validated['nama'],
+                'email' => $validated['email'],
+                'role'  => $validated['role'],
+            ];
+
+            if (!empty($validated['password'])) {
+                $userData['password'] = Hash::make($validated['password']);
+            }
+
+            $pegawai->user->update($userData);
+
+            // Update Pegawai
+            $pegawai->update([
+                'nama'       => $validated['nama'],
+                'email'      => $validated['email'], // <--- TAMBAHAN: Update email di tabel pegawai juga
+                'nip'        => $validated['nip'] ?? null,
+                'jabatan'    => $validated['jabatan'] ?? null,
+                'unit_kerja' => $validated['unit_kerja'] ?? null,
+                'telepon'    => $validated['telepon'] ?? null,
             ]);
+
+            DB::commit();
+            
+            return redirect()->route('admin.pegawai.index')->with('success', 'Data pegawai berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal update: ' . $e->getMessage());
         }
-
-        // Update data pegawai
-        $pegawai->update([
-            'nama'       => $validated['nama'],
-            'nip'        => $validated['nip'] ?? null,
-            'jabatan'    => $validated['jabatan'] ?? null,
-            'unit_kerja' => $validated['unit_kerja'] ?? null,
-            'telepon'    => $validated['telepon'] ?? null,
-        ]);
-
-        return redirect()->route('admin.pegawai.index')
-            ->with('success', 'Data pegawai berhasil diperbarui.');
     }
 
-    /**
-     * Hapus pegawai
-     */
+    // ... method destroy biarkan tetap sama ...
     public function destroy($id)
     {
         $pegawai = Pegawai::with('user')->findOrFail($id);
-
-        // Hapus user dan pegawai
-        $pegawai->user->delete();
+        $pegawai->user->delete(); // Karena cascade delete biasanya di database, tapi manual lebih aman
         $pegawai->delete();
 
-        return redirect()->route('admin.pegawai.index')
-            ->with('success', 'Data pegawai berhasil dihapus.');
+        return redirect()->route('admin.pegawai.index')->with('success', 'Data pegawai berhasil dihapus.');
     }
 }

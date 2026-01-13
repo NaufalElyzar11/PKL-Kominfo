@@ -12,7 +12,6 @@ class Pegawai extends Model
     protected $table = 'pegawai';
 
     protected $fillable = [
-        // 'user_id', // ❌ HAPUS INI (Tidak ada kolom user_id di tabel pegawai)
         'nama',
         'nip',
         'jabatan',
@@ -21,6 +20,8 @@ class Pegawai extends Model
         'jatah_cuti',
         'kuota_cuti',
         'atasan_id',
+        'email',
+        'telepon',
     ];
 
     protected $appends = ['sisa_cuti'];
