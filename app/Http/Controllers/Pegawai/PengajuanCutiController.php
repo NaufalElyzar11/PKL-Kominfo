@@ -26,44 +26,45 @@ public function index()
     }
 
     $pegawai = $user->pegawai;
-    $atasan = AtasanLangsung::all();
-    $pejabat = PejabatPemberiCuti::all();
 
-    // Jika pegawai belum dibuat
+    /** 1. JALANKAN QUERY DATA TERLEBIH DAHULU **/
+    // Ambil data cuti dari database agar variabel tidak kosong
+    $cutiQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
+        ->where('user_id', $user->id)
+        ->where('status', 'Menunggu');
+
+    $riwayatQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
+        ->where('user_id', $user->id)
+        ->whereIn('status', ['Disetujui', 'Ditolak']);
+
+    // Tentukan pagination (sesuaikan dengan kode asli Anda)
+    $cuti = $cutiQuery->latest()->paginate(10, ['*'], 'menunggu_page');
+    $riwayat = $riwayatQuery->latest()->paginate(10, ['*'], 'riwayat_page');
+
+    /** 2. LOGIKA PENGECEKAN PROFIL **/
+    // Alih-alih langsung me-return view kosong, kita hanya menentukan pesan peringatan
+    $warningMessage = null;
+    
     if (!$pegawai) {
-        return view('pegawai.pengajuancuti.index', [
-            'pegawai' => null,
-            'cuti' => collect(),
-            'riwayat' => collect(),
-            'atasanLangsung' => $atasan,
-            'pejabatPemberiCuti' => $pejabat,
-            'totalCuti' => 0,
-            'cutiPending' => 0,
-            'cutiDisetujui' => 0,
-            'cutiDitolak' => 0,
-            'sisaCuti' => 0,
-            'warningMessage' => '⚠️ Data pegawai belum ditemukan. Silakan hubungi admin.',
-            'hasPendingCuti' => false, // Tambahkan nilai default
-        ]);
+        $warningMessage = '⚠️ Data pegawai belum ditemukan. Silakan hubungi admin.';
+    } elseif (!$this->isPegawaiLengkap($pegawai)) {
+        $warningMessage = '⚠️ Lengkapi profil Anda terlebih dahulu sebelum mengajukan cuti.';
     }
 
-    // Jika profil belum lengkap
-    if (!$this->isPegawaiLengkap($pegawai)) {
-        return view('pegawai.pengajuancuti.index', [
-            'pegawai' => $pegawai,
-            'cuti' => collect(),
-            'riwayat' => collect(),
-            'atasanLangsung' => $atasan,
-            'pejabatPemberiCuti' => $pejabat,
-            'totalCuti' => 0,
-            'cutiPending' => 0,
-            'cutiDisetujui' => 0,
-            'cutiDitolak' => 0,
-            'sisaCuti' => 0,
-            'warningMessage' => '⚠️ Lengkapi profil Anda terlebih dahulu sebelum mengajukan cuti.',
-            'hasPendingCuti' => false, // Tambahkan nilai default
-        ]);
-    }
+    /** 3. RETURN VIEW DENGAN DATA ASLI **/
+    return view('pegawai.pengajuancuti.index', [
+        'pegawai' => $pegawai,
+        'cuti' => $cuti,       // Sekarang variabel ini berisi data dari DB, bukan collect()
+        'riwayat' => $riwayat, // Sekarang variabel ini berisi data dari DB, bukan collect()
+        'tahun' => request('tahun', 'semua'),
+        'totalCuti' => $cuti->total() + $riwayat->total(),
+        'cutiPending' => $cuti->total(),
+        'cutiDisetujui' => $riwayatQuery->where('status', 'Disetujui')->count(),
+        'cutiDitolak' => $riwayatQuery->where('status', 'Ditolak')->count(),
+        'sisaCuti' => $this->hitungSisaCuti($user->id),
+        'warningMessage' => $warningMessage,
+        'hasPendingCuti' => $cuti->total() > 0,
+    ]);
 
     /** ========================== FILTER TAHUN ============================= */
     $tahun = request('tahun', 'semua');
@@ -112,8 +113,6 @@ public function index()
         'pegawai' => $pegawai,
         'cuti' => $cuti,
         'riwayat' => $riwayat,
-        'atasanLangsung' => $atasan,
-        'pejabatPemberiCuti' => $pejabat,
         'tahun' => $tahun,
 
         // Perhitungan fix
@@ -131,49 +130,51 @@ public function index()
 }
 
     /** ========================== 📝 STORE CUTI ============================= */
-    public function store(Request $request)
-    {
-        $user = Auth::user();
-        $pegawai = $user->pegawai;
+public function store(Request $request)
+{
+    $user = Auth::user();
+    $pegawai = $user->pegawai;
 
-        if (!$pegawai) {
-            return back()->with('error', 'Data pegawai tidak ditemukan.');
-        }
-
-        $validated = $request->validate([
-            'jenis_cuti'                 => 'required|string',
-            'tanggal_mulai'              => 'required|date',
-            'tanggal_selesai'            => 'required|date',
-            'jumlah_hari'                => 'required|integer',
-            'id_atasan_langsung'         => 'required|integer',
-            'id_pejabat_pemberi_cuti'    => 'required|integer',
-            'keterangan'                 => 'required|string',
-            'alamat'                     => 'required|string',
-        ]);
-
-        $jumlah_hari = Carbon::parse($validated['tanggal_mulai'])
-            ->diffInDays(Carbon::parse($validated['tanggal_selesai'])) + 1;
-
-        Cuti::create([
-            'user_id'                   => $user->id,
-            'nama'                      => $pegawai->nama,
-            'nip'                       => $pegawai->nip,
-            'jabatan'                   => $pegawai->jabatan,
-            'alamat'                    => $request->alamat,
-            'jenis_cuti'                => $validated['jenis_cuti'],
-            'tanggal_mulai'             => $validated['tanggal_mulai'],
-            'tanggal_selesai'           => $validated['tanggal_selesai'],
-            'jumlah_hari'               => $jumlah_hari,
-            'tahun'                     => date('Y'),
-            'keterangan'                => $validated['keterangan'],
-            'status'                    => 'Menunggu',
-            'id_atasan_langsung'        => $validated['id_atasan_langsung'],
-            'id_pejabat_pemberi_cuti'   => $validated['id_pejabat_pemberi_cuti'],
-        ]);
-
-        return redirect()->route('pegawai.cuti.index')
-            ->with('success', 'Pengajuan cuti berhasil dikirim.');
+    if (!$pegawai) {
+        return back()->with('error', 'Data pegawai tidak ditemukan.');
     }
+
+    // 1. HAPUS id_atasan_langsung dan id_pejabat_pemberi_cuti dari validasi request
+    $validated = $request->validate([
+        'jenis_cuti'      => 'required|string',
+        'tanggal_mulai'   => 'required|date',
+        'tanggal_selesai' => 'required|date',
+        'jumlah_hari'     => 'required|integer',
+        'keterangan'      => 'required|string',
+        'alamat'          => 'required|string',
+    ]);
+
+    $jumlah_hari = Carbon::parse($validated['tanggal_mulai'])
+        ->diffInDays(Carbon::parse($validated['tanggal_selesai'])) + 1;
+
+    // 2. Gunakan ID atasan/pejabat dari tabel pegawai secara otomatis
+    Cuti::create([
+        'user_id'                 => $user->id,
+        'nama'                    => $pegawai->nama,
+        'nip'                     => $pegawai->nip,
+        'jabatan'                 => $pegawai->jabatan,
+        'alamat'                  => $validated['alamat'],
+        'jenis_cuti'              => $validated['jenis_cuti'],
+        'tanggal_mulai'           => $validated['tanggal_mulai'],
+        'tanggal_selesai'         => $validated['tanggal_selesai'],
+        'jumlah_hari'             => $jumlah_hari,
+        'tahun'                   => date('Y'),
+        'keterangan'              => $validated['keterangan'],
+        'status'                  => 'Menunggu',
+        
+        // Ambil otomatis dari profil pegawai
+        'id_atasan_langsung'      => $pegawai->id_atasan_langsung, 
+        'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
+    ]);
+
+    return redirect()->route('pegawai.cuti.index')
+        ->with('success', 'Pengajuan cuti berhasil dikirim.');
+}
 
 
     /** ========================== ✏️ UPDATE CUTI ============================= */
@@ -341,14 +342,14 @@ private function isPegawaiLengkap($pegawai)
 {
     if (!$pegawai) return false;
 
-    // Kolom yang benar-benar ada di tabel 'pegawai'
     $dataWajib = [
         'nama',
         'nip',
         'jabatan',
         'unit_kerja',
         'telepon',
-        // 'email', // opsional, karena banyak yang NULL
+        'id_atasan_langsung',      // Tambahkan ini agar sistem tidak error saat store
+        'id_pejabat_pemberi_cuti', // Tambahkan ini agar sistem tidak error saat store
     ];
 
     foreach ($dataWajib as $field) {
@@ -358,5 +359,4 @@ private function isPegawaiLengkap($pegawai)
     }
 
     return true;
-}
-}
+}}
