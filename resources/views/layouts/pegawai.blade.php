@@ -93,7 +93,7 @@
         {{-- === Profil Pegawai === --}}
         <div class="p-3 border-t border-gray-200">
             @php
-                $pegawai = \App\Models\Pegawai::where('user_id', Auth::id())->first();
+                $pegawai = Auth::user()->pegawai;
                 $namaPegawai = $pegawai->nama ?? 'Pegawai';
             @endphp
 

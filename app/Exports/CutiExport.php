@@ -29,8 +29,8 @@ class CutiExport implements FromCollection, WithHeadings, WithMapping, WithEvent
 
     public function collection()
     {
-        // Query disesuaikan dengan kolom 'pegawai_id' dan 'tahun' di DB Anda
-        return Cuti::where('pegawai_id', $this->pegawaiId)
+        // Query disesuaikan dengan kolom 'user_id' dan 'tahun' di DB Anda
+        return Cuti::where('user_id', $this->pegawaiId)
                     ->where('tahun', $this->tahun)
                     ->orderBy('tanggal_mulai', 'asc')
                     ->get();

@@ -19,13 +19,13 @@ class PegawaiController extends Controller
         }
 
         // Ambil data pegawai sesuai user yang login
-        $pegawai = Pegawai::where('user_id', $user->id)->first();
+        $pegawai = $user->pegawai;
 
         // Jika pegawai belum terdaftar, buat query kosong
         if (!$pegawai) {
             $cutiQuery = Cuti::query()->whereNull('id');
         } else {
-            $cutiQuery = Cuti::where('pegawai_id', $pegawai->id);
+            $cutiQuery = Cuti::where('user_id', $user->id);
         }
 
         // Statistik cuti

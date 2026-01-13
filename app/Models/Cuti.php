@@ -12,7 +12,7 @@ class Cuti extends Model
     protected $table = 'cuti';
 
   protected $fillable = [
-    'pegawai_id',
+    'user_id',
     'atasan_id',
     'pemberi_cuti_id',
     'alamat',
@@ -40,9 +40,16 @@ class Cuti extends Model
     // RELASI
     // ================================
 
-    public function pegawai()
+    public function user()
     {
-        return $this->belongsTo(Pegawai::class, 'pegawai_id');
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Accessor untuk mendapatkan pegawai dari user
+    // Ini bukan relationship, tapi property accessor yang memanfaatkan user relationship
+    public function getPegawaiAttribute()
+    {
+        return $this->user?->pegawai;
     }
 
     public function atasanLangsung()

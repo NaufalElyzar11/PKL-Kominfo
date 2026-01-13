@@ -20,7 +20,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // Ambil data pegawai sesuai user login
-        $pegawai = Pegawai::where('user_id', $user->id)->first();
+        $pegawai = $user->pegawai;
 
         if (!$pegawai) {
             return redirect()->route('pegawai.profile.show')
@@ -28,7 +28,7 @@ class DashboardController extends Controller
         }
 
         // Query data cuti pegawai
-        $cutiQuery = Cuti::where('pegawai_id', $pegawai->id);
+        $cutiQuery = Cuti::where('user_id', $user->id);
 
         $totalCuti     = $cutiQuery->count();
         $cutiPending   = (clone $cutiQuery)->where('status', 'pending')->count();

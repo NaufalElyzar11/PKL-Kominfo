@@ -25,7 +25,7 @@ public function index()
         return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
     }
 
-    $pegawai = Pegawai::where('user_id', $user->id)->first();
+    $pegawai = $user->pegawai;
     $atasan = AtasanLangsung::all();
     $pejabat = PejabatPemberiCuti::all();
 
@@ -70,12 +70,12 @@ public function index()
 
     /** ========================== QUERY CUTI MENUNGGU ===================== */
     $cutiQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-        ->where('pegawai_id', $pegawai->id)
+        ->where('user_id', $user->id)
         ->where('status', 'Menunggu');
 
     /** ========================== QUERY RIWAYAT =========================== */
     $riwayatQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-        ->where('pegawai_id', $pegawai->id)
+        ->where('user_id', $user->id)
         ->whereIn('status', ['Disetujui', 'Ditolak']);
 
     // Filter tahun jika dipilih
@@ -99,13 +99,13 @@ public function index()
 
     /** ========================== LOCKING CUTI BARU ===================== */
     // Logika untuk mencegah pengajuan baru jika ada yang Menunggu (Mengabaikan filter tahun)
-    $hasPendingCuti = Cuti::where('pegawai_id', $pegawai->id)
+    $hasPendingCuti = Cuti::where('user_id', $user->id)
                           ->where('status', 'Menunggu')
                           ->exists(); // Check keberadaan data secara global
 
 
     /** ========================== SISA CUTI ============================== */
-    $sisaCuti = $this->hitungSisaCuti($pegawai->id);
+    $sisaCuti = $this->hitungSisaCuti($user->id);
 
     /** ========================== RETURN FINAL =========================== */
     return view('pegawai.pengajuancuti.index', [
@@ -134,7 +134,7 @@ public function index()
     public function store(Request $request)
     {
         $user = Auth::user();
-        $pegawai = Pegawai::where('user_id', $user->id)->first();
+        $pegawai = $user->pegawai;
 
         if (!$pegawai) {
             return back()->with('error', 'Data pegawai tidak ditemukan.');
@@ -155,7 +155,7 @@ public function index()
             ->diffInDays(Carbon::parse($validated['tanggal_selesai'])) + 1;
 
         Cuti::create([
-            'pegawai_id'                => $pegawai->id,
+            'user_id'                   => $user->id,
             'atasan_id'                 => $pegawai->atasan_id ?? 1,
             'pemberi_cuti_id'           => $pegawai->pemberi_cuti_id ?? 1,
             'alamat'                    => $request->alamat,
@@ -259,7 +259,7 @@ public function update(Request $request, $id)
     public function destroy($id)
     {
         $cuti = Cuti::where('id', $id)
-            ->where('pegawai_id', Auth::user()->pegawai->id)
+            ->where('user_id', $user->id)
             ->first();
 
         if (!$cuti) {
@@ -284,7 +284,7 @@ private function hitungSisaCuti($pegawaiId)
     $jatahTahunan = 12;
 
     // 1. Hitung penggunaan cuti tahun lalu (Hanya yang Disetujui)
-    $cutiDisetujuiTahunLalu = Cuti::where('pegawai_id', $pegawaiId)
+    $cutiDisetujuiTahunLalu = Cuti::where('user_id', $pegawaiId)
         ->whereIn('status', ['Disetujui', 'disetujui']) // Mengantisipasi perbedaan penulisan
         ->where('tahun', $tahunLalu)
         ->sum('jumlah_hari');
@@ -297,7 +297,7 @@ private function hitungSisaCuti($pegawaiId)
     $totalJatahTahunIni = $jatahTahunan + $sisaTahunLalu;
 
     // 4. Hitung penggunaan cuti tahun berjalan (Tahun Sekarang)
-    $cutiDisetujuiTahunIni = Cuti::where('pegawai_id', $pegawaiId)
+    $cutiDisetujuiTahunIni = Cuti::where('user_id', $pegawaiId)
         ->whereIn('status', ['Disetujui', 'disetujui'])
         ->where('tahun', $tahunSekarang)
         ->sum('jumlah_hari');
@@ -312,7 +312,7 @@ public function exportExcel(Request $request)
 {
     $user = Auth::user();
     // Pastikan mengambil data pegawai yang terhubung dengan user
-    $pegawai = \App\Models\Pegawai::where('user_id', $user->id)->first();
+    $pegawai = $user->pegawai;
 
     if (!$pegawai) {
         return back()->with('error', 'Data pegawai tidak ditemukan.');

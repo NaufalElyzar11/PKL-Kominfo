@@ -12,7 +12,7 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        $pegawai = Pegawai::where('user_id', $user->id)->first();
+        $pegawai = $user->pegawai;
 
         if (!$pegawai) {
             return redirect()->route('pegawai.dashboard')
