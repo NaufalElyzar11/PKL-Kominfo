@@ -53,10 +53,10 @@
                            bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
                            focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">
                 <option value="" disabled>Pilih Role</option>
-                <option value="super-admin" {{ old('role', $pegawai->role) == 'super-admin' ? 'selected' : '' }}>Super Admin</option>
-                <option value="admin" {{ old('role', $pegawai->role) == 'admin' ? 'selected' : '' }}>Admin</option>
-                <option value="kepala-dinas" {{ old('role', $pegawai->role) == 'kepala-dinas' ? 'selected' : '' }}>Kepala Dinas</option>
-                <option value="pegawai" {{ old('role', $pegawai->role) == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
+                <option value="super_admin" {{ old('role', $pegawai->user->role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                <option value="admin" {{ old('role', $pegawai->user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                <option value="kadis" {{ old('role', $pegawai->user->role) == 'kadis' ? 'selected' : '' }}>Kadis (Kepala Dinas)</option>
+                <option value="pegawai" {{ old('role', $pegawai->user->role) == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
             </select>
             @error('role')
                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
