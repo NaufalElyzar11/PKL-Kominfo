@@ -95,7 +95,7 @@
                         <option value="">-- Pilih Role --</option>
                         <option value="pegawai" {{ old('role') == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
                         <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="kepala_dinas" {{ old('role') == 'kepala_dinas' ? 'selected' : '' }}>Kepala Dinas</option>
+                        <option value="kadis" {{ old('role') == 'kadis' ? 'selected' : '' }}>Kadis (Kepala Dinas)</option>
                         <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                     </select>
                     @error('role') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
@@ -129,7 +129,8 @@
                 <label class="block text-gray-700 dark:text-gray-200 font-medium mb-1">Status</label>
                 <select name="status"
                     class="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded 
-                           dark:bg-gray-700 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                           dark:bg-gray-700 dark:text-white focus:ring-1 focus:ring-sky-500 focus:outline-none" required>
+                    <option value="" disabled>-- Pilih Status --</option>
                     <option value="aktif" {{ old('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
                     <option value="nonaktif" {{ old('status') == 'nonaktif' ? 'selected' : '' }}>Nonaktif</option>
                 </select>
