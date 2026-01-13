@@ -156,8 +156,9 @@ public function index()
 
         Cuti::create([
             'user_id'                   => $user->id,
-            'atasan_id'                 => $pegawai->atasan_id ?? 1,
-            'pemberi_cuti_id'           => $pegawai->pemberi_cuti_id ?? 1,
+            'nama'                      => $pegawai->nama,
+            'nip'                       => $pegawai->nip,
+            'jabatan'                   => $pegawai->jabatan,
             'alamat'                    => $request->alamat,
             'jenis_cuti'                => $validated['jenis_cuti'],
             'tanggal_mulai'             => $validated['tanggal_mulai'],
@@ -258,6 +259,8 @@ public function update(Request $request, $id)
     /** ========================== 🗑 DELETE CUTI ============================ */
     public function destroy($id)
     {
+        $user = Auth::user();
+
         $cuti = Cuti::where('id', $id)
             ->where('user_id', $user->id)
             ->first();

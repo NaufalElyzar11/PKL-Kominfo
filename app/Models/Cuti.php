@@ -13,8 +13,9 @@ class Cuti extends Model
 
   protected $fillable = [
     'user_id',
-    'atasan_id',
-    'pemberi_cuti_id',
+    'nama',
+    'nip',
+    'jabatan',
     'alamat',
     'jenis_cuti',
     'tanggal_mulai',
@@ -45,11 +46,23 @@ class Cuti extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Accessor untuk mendapatkan pegawai dari user
-    // Ini bukan relationship, tapi property accessor yang memanfaatkan user relationship
-    public function getPegawaiAttribute()
+    /**
+     * Relasi Cuti -> Pegawai melalui User
+     * Gunakan lazy load melalui user relationship
+     */
+    public function pegawai()
     {
-        return $this->user?->pegawai;
+        // Hasilnya bukan relationship melainkan lazy loading
+        // Tapi untuk with() eager loading, kita perlu relasi proper
+        // Solusi: ubah di controller untuk menggunakan with('user.pegawai') atau buat relasi melalui HasOneThrough
+        return $this->hasOneThrough(
+            Pegawai::class,
+            User::class,
+            'id',           // FK di User
+            'id',           // PK di Pegawai
+            'user_id',      // FK di Cuti ke User
+            'id_pegawai'    // FK di User ke Pegawai
+        );
     }
 
     public function atasanLangsung()
