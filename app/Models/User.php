@@ -2,47 +2,95 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $guard_name = 'web';
+
+    // SAYA SESUAIKAN DENGAN TABEL DATABASE KAMU (HEIDISQL)
     protected $fillable = [
-        'name',
+        'name',         // Database kamu pakai 'name', bukan 'nama'
+        'nip',
         'email',
         'password',
+        'role',
+        'telepon',
+        'jabatan',
+        'unit_kerja',
+        'id_pegawai',   // WAJIB ADA: Ini kunci penghubung ke tabel pegawai
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * PERBAIKAN 1: Relasi User → Pegawai
+     * Gunakan belongsTo karena kolom 'id_pegawai' ada di tabel users ini.
      */
-    protected function casts(): array
+    public function pegawai()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(Pegawai::class, 'id_pegawai');
+    }
+
+    /**
+     * PERBAIKAN 2: Relasi Cutinya User
+     * Cuti terhubung lewat user_id, bukan pegawai_id
+     */
+    public function cuti()
+    {
+        return $this->hasMany(Cuti::class, 'user_id', 'id');
+    }
+
+    /**
+     * Relasi: User sebagai atasan langsung
+     */
+    public function cutiSebagaiAtasanLangsung()
+    {
+        return $this->hasMany(Cuti::class, 'id_atasan_langsung', 'id');
+    }
+
+    /**
+     * Relasi: User sebagai pemberi cuti
+     */
+    public function cutiSebagaiPemberiCuti()
+    {
+        return $this->hasMany(Cuti::class, 'id_pemberi_cuti', 'id');
+    }
+
+    /**
+     * Mutator otomatis hash password
+     */
+    public function setPasswordAttribute($value)
+    {
+        if (!empty($value)) {
+            $this->attributes['password'] = Hash::needsRehash($value)
+                ? Hash::make($value)
+                : $value;
+        }
+    }
+
+    // Accessor untuk jaga-jaga kalau ada kodingan lama yg panggil 'nama'
+    public function getNamaAttribute()
+    {
+        return $this->attributes['name'] ?? null;
+    }
+    
+    public function isRole($role)
+    {
+        return $this->role === $role;
     }
 }
