@@ -58,8 +58,6 @@
                             <th class="px-2 py-1 border">Selesai</th>
                             <th class="px-2 py-1 border">Hari</th>
                             <th class="px-2 py-1 border">Alasan</th>
-                            <th class="px-2 py-1 border">Atasan</th>
-                            <th class="px-2 py-1 border">Pemberi Cuti</th>
                             <th class="px-2 py-1 border">Status</th>
                             <th class="px-2 py-1 border text-center">Aksi</th>
                         </tr>
@@ -78,8 +76,6 @@
                                     'tanggal_selesai' => \Carbon\Carbon::parse($c->tanggal_selesai)->translatedFormat('d F Y'),
                                     'jumlah_hari' => $c->jumlah_hari,
                                     'alasan_cuti' => $c->keterangan ?? ($c->alasan_cuti ?? '-'),
-                                    'nama_atasan' => optional($c->atasanLangsung)->nama_atasan ?? '-',
-                                    'nama_pemberi_cuti' => optional($c->pejabatPemberiCuti)->nama_pejabat ?? '-',
                                     'status' => $c->status,
                                 ];
                             @endphp
@@ -97,8 +93,6 @@
                                     {{ \Illuminate\Support\Str::limit($cutiData['alasan_cuti'], 35) }}
                                 </td>
 
-                                <td class="px-2 py-1 border">{{ $cutiData['nama_atasan'] }}</td>
-                                <td class="px-2 py-1 border">{{ $cutiData['nama_pemberi_cuti'] }}</td>
 
                                 <td class="px-2 py-1 border text-center">
                                     @php
@@ -220,19 +214,9 @@
                             <p x-text="selectedCuti.jumlah_hari + ' Hari'" class="text-sm font-medium"></p>
                         </div>
 
-                        <div class="space-y-1 p-2 border border-gray-200 rounded-lg">
-                            <p class="font-semibold text-gray-500 text-xs">Atasan Langsung</p>
-                            <p x-text="selectedCuti.nama_atasan" class="text-sm font-medium"></p>
-                        </div>
-
                         <div class="col-span-2 space-y-1 p-2 border border-gray-200 rounded-lg">
                             <p class="font-semibold text-gray-500 text-xs">Alasan Cuti</p>
                             <p x-text="selectedCuti.alasan_cuti" class="text-sm font-medium"></p>
-                        </div>
-
-                        <div class="space-y-1 p-2 border border-gray-200 rounded-lg">
-                            <p class="font-semibold text-gray-500 text-xs">Pejabat Pemberi Cuti</p>
-                            <p x-text="selectedCuti.nama_pemberi_cuti" class="text-sm font-medium"></p>
                         </div>
 
                         <div class="space-y-1 p-2 border border-gray-200 rounded-lg flex flex-col justify-center">
