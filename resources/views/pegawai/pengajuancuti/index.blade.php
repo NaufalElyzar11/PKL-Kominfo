@@ -446,7 +446,7 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
             </div>
 
             <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100 mt-1">
-                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">Durasi</span>
+                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">TOTAL CUTI</span>
                 <div class="text-sky-800 font-black">
                     <span x-text="jumlahHariTambah"></span> Hari
                 </div>
