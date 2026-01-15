@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Pegawai;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,26 +14,22 @@ class DashboardController extends Controller
     /**
      * 🏠 Tampilkan Dashboard Pegawai
      */
+
     public function index()
     {
         $user = Auth::user();
-
         // Ambil data pegawai sesuai user login
         $pegawai = $user->pegawai;
-
         if (!$pegawai) {
             return redirect()->route('pegawai.profile.show')
                 ->with('error', 'Data pegawai tidak ditemukan. Lengkapi profil Anda terlebih dahulu.');
         }
-
         // Query data cuti pegawai
         $cutiQuery = Cuti::where('user_id', $user->id);
-
         $totalCuti     = $cutiQuery->count();
         $cutiPending   = (clone $cutiQuery)->where('status', 'pending')->count();
         $cutiDisetujui = (clone $cutiQuery)->where('status', 'disetujui')->count();
         $cutiDitolak   = (clone $cutiQuery)->where('status', 'ditolak')->count();
-
         // Ambil 5 cuti terbaru lengkap dengan relasi
         $latestCuti = $cutiQuery
             ->with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])

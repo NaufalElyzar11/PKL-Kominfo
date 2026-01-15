@@ -352,36 +352,71 @@
                     <label class="block font-medium text-gray-700 mb-0.5">Nama Akun <span class="text-red-500">*</span></label>
                     <input type="text" name="name" required
                            class="block w-full border rounded-lg p-1"
-                           placeholder="Nama login">
+                           placeholder="Nama Login">
                 </div>
 
                 <div>
                     <label class="block font-medium text-gray-700 mb-0.5">Nama Lengkap <span class="text-red-500">*</span></label>
                     <input type="text" name="nama" required
-                           class="block w-full border rounded-lg p-1"
-                           placeholder="Nama pegawai">
+                        class="block w-full border rounded-lg p-1"
+                        placeholder="Nama Pegawai"
+                        {{-- Menghapus angka DAN simbol secara otomatis saat diketik --}}
+                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
+                        {{-- Validasi HTML5 untuk memastikan hanya huruf dan spasi yang dikirim --}}
+                        pattern="^[a-zA-Z\s]+$"
+                        title="Nama hanya boleh berisi huruf dan spasi">
+                    @error('nama')
+                        <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>
                     <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
-                    <input type="text" name="nip" maxlength="20"
-                           class="block w-full border rounded-lg p-1"
-                           placeholder="NIP">
+                    <input type="text" name="nip" 
+                        {{-- Batasi maksimal 18 karakter --}}
+                        maxlength="18" 
+                        {{-- Paksa keyboard angka pada perangkat mobile --}}
+                        inputmode="numeric"
+                        {{-- Hapus karakter selain angka secara otomatis saat diketik --}}
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        class="block w-full border rounded-lg p-1"
+                        placeholder="Masukkan 18 digit NIP"
+                        required>
+                    @error('nip')
+                        <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
+                    @enderror
                 </div>
 
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Jabatan</label>
-                    <input type="text" name="jabatan"
-                           class="block w-full border rounded-lg p-1"
-                           placeholder="Staf IT">
-                </div>
+            <div>
+                <label class="block font-medium text-gray-700 mb-0.5">Jabatan <span class="text-red-500">*</span></label>
+                <input type="text" name="jabatan" required
+                    class="block w-full border rounded-lg p-1"
+                    placeholder="Staf IT"
+                    {{-- Menghapus APAPUN yang BUKAN huruf dan BUKAN spasi secara otomatis --}}
+                    oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
+                    {{-- Pola validasi untuk memastikan hanya huruf dan spasi yang dikirim --}}
+                    pattern="^[a-zA-Z\s]+$"
+                    title="Jabatan hanya boleh berisi huruf dan spasi">
+                @error('jabatan')
+                    <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
+                @enderror
+            </div>
 
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Unit Kerja</label>
-                    <input type="text" name="unit_kerja"
-                           class="block w-full border rounded-lg p-1"
-                           placeholder="Bidang Informatika">
-                </div>
+           <div>
+                <label class="block font-medium text-gray-700 mb-0.5">Unit Kerja <span class="text-red-500">*</span></label>
+                <input type="text" name="unit_kerja" required
+                    class="block w-full border rounded-lg p-1"
+                    placeholder="Contoh: Bidang Informatika"
+                    {{-- Menghapus APAPUN yang BUKAN huruf dan BUKAN spasi secara otomatis --}}
+                    oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
+                    {{-- Pola validasi untuk memastikan hanya huruf dan spasi yang dikirim --}}
+                    pattern="^[a-zA-Z\s]+$"
+                    title="Unit kerja hanya boleh berisi huruf dan spasi">
+                
+                @error('unit_kerja')
+                    <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
+                @enderror
+            </div>
 
             </div>
 
@@ -439,10 +474,23 @@
 
             {{-- TELEPON --}}
             <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Telepon</label>
-                <input type="text" name="telepon" maxlength="15"
-                       class="block w-full border rounded-lg p-1"
-                       placeholder="08xxxxxxxx">
+                <label class="block font-medium text-gray-700 mb-0.5">Telepon <span class="text-red-500">*</span></label>
+                <input type="text" 
+                    name="telepon" 
+                    {{-- Membatasi maksimal 13 digit --}}
+                    maxlength="13" 
+                    {{-- Mengaktifkan keyboard angka pada perangkat mobile --}}
+                    inputmode="numeric"
+                    {{-- Menghapus huruf, simbol, dan spasi secara otomatis --}}
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    class="block w-full border rounded-lg p-1"
+                    placeholder="Contoh: 081234567890"
+                    required>
+                
+                {{-- Menampilkan pesan error dari server --}}
+                @error('telepon')
+                    <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
+                @enderror
             </div>
 
             {{-- BUTTON --}}
@@ -528,120 +576,6 @@
     </div>
 </div>
 @endif
-
-
-{{-- =============================================== --}}
-{{-- MODAL TAMBAH ATASAN LANGSUNG --}}
-{{-- =============================================== --}}
-<div x-show="activeModal === 'atasan'" x-cloak @click.self="activeModal = null"
-     class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-
-    <div class="bg-white p-6 rounded-xl w-96 relative shadow-2xl text-sm">
-
-        <div class="text-indigo-600 text-4xl text-center mb-2">
-            <i class="fa-solid fa-user-tie"></i>
-        </div>
-
-        <h2 class="text-lg font-bold text-indigo-600 mb-3 text-center">
-            Tambah Atasan Langsung
-        </h2>
-
-        <form action="{{ route('admin.atasan.store') }}" method="POST" class="space-y-3">
-            @csrf
-
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Nama Atasan</label>
-                <input type="text" name="nama_atasan" placeholder="Nama Atasan"
-                       class="w-full p-2 border rounded-lg" required>
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">NIP Atasan</label>
-                <input type="text" name="nip_atasan" placeholder="NIP Atasan"
-                       class="w-full p-2 border rounded-lg" required>
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Jabatan Atasan</label>
-                <input type="text" name="jabatan_atasan" placeholder="Jabatan Atasan"
-                       class="w-full p-2 border rounded-lg" required>
-            </div>
-
-            <div class="flex flex-col gap-2 pt-2">
-                <button type="button" @click="activeModal = null"
-                        class="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-                    Batal
-                </button>
-
-                <button type="submit"
-                        class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                    Simpan Atasan
-                </button>
-            </div>
-        </form>
-
-        <button @click="activeModal = null" 
-                class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    </div>
-</div>
-{{-- =============================================== --}}
-{{-- MODAL TAMBAH PEMBERI CUTI --}}
-{{-- =============================================== --}}
-<div x-show="activeModal === 'pemberi_cuti'" x-cloak @click.self="activeModal = null"
-     class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-
-    <div class="bg-white p-6 rounded-xl w-96 relative shadow-2xl text-sm">
-
-        <div class="text-yellow-600 text-4xl text-center mb-2">
-            <i class="fa-solid fa-id-card-clip"></i>
-        </div>
-
-        <h2 class="text-lg font-bold text-yellow-600 mb-3 text-center">
-            Tambah Pejabat Pemberi Cuti
-        </h2>
-
-        <form action="{{ route('admin.pemberi_cuti.store') }}" method="POST" class="space-y-3">
-            @csrf
-
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Nama Pejabat</label>
-                <input type="text" name="nama_pejabat" placeholder="Nama Pejabat"
-                       class="w-full p-2 border rounded-lg" required>
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
-                <input type="text" name="nip_pejabat" placeholder="NIP Pejabat"
-                       class="w-full p-2 border rounded-lg" required>
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Jabatan</label>
-                <input type="text" name="jabatan_pejabat" placeholder="Jabatan Pejabat"
-                       class="w-full p-2 border rounded-lg" required>
-            </div>
-
-            <div class="flex flex-col gap-2 pt-2">
-                <button type="button" @click="activeModal = null"
-                        class="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-                    Batal
-                </button>
-
-                <button type="submit"
-                        class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
-                    Simpan Pejabat
-                </button>
-            </div>
-        </form>
-
-        <button @click="activeModal = null"
-                class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
-    </div>
-</div>
 
 {{-- ================= MODAL DETAIL (COMPACT VERSION) ================= --}}
 <div x-show="showDetailModal" x-cloak @click.self="closeModal()" 
@@ -751,15 +685,18 @@
                 <div>
                     <label class="font-medium text-xs">Nama</label>
                     <input type="text" name="nama" 
-                           x-bind:value="selectedPegawai?.nama" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.nama" 
+                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
                     <label class="font-medium text-xs">NIP</label>
                     <input type="text" name="nip" 
-                           x-bind:value="selectedPegawai?.nip" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.nip" 
+                        maxlength="18"
+                        @input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').slice(0, 18)"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
@@ -782,22 +719,26 @@
                 <div>
                     <label class="font-medium text-xs">Jabatan</label>
                     <input type="text" name="jabatan" 
-                           x-bind:value="selectedPegawai?.jabatan" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.jabatan" 
+                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
                     <label class="font-medium text-xs">Unit Kerja</label>
                     <input type="text" name="unit_kerja" 
-                           x-bind:value="selectedPegawai?.unit_kerja" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.unit_kerja" 
+                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
                     <label class="font-medium text-xs">Telepon</label>
                     <input type="text" name="telepon" 
-                           x-bind:value="selectedPegawai?.telepon" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.telepon" 
+                        maxlength="13"
+                        @input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').slice(0, 13)"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>

@@ -145,8 +145,6 @@
                             <th class="px-1 py-1 text-center font-semibold">Hari</th>
                             <th class="px-1 py-1 font-semibold text-left">Alasan</th>
                             <th class="px-1 py-1 font-semibold text-left">Alamat</th>
-                            <th class="px-1 py-1 font-semibold text-left">Atasan</th>
-                            <th class="px-1 py-1 font-semibold text-left">Pejabat</th>
                             <th class="px-1 py-1 text-center font-semibold">Status</th>
                             <th class="px-1 py-1 text-center font-semibold">Aksi</th>
                         </tr>
@@ -170,8 +168,6 @@
                                 <td class="px-1 py-2 text-center font-bold">{{ $c->jumlah_hari }}</td>
                                 <td class="px-1 py-2">{{ Str::limit($c->alasan_cuti, 20) }}</td>
                                 <td class="px-1 py-2">{{ $c->alamat ?? '-' }}</td>
-                                <td class="px-1 py-2">{{ $c->atasanLangsung->nama_atasan ?? '-' }}</td>
-                                <td class="px-1 py-2">{{ $c->pejabatPemberiCuti->nama_pejabat ?? '-' }}</td>
                                 <td class="px-1 py-2 text-center">
                                     <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
                                 </td>
@@ -180,8 +176,6 @@
                                         nama: '{{ $c->pegawai->nama }}', nip: '{{ $c->pegawai->nip }}', jabatan: '{{ $c->pegawai->jabatan }}',
                                         jenis_cuti: '{{ $c->jenis_cuti }}', tanggal_mulai: '{{ $c->tanggal_mulai->translatedFormat('d M Y') }}',
                                         tanggal_selesai: '{{ $c->tanggal_selesai->translatedFormat('d M Y') }}', jumlah_hari: '{{ $c->jumlah_hari }}',
-                                        alasan_cuti: '{{ addslashes($c->alasan_cuti) }}', atasan: '{{ $c->atasanLangsung->nama_atasan ?? '-' }}',
-                                        pejabat: '{{ $c->pejabatPemberiCuti->nama_pejabat ?? '-' }}', sisa_cuti: '{{ $pegawai->kuota_cuti }}'
                                     })" class="p-1 text-sky-600 hover:bg-sky-50 rounded"><i class="fa-solid fa-eye text-[12px]"></i></button>
                                     
                                     <button @click="openEditModal({
@@ -223,8 +217,6 @@
                     <th class="px-1 py-1 text-center font-semibold">Sisa</th>
                     <th class="px-1 py-1 font-semibold text-left">Alamat</th>
                     <th class="px-1 py-1 font-semibold text-left">Alasan</th>
-                    <th class="px-1 py-1 font-semibold text-left">Atasan</th>
-                    <th class="px-1 py-1 font-semibold text-left">Pejabat</th>
                     <th class="px-1 py-1 text-center font-semibold">Status</th>
                     <th class="px-1 py-1 text-center font-semibold">Aksi</th>
                 </tr>
@@ -270,8 +262,6 @@
 
                         <td class="px-1 py-2">{{ Str::limit($r->alamat, 20) }}</td>
                         <td class="px-1 py-2">{{ Str::limit($r->alasan_cuti, 20) }}</td>
-                        <td class="px-1 py-2 text-gray-500">{{ $r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-' }}</td>
-                        <td class="px-1 py-2 text-gray-500">{{ $r->pejabatPemberiCuti->nama_pejabat ?? $r->pejabat_nama ?? '-' }}</td>
                         <td class="px-1 py-2 text-center">
                             @if($status == 'disetujui')
                                 <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Disetujui</span>
@@ -392,102 +382,89 @@
 x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3">
 
     <div @click.away="showModal=false" 
-         x-transition.scale
-         class="bg-white rounded-xl shadow-xl w-full max-w-sm p-4 border border-gray-200">
+     x-transition.scale
+     class="bg-white rounded-xl shadow-xl w-full max-w-sm p-4 border border-gray-200">
 
-        <h3 class="text-sm font-bold text-sky-600 mb-2 pb-1.5 border-b flex items-center gap-2">
-            <i class="fa-solid fa-calendar-plus text-xs"></i> Ajukan Cuti Baru
-        </h3>
+    <h3 class="text-sm font-bold text-sky-600 mb-2 pb-1.5 border-b flex items-center gap-2">
+        <i class="fa-solid fa-calendar-plus text-xs"></i> Ajukan Cuti Baru
+    </h3>
 
-        <form action="{{ route('pegawai.cuti.store') }}" method="POST" class="space-y-2 text-[10px]">
-            @csrf
-            
-            <div x-show="hasPendingCuti" class="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-[9px] leading-tight">
-                <i class="fa-solid fa-circle-exclamation mr-1"></i> Ada pengajuan yang masih <b>Menunggu Persetujuan</b>.
+    <form action="{{ route('pegawai.cuti.store') }}" method="POST" class="space-y-2 text-[10px]">
+        @csrf
+        
+        <div x-show="hasPendingCuti" class="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-[9px] leading-tight">
+            <i class="fa-solid fa-circle-exclamation mr-1"></i> Ada pengajuan yang masih <b>Menunggu Persetujuan</b>.
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded border border-gray-200 text-gray-500">
+            <div class="col-span-2 border-b border-gray-200 pb-1 mb-1">
+                <span class="font-bold">Nama:</span> <span x-text="'{{ $pegawai->nama ?? '-' }}'"></span>
+            </div>
+            <div><span class="font-bold">NIP:</span> {{ $pegawai->nip ?? '-' }}</div>
+            <div><span class="font-bold">Jabatan:</span> {{ $pegawai->jabatan ?? '-' }}</div>
+        </div>
+
+        <fieldset :disabled="hasPendingCuti" class="space-y-2">
+            <div>
+                <label class="font-bold text-gray-600">Jenis Cuti *</label>
+                <select name="jenis_cuti" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none focus:border-sky-500" required>
+                    <option value="">Pilih</option>
+                    <option value="Tahunan">Tahunan</option>
+                </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded border border-gray-200 text-gray-500">
-                <div class="col-span-2 border-b border-gray-200 pb-1 mb-1">
-                    <span class="font-bold">Nama:</span> <span x-text="'{{ $pegawai->nama ?? '-' }}'"></span>
-                </div>
-                <div><span class="font-bold">NIP:</span> {{ $pegawai->nip ?? '-' }}</div>
-                <div><span class="font-bold">Jabatan:</span> {{ $pegawai->jabatan ?? '-' }}</div>
-            </div>
-
-            <fieldset :disabled="hasPendingCuti" class="space-y-2">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-gray-600">Jenis Cuti *</label>
-                        <select name="jenis_cuti" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none focus:border-sky-500" required>
-                            <option value="">Pilih</option>
-                            <option value="Tahunan">Tahunan</option>
-                
-                        </select>
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-600">Atasan *</label>
-                        <select name="id_atasan_langsung" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
-                            <option value="">Pilih Atasan</option>
-                            @foreach ($atasanLangsung as $a)
-                                <option value="{{ $a->id }}">{{ $a->nama_atasan }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-gray-600">Mulai *</label>
-                        <input type="date" name="tanggal_mulai" x-model="tanggalMulaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-600">Selesai *</label>
-                        <input type="date" name="tanggal_selesai" x-model="tanggalSelesaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
-                    </div>
-                </div>
-
+            <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="font-bold text-gray-600">Pejabat Pemberi Cuti *</label>
-                    <select name="id_pejabat_pemberi_cuti" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
-                        <option value="">Pilih Pejabat</option>
-                        @foreach ($pejabatPemberiCuti as $p)
-                            <option value="{{ $p->id }}">{{ $p->nama_pejabat }}</option>
-                        @endforeach
-                    </select>
+                    <label class="font-bold text-gray-600">Mulai *</label>
+                    <input type="date" name="tanggal_mulai" x-model="tanggalMulaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
                 </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-gray-600">Alamat *</label>
-                        <textarea name="alamat" rows="1" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" placeholder="Alamat..." required></textarea>
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-600">Alasan *</label>
-                        <textarea name="keterangan" rows="1" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" placeholder="Alasan..." required></textarea>
-                    </div>
+                <div>
+                    <label class="font-bold text-gray-600">Selesai *</label>
+                    <input type="date" name="tanggal_selesai" x-model="tanggalSelesaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
                 </div>
-
-                <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100 mt-1">
-                    <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">Durasi</span>
-                    <div class="text-sky-800 font-black">
-                        <span x-text="jumlahHariTambah"></span> Hari
-                    </div>
-                    <input type="hidden" name="jumlah_hari" x-bind:value="jumlahHariTambah">
-                </div>
-            </fieldset>
-
-            <div class="flex justify-end gap-2 pt-2 border-t mt-1">
-                <button type="button" @click="showModal=false" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 transition">Batal</button>
-                <button type="submit" 
-                        :disabled="hasPendingCuti"
-                        class="px-3 py-1 text-white rounded-lg font-bold flex items-center gap-1 transition active:scale-95"
-                        :class="hasPendingCuti ? 'bg-gray-400' : 'bg-sky-600 hover:bg-sky-700'">
-                    <i class="fa-solid fa-paper-plane text-[9px]"></i> 
-                    <span x-text="hasPendingCuti ? 'Terkunci' : 'Kirim'"></span>
-                </button>
             </div>
-        </form>
-    </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="font-bold text-gray-600">Alamat *</label>
+                    <textarea name="alamat" rows="1" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" placeholder="Alamat..." required></textarea>
+                </div>
+                <div>
+                    <label class="font-bold text-gray-600">Alasan *</label>
+                    <textarea 
+                        name="keterangan" 
+                        rows="1" 
+                        class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" 
+                        placeholder="Alasan..." 
+                        required
+                        {{-- Mencegah input angka secara real-time --}}
+                        oninput="this.value = this.value.replace(/[0-9]/g, '')"
+                        {{-- Validasi regex: hanya huruf dan spasi, minimal 5 karakter --}}
+                        pattern="^[a-zA-Z\s]+$"
+                        title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100 mt-1">
+                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">TOTAL CUTI</span>
+                <div class="text-sky-800 font-black">
+                    <span x-text="jumlahHariTambah"></span> Hari
+                </div>
+                <input type="hidden" name="jumlah_hari" x-bind:value="jumlahHariTambah">
+            </div>
+        </fieldset>
+
+        <div class="flex justify-end gap-2 pt-2 border-t mt-1">
+            <button type="button" @click="showModal=false" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 transition">Batal</button>
+            <button type="submit" 
+                    :disabled="hasPendingCuti"
+                    class="px-3 py-1 text-white rounded-lg font-bold flex items-center gap-1 transition active:scale-95"
+                    :class="hasPendingCuti ? 'bg-gray-400' : 'bg-sky-600 hover:bg-sky-700'">
+                <i class="fa-solid fa-paper-plane text-[9px]"></i> 
+                <span x-text="hasPendingCuti ? 'Terkunci' : 'Kirim'"></span>
+            </button>
+        </div>
+    </form>
 </div>
 
 {{-- 2. MODAL DETAIL (PENDING) --}}
@@ -536,14 +513,6 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
             <p class="flex justify-between border-b border-gray-100 pb-1">
                 <span class="font-semibold text-gray-500">Sisa Kuota:</span> 
                 <span><span x-text="detailPending.sisa_cuti || '0'"></span> Hari</span>
-            </p>
-            <p class="flex justify-between border-b border-gray-100 pb-1">
-                <span class="font-semibold text-gray-500">Atasan:</span> 
-                <span x-text="detailPending.atasan || '-'"></span>
-            </p>
-            <p class="flex justify-between border-b border-gray-100 pb-1">
-                <span class="font-semibold text-gray-500">Pejabat:</span> 
-                <span x-text="detailPending.pejabat || '-'"></span>
             </p>
             <div class="pt-1">
                 <p class="font-semibold text-gray-500 mb-1">Alasan:</p>
@@ -614,17 +583,6 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Selesai:</label>
                         <input type="date" name="tanggal_selesai" x-model="selectedCuti.tanggal_selesai" @change="hitungHariEdit()" class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Atasan:</label>
-                        <input type="text" name="atasan" x-model="selectedCuti.atasan" class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none">
-                    </div>
-                    <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Pejabat:</label>
-                        <input type="text" name="pejabat" x-model="selectedCuti.pejabat" class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none">
                     </div>
                 </div>
 
@@ -714,14 +672,6 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
             <p class="flex justify-between border-b border-gray-100 pb-0.5">
                 <span class="font-semibold text-gray-500">Sisa Kuota:</span> 
                 <span><span class="font-bold text-sky-600" x-text="detailRiwayat.sisa_cuti || '0'"></span> Hari</span>
-            </p>
-            <p class="flex justify-between border-b border-gray-100 pb-0.5">
-                <span class="font-semibold text-gray-500">Atasan:</span> 
-                <span x-text="detailRiwayat.atasan || '-'"></span>
-            </p>
-            <p class="flex justify-between border-b border-gray-100 pb-0.5">
-                <span class="font-semibold text-gray-500">Pejabat:</span> 
-                <span x-text="detailRiwayat.pejabat || '-'"></span>
             </p>
             <div class="pt-1">
                 <p class="font-semibold text-gray-500 mb-1">Alasan:</p>
