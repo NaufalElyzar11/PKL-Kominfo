@@ -685,15 +685,18 @@
                 <div>
                     <label class="font-medium text-xs">Nama</label>
                     <input type="text" name="nama" 
-                           x-bind:value="selectedPegawai?.nama" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.nama" 
+                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
                     <label class="font-medium text-xs">NIP</label>
                     <input type="text" name="nip" 
-                           x-bind:value="selectedPegawai?.nip" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.nip" 
+                        maxlength="18"
+                        @input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').slice(0, 18)"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
@@ -716,22 +719,26 @@
                 <div>
                     <label class="font-medium text-xs">Jabatan</label>
                     <input type="text" name="jabatan" 
-                           x-bind:value="selectedPegawai?.jabatan" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.jabatan" 
+                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
                     <label class="font-medium text-xs">Unit Kerja</label>
                     <input type="text" name="unit_kerja" 
-                           x-bind:value="selectedPegawai?.unit_kerja" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.unit_kerja" 
+                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
                     <label class="font-medium text-xs">Telepon</label>
                     <input type="text" name="telepon" 
-                           x-bind:value="selectedPegawai?.telepon" 
-                           class="w-full border rounded px-2 py-1 text-sm">
+                        x-bind:value="selectedPegawai?.telepon" 
+                        maxlength="13"
+                        @input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').slice(0, 13)"
+                        class="w-full border rounded px-2 py-1 text-sm">
                 </div>
 
                 <div>
