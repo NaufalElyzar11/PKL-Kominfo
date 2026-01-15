@@ -139,36 +139,67 @@ public function store(Request $request)
         return back()->with('error', 'Data pegawai tidak ditemukan.');
     }
 
-    // 1. HAPUS id_atasan_langsung dan id_pejabat_pemberi_cuti dari validasi request
-    $validated = $request->validate([
-        'jenis_cuti'      => 'required|string',
-        'tanggal_mulai'   => 'required|date',
-        'tanggal_selesai' => 'required|date',
-        'jumlah_hari'     => 'required|integer',
-        'keterangan'      => 'required|string',
-        'alamat'          => 'required|string',
-    ]);
+    $validated = $request->validate(
+        [
+            'jenis_cuti' => 'required|in:Tahunan',
 
-    $jumlah_hari = Carbon::parse($validated['tanggal_mulai'])
-        ->diffInDays(Carbon::parse($validated['tanggal_selesai'])) + 1;
+            'alamat' => [
+                'required',
+                'regex:/^[A-Za-z0-9\s]+$/'
+            ],
 
-    // 2. Gunakan ID atasan/pejabat dari tabel pegawai secara otomatis
+            'keterangan' => [
+                'required',
+                'regex:/^[A-Za-z\s]+$/'
+            ],
+
+            'tanggal_mulai' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    $minDate = Carbon::today()->addDays(3);
+
+                    if (Carbon::parse($value)->lt($minDate)) {
+                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                    }
+                },
+            ],
+
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'jumlah_hari' => 'required|integer',
+        ],
+        [
+            'alamat.regex' =>
+                'Alamat hanya boleh berisi huruf dan angka.',
+
+            'keterangan.regex' =>
+                'Alasan cuti hanya boleh berisi huruf.',
+
+            'jenis_cuti.in' =>
+                'Jenis cuti tidak valid.',
+        ]
+    );
+
+    // ================= HITUNG JUMLAH HARI =================
+    $start = Carbon::parse($validated['tanggal_mulai']);
+    $end   = Carbon::parse($validated['tanggal_selesai']);
+    $jumlah_hari = $start->diffInDays($end) + 1;
+
+    // ================= SIMPAN =================
     Cuti::create([
-        'user_id'                 => $user->id,
-        'nama'                    => $pegawai->nama,
-        'nip'                     => $pegawai->nip,
-        'jabatan'                 => $pegawai->jabatan,
-        'alamat'                  => $validated['alamat'],
-        'jenis_cuti'              => $validated['jenis_cuti'],
-        'tanggal_mulai'           => $validated['tanggal_mulai'],
-        'tanggal_selesai'         => $validated['tanggal_selesai'],
-        'jumlah_hari'             => $jumlah_hari,
-        'tahun'                   => date('Y'),
-        'keterangan'              => $validated['keterangan'],
-        'status'                  => 'Menunggu',
-        
-        // Ambil otomatis dari profil pegawai
-        'id_atasan_langsung'      => $pegawai->id_atasan_langsung, 
+        'user_id' => $user->id,
+        'nama' => $pegawai->nama,
+        'nip' => $pegawai->nip,
+        'jabatan' => $pegawai->jabatan,
+        'alamat' => $validated['alamat'],
+        'jenis_cuti' => $validated['jenis_cuti'],
+        'tanggal_mulai' => $validated['tanggal_mulai'],
+        'tanggal_selesai' => $validated['tanggal_selesai'],
+        'jumlah_hari' => $jumlah_hari,
+        'tahun' => date('Y'),
+        'keterangan' => $validated['keterangan'],
+        'status' => 'Menunggu',
+        'id_atasan_langsung' => $pegawai->id_atasan_langsung,
         'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
     ]);
 
@@ -176,57 +207,59 @@ public function store(Request $request)
         ->with('success', 'Pengajuan cuti berhasil dikirim.');
 }
 
-
     /** ========================== ✏️ UPDATE CUTI ============================= */
 public function update(Request $request, $id)
 {
-    // 1. Validasi input (Sertakan nama, nip, dan alamat)
+    // ================= VALIDASI =================
     $request->validate([
-        'nama' => 'required|string|max:255', // Agar nama bisa diupdate
+        'nama' => 'required|string|max:255',
         'nip' => 'required',
         'jenis_cuti' => 'required',
-        'tanggal_mulai' => 'required|date',
-        'tanggal_selesai' => 'required|date',
-        'jumlah_hari' => 'required|numeric',
-        'alamat' => 'required', // Penting agar alamat tidak kosong
-        'keterangan' => 'required',
+
+        'tanggal_mulai' => [
+            'required',
+            'date',
+            function ($attribute, $value, $fail) {
+                $minDate = Carbon::today()->addDays(3);
+
+                if (Carbon::parse($value)->lt($minDate)) {
+                    $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                }
+            },
+        ],
+
+        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        'alamat' => [
+        'required',
+            'regex:/^[A-Za-z0-9\s]+$/'
+        ],
+
+        'keterangan' => [
+            'required',
+            'regex:/^[A-Za-z\s]+$/'
+        ],
+
+
     ]);
 
-    // 2. Cari data cuti berdasarkan ID
+    // ================= HITUNG JUMLAH HARI =================
+    $start = Carbon::parse($request->tanggal_mulai);
+    $end   = Carbon::parse($request->tanggal_selesai);
+    $jumlahHari = $start->diffInDays($end) + 1;
+
+    // ================= UPDATE =================
     $cuti = Cuti::findOrFail($id);
 
-    // 3. UPDATE DATA PEGAWAI (Ganti Paisal jadi Zainuddin)
-    // Asumsi: Model Cuti memiliki relasi 'pegawai' ke model Pegawai
-    if ($cuti->pegawai) {
-        $cuti->pegawai->update([
-            'nama' => $request->nama,
-            'nip'  => $request->nip
-        ]);
-    }
-
-    // 4. UPDATE DATA CUTI
-    $cuti->jenis_cuti = $request->jenis_cuti;
     $cuti->tanggal_mulai = $request->tanggal_mulai;
     $cuti->tanggal_selesai = $request->tanggal_selesai;
-    $cuti->jumlah_hari = $request->jumlah_hari;
-    $cuti->alamat = $request->alamat; // Menyimpan alamat baru
+    $cuti->jumlah_hari = $jumlahHari;
+    $cuti->alamat = $request->alamat;
     $cuti->keterangan = $request->keterangan;
-    
-    // Update atasan/pejabat hanya jika ada di request
-    if ($request->has('id_atasan_langsung')) {
-        $cuti->id_atasan_langsung = $request->id_atasan_langsung;
-    }
-    if ($request->has('id_pejabat_pemberi_cuti')) {
-        $cuti->id_pejabat_pemberi_cuti = $request->id_pejabat_pemberi_cuti;
-    }
 
-    $cuti->tahun = date('Y');
     $cuti->save();
 
-    // 5. Kembali dengan pesan sukses
-    return redirect()->back()->with('success', 'Data Pegawai dan Pengajuan cuti berhasil diperbarui.');
+    return back()->with('success', 'Pengajuan cuti berhasil diperbarui.');
 }
-
     /** ========================== 🔍 DETAIL CUTI ============================ */
     public function detail($id)
     {

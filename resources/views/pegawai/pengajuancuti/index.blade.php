@@ -37,6 +37,7 @@
     // Inisialisasi Objek (WAJIB ADA AGAR TIDAK ERROR)
     detailPending: {}, 
     detailRiwayat: {},
+    
     selectedCuti: {}, // <-- Tambahkan ini
 
     // FORM TAMBAH
@@ -69,6 +70,9 @@
             status: data.status,
             jumlah_hari: data.jumlah_hari // Tambahkan agar durasi awal langsung muncul
         };
+            this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
+            this.isChanged = false;
+
         this.showEditModal = true;
     },
 
@@ -83,6 +87,12 @@
         const diff = Math.floor((selesai - mulai) / (1000*60*60*24)) + 1;
         this.selectedCuti.jumlah_hari = diff > 0 ? diff : 0;
     },
+    checkChange() {
+    this.isChanged =
+        JSON.stringify(this.selectedCuti)
+        !== JSON.stringify(this.originalCuti);
+},
+
 
     // FUNGSI DETAIL PENDING
     showPendingDetail(data) { 
@@ -141,7 +151,7 @@
                             <th class="px-1 py-1 font-semibold text-left">Nama</th>
                             <th class="px-1 py-1 font-semibold text-left">NIP</th>
                             <th class="px-1 py-1 font-semibold text-left">Jenis</th>
-                            <th class="px-1 py-1 font-semibold text-left">Tgl</th>
+                            <th class="px-1 py-1 font-semibold text-left">Tanggal</th>
                             <th class="px-1 py-1 text-center font-semibold">Hari</th>
                             <th class="px-1 py-1 font-semibold text-left">Alasan</th>
                             <th class="px-1 py-1 font-semibold text-left">Alamat</th>
@@ -179,11 +189,21 @@
                                     })" class="p-1 text-sky-600 hover:bg-sky-50 rounded"><i class="fa-solid fa-eye text-[12px]"></i></button>
                                     
                                     <button @click="openEditModal({
-                                        id: {{ $c->id }}, jenis_cuti: '{{ $c->jenis_cuti }}', 
-                                        tanggal_mulai: '{{ $c->tanggal_mulai->format('Y-m-d') }}',
-                                        tanggal_selesai: '{{ $c->tanggal_selesai->format('Y-m-d') }}', 
-                                        alasan_cuti: '{{ addslashes($c->alasan_cuti) }}'
-                                    })" class="p-1 text-yellow-600 hover:bg-yellow-50 rounded"><i class="fa-solid fa-pen-to-square text-[12px]"></i></button>
+                                        id: {{ $c->id }},
+                                        nama: @js($c->pegawai->nama),
+                                        nip: @js($c->pegawai->nip),
+                                        jabatan: @js($c->pegawai->jabatan),
+                                        jenis_cuti: @js($c->jenis_cuti),
+                                        sisa_cuti: @js($c->sisa_cuti ?? 0),
+                                        tanggal_mulai_raw: @js($c->tanggal_mulai->format('Y-m-d')),
+                                        tanggal_selesai_raw: @js($c->tanggal_selesai->format('Y-m-d')),
+                                        alasan_cuti: @js($c->alasan_cuti),
+                                        jumlah_hari: @js($c->jumlah_hari)
+                                    })"
+                                    class="p-1 text-yellow-600 hover:bg-yellow-50 rounded">
+                                        <i class="fa-solid fa-pen-to-square text-[12px]"></i>
+                                    </button>
+
 
                                     <button @click="openDelete({{ $c->id }}, '{{ $c->pegawai->nama }}')" class="p-1 text-red-600 hover:bg-red-50 rounded"><i class="fa-solid fa-trash text-[12px]"></i></button>
                                 </td>
@@ -404,30 +424,41 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
             <div><span class="font-bold">Jabatan:</span> {{ $pegawai->jabatan ?? '-' }}</div>
         </div>
 
-        <fieldset :disabled="hasPendingCuti" class="space-y-2">
+        <fieldset :disabled="hasPendingCuti && !showEditModal" class="space-y-2">
             <div>
                 <label class="font-bold text-gray-600">Jenis Cuti *</label>
-                <select name="jenis_cuti" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none focus:border-sky-500" required>
-                    <option value="">Pilih</option>
-                    <option value="Tahunan">Tahunan</option>
-                </select>
+                <input type="text"
+                    value="Tahunan"
+                    class="w-full mt-0.5 p-1 rounded border border-gray-300 bg-gray-100"
+                    disabled>
+
+                <!-- Nilai yang dikirim ke backend -->
+                <input type="hidden" name="jenis_cuti" value="Tahunan">
             </div>
 
             <div class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="font-bold text-gray-600">Mulai *</label>
-                    <input type="date" name="tanggal_mulai" x-model="tanggalMulaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
+                    <input type="date" name="tanggal_mulai" x-model="tanggalMulaiTambah" min="{{ \Carbon\Carbon::today()->addDays(3)->toDateString() }}" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
                 </div>
                 <div>
                     <label class="font-bold text-gray-600">Selesai *</label>
-                    <input type="date" name="tanggal_selesai" x-model="tanggalSelesaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
+                    <input type="date" name="tanggal_selesai" x-model="tanggalSelesaiTambah" :min="tanggalMulaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="font-bold text-gray-600">Alamat *</label>
-                    <textarea name="alamat" rows="1" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" placeholder="Alamat..." required></textarea>
+                    <textarea 
+                        name="alamat"
+                        rows="1"
+                        class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none"
+                        placeholder="Alamat..."
+                        required
+                        oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')">
+                    </textarea>
+
                 </div>
                 <div>
                     <label class="font-bold text-gray-600">Alasan *</label>
@@ -436,9 +467,11 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
                         rows="1" 
                         class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" 
                         placeholder="Alasan..." 
+                        pattern="[A-Za-z\s]+"
+                        title="Alasan cuti hanya boleh huruf"
                         required
                         {{-- Mencegah input angka secara real-time --}}
-                        oninput="this.value = this.value.replace(/[0-9]/g, '')"
+                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
                         {{-- Validasi regex: hanya huruf dan spasi, minimal 5 karakter --}}
                         pattern="^[a-zA-Z\s]+$"
                         title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
@@ -446,7 +479,11 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
             </div>
 
             <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100 mt-1">
+<<<<<<< HEAD
+                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">Jumlah Hari Cuti</span>
+=======
                 <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">TOTAL CUTI</span>
+>>>>>>> 466e774baff932d20b03456a7b05325d1d6889c8
                 <div class="text-sky-800 font-black">
                     <span x-text="jumlahHariTambah"></span> Hari
                 </div>
@@ -530,8 +567,12 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
     </div>
 </div>
 
-<div x-show="showEditModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3">
-    <div x-show="selectedCuti" @click.away="showEditModal=false" x-transition.scale 
+<<div x-show="showEditModal" x-cloak
+     class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3">
+
+    <div x-show="showEditModal && selectedCuti"
+         @click.stop
+         x-transition.scale
          class="bg-white rounded-xl p-4 w-full max-w-sm shadow-xl border border-gray-200">
          
         <div class="flex justify-between items-center border-b pb-2 mb-2">
@@ -553,44 +594,59 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">NIP:</label>
-                        <input type="text" name="nip" x-model="selectedCuti.nip" class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none focus:border-sky-500">
+                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium"
+                            x-text="selectedCuti.nip"></div>
+                        <input type="hidden" name="nip" :value="selectedCuti.nip">
                     </div>
-                    <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Jabatan:</label>
-                        <input type="text" name="jabatan" x-model="selectedCuti.jabatan" class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none focus:border-sky-500">
-                    </div>
+                <div>
+                    <label class="font-bold text-gray-500 block mb-0.5">Jabatan:</label>
+                    <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium"
+                        x-text="selectedCuti.jabatan"></div>
+                    <input type="hidden" name="jabatan" :value="selectedCuti.jabatan">
+                </div>
+
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Jenis Cuti:</label>
-                        <select name="jenis_cuti" x-model="selectedCuti.jenis_cuti" class="w-full bg-white border border-gray-300 rounded px-1 py-1 font-bold text-sky-700 outline-none">
-                            <option value="Tahunan">Tahunan</option>
-                            
-                        </select>
+
+                        <!-- Tampilan saja (tidak bisa diedit) -->
+                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200
+                                    font-bold text-sky-700">
+                            Tahunan
+                        </div>
+
+                        <!-- Nilai tetap dikirim ke backend -->
+                        <input type="hidden" name="jenis_cuti" value="Tahunan">
                     </div>
-                    <div>
+                <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Sisa Kuota:</label>
-                        <input type="number" name="sisa_cuti" x-model="selectedCuti.sisa_cuti" class="w-full bg-white border border-gray-300 rounded px-2 py-1 font-bold text-sky-600 outline-none">
+                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-sky-600 font-bold"
+                            x-text="selectedCuti.sisa_cuti"></div>
+                        <input type="hidden" name="sisa_cuti" :value="selectedCuti.sisa_cuti">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Mulai:</label>
-                        <input type="date" name="tanggal_mulai" x-model="selectedCuti.tanggal_mulai" @change="hitungHariEdit()" class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none">
+                        <input type="date" name="tanggal_mulai" x-model="selectedCuti.tanggal_mulai" min="{{ \Carbon\Carbon::today()->addDays(3)->toDateString() }}" @change="hitungHariEdit(); checkChange()" class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none">
                     </div>
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Selesai:</label>
-                        <input type="date" name="tanggal_selesai" x-model="selectedCuti.tanggal_selesai" @change="hitungHariEdit()" class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none">
+                        <input type="date" name="tanggal_selesai" x-model="selectedCuti.tanggal_selesai" :min="selectedCuti.tanggal_mulai" @change="hitungHariEdit(); checkChange()" class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none">
                     </div>
                 </div>
 
                 <div>
                     <label class="font-bold text-gray-500 block mb-0.5">Alasan Cuti:</label>
-                    <textarea name="alasan_cuti" x-model="selectedCuti.alasan_cuti" rows="1" class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none resize-none italic"></textarea>
+                    <textarea name="alasan_cuti"
+                        x-model="selectedCuti.alasan_cuti"
+                        @input="checkChange()"
+                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
+                        class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none resize-none italic">
+                    </textarea>
                 </div>
-
                 <div class="flex justify-between items-center bg-sky-100/50 p-1.5 rounded border border-sky-200">
                     <span class="font-bold text-sky-700">Total Hari:</span>
                     <span class="font-black text-sky-800"><span x-text="selectedCuti.jumlah_hari || '0'"></span> Hari</span>
@@ -599,14 +655,18 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
             </div>
 
             <div class="flex justify-end mt-3 gap-2">
-                <button type="button" @click="showEditModal=false" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-[10px] font-bold">Batal</button>
-                <button type="submit" class="px-3 py-1.5 bg-sky-600 text-white rounded text-[10px] font-bold shadow-sm">Update Data</button>
+                <button type="submit"
+                    :disabled="!isChanged"
+                    :class="!isChanged 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-sky-600 hover:bg-sky-700'"
+                    class="px-3 py-1.5 text-white rounded text-[10px] font-bold shadow-sm transition">
+                    Update Data
+                </button>
             </div>
         </form>
     </div>
 </div>
-
-
 
 <div x-show="showDetailRiwayat" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3">
     <div @click.away="showDetailRiwayat=false" x-transition.scale class="bg-white rounded-xl p-4 w-full max-w-sm shadow-xl border border-gray-200">
