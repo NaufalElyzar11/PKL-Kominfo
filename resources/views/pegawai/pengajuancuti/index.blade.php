@@ -449,17 +449,18 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
 
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="font-bold text-gray-600">Alamat *</label>
-                    <textarea 
-                        name="alamat"
-                        rows="1"
-                        class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none"
-                        placeholder="Alamat..."
-                        required
-                        oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')">
-                    </textarea>
-
+                    <div>
+                <label class="font-bold text-gray-600">Alamat *</label>
+                <textarea 
+                    name="alamat"
+                    rows="1"
+                    class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none"
+                    placeholder="Alamat..."
+                    required
+                    oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')"></textarea>
                 </div>
+
+            </div>
                 <div>
                     <label class="font-bold text-gray-600">Alasan *</label>
                     <textarea 
@@ -479,16 +480,17 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
             </div>
 
             <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100 mt-1">
-<<<<<<< HEAD
-                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">Jumlah Hari Cuti</span>
-=======
-                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">TOTAL CUTI</span>
->>>>>>> 466e774baff932d20b03456a7b05325d1d6889c8
+                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">
+                    Jumlah Hari Cuti
+                </span>
+
                 <div class="text-sky-800 font-black">
                     <span x-text="jumlahHariTambah"></span> Hari
                 </div>
+
                 <input type="hidden" name="jumlah_hari" x-bind:value="jumlahHariTambah">
             </div>
+
         </fieldset>
 
         <div class="flex justify-end gap-2 pt-2 border-t mt-1">
