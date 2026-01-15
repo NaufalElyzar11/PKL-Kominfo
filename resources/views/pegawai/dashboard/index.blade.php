@@ -5,164 +5,367 @@
 @section('content')
 <div class="p-6 space-y-8">
 
-    {{-- 🌟 Kartu Selamat Datang --}}
-    <div class="bg-gradient-to-r from-sky-500 to-sky-700 text-white p-6 sm:p-8 rounded-2xl shadow-xl flex justify-between items-center">
+    {{-- 🌟 KARTU SELAMAT DATANG --}}
+    <div class="bg-gradient-to-r from-sky-500 to-sky-700 text-white p-6 rounded-2xl shadow flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-extrabold tracking-tight">
+            <h1 class="text-2xl font-bold">
                 Selamat Datang, {{ Auth::user()->name }}
             </h1>
-            <p class="mt-1.5 text-base font-light text-sky-100">
-                Pantau data pegawai dan kelola pengajuan cuti dengan mudah.
+            <p class="text-sm text-sky-100 mt-1">
+                Pantau dan kelola pengajuan cuti pegawai
             </p>
         </div>
-        <div class="hidden sm:flex justify-center items-center bg-white/20 p-4 rounded-full">
-            <i class="fa-solid fa-clipboard-user text-5xl opacity-90"></i>
+        <div class="hidden sm:block bg-white/20 p-4 rounded-full">
+            <i class="fa-solid fa-clipboard-user text-4xl"></i>
         </div>
     </div>
 
-    {{-- 📊 Statistik --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
-        {{-- Total Pegawai --}}
-        <div class="p-5 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-lg border-l-4 border-sky-500 flex items-center justify-between hover:scale-[1.02] transition-transform duration-200">
-            <div>
-                <p class="text-xs font-medium text-gray-600">Total Pegawai</p>
-                <p class="text-3xl font-extrabold text-sky-700 mt-1">{{ $totalPegawai ?? 0 }}</p>
-            </div>
-            <div class="bg-sky-100 p-3 rounded-full">
-                <i class="fa-solid fa-users text-sky-500 text-3xl"></i>
-            </div>
-        </div>
+    {{-- 🧩 GRID STATISTIK (DESKTOP-FIRST) --}}
+    <div class="grid grid-cols-12 gap-6 items-start">
 
-        {{-- Cuti Menunggu --}}
-        <div class="p-5 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl shadow-lg border-l-4 border-yellow-500 flex items-center justify-between hover:scale-[1.02] transition-transform duration-200">
-            <div>
-                <p class="text-xs font-medium text-gray-600">Cuti Menunggu</p>
-                <p class="text-3xl font-extrabold text-yellow-700 mt-1">{{ $cutiPending ?? 0 }}</p>
-            </div>
-            <div class="bg-yellow-100 p-3 rounded-full">
-                <i class="fa-solid fa-hourglass-half text-yellow-500 text-3xl"></i>
-            </div>
-        </div>
-
-        {{-- Cuti Disetujui --}}
-        <div class="p-5 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg border-l-4 border-green-500 flex items-center justify-between hover:scale-[1.02] transition-transform duration-200">
-            <div>
-                <p class="text-xs font-medium text-gray-600">Cuti Disetujui</p>
-                <p class="text-3xl font-extrabold text-green-700 mt-1">{{ $cutiDisetujui ?? 0 }}</p>
-            </div>
-            <div class="bg-green-100 p-3 rounded-full">
-                <i class="fa-solid fa-circle-check text-green-500 text-3xl"></i>
-            </div>
-        </div>
-
-        {{-- Cuti Ditolak --}}
-        <div class="p-5 bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-lg border-l-4 border-red-500 flex items-center justify-between hover:scale-[1.02] transition-transform duration-200">
-            <div>
-                <p class="text-xs font-medium text-gray-600">Cuti Ditolak</p>
-                <p class="text-3xl font-extrabold text-red-700 mt-1">{{ $cutiDitolak ?? 0 }}</p>
-            </div>
-            <div class="bg-red-100 p-3 rounded-full">
-                <i class="fa-solid fa-circle-xmark text-red-500 text-3xl"></i>
-            </div>
-        </div>
-    </div>
-
-    {{-- 📋 Tabel Riwayat & Statistik --}}
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {{-- Riwayat Cuti --}}
-        <div class="lg:col-span-2 bg-white p-5 rounded-2xl shadow-lg border border-gray-200">
-            <h2 class="text-lg font-bold text-sky-700 mb-3 border-b pb-2 flex items-center gap-2">
-                <i class="fas fa-clock text-sky-600"></i> Riwayat Cuti Pegawai
+        {{-- ⬅️ STATISTIK SISA CUTI --}}
+        <div class="col-span-8 bg-white rounded-xl p-6 flex flex-col shadow border border-gray-200">
+            <h2 class="text-sm font-semibold text-sky-700 mb-4">
+                Statistik Sisa Cuti
             </h2>
 
-            <div class="overflow-x-auto overflow-y-auto max-h-[28rem] border rounded-lg text-[11px] sm:text-[12px] leading-tight">
-                <table class="min-w-[1000px] border-collapse">
-                    <thead class="bg-sky-600 text-white sticky top-0 z-10 text-[11px] uppercase">
-                        <tr>
-                            <th class="px-2 py-2 border text-center w-8">No</th>
-                            <th class="px-2 py-2 border">Nama</th>
-                            <th class="px-2 py-2 border">NIP</th>
-                            <th class="px-2 py-2 border">Jabatan</th>
-                            <th class="px-2 py-2 border">Jenis Cuti</th>
-                            <th class="px-2 py-2 border">Mulai</th>
-                            <th class="px-2 py-2 border">Selesai</th>
-                            <th class="px-2 py-2 border">Hari</th>
-                            <th class="px-2 py-2 border">Alasan</th>
-                            <th class="px-2 py-2 border">Atasan</th>
-                            <th class="px-2 py-2 border">Pemberi</th>
-                            <th class="px-2 py-2 border">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @forelse ($latestCuti ?? [] as $index => $c)
-                        <tr class="hover:bg-gray-100 transition text-gray-700">
-                            <td class="px-2 py-1 border text-center">{{ $index + 1 }}</td>
-                            <td class="px-2 py-1 border truncate">{{ $c->pegawai->nama ?? '-' }}</td>
-                            <td class="px-2 py-1 border text-center">
-                                {{ $c->pegawai->nip ? substr($c->pegawai->nip, 0, 4) . '•••' . substr($c->pegawai->nip, -2) : '-' }}
-                            </td>
-                            <td class="px-2 py-1 border truncate">{{ $c->pegawai->jabatan ?? '-' }}</td>
-                            <td class="px-2 py-1 border truncate">{{ $c->jenis_cuti ?? '-' }}</td>
-                            <td class="px-2 py-1 border text-center">{{ $c->tanggal_mulai?->format('d-m-Y') }}</td>
-                            <td class="px-2 py-1 border text-center">{{ $c->tanggal_selesai?->format('d-m-Y') }}</td>
-                            <td class="px-2 py-1 border text-center">{{ $c->jumlah_hari ?? '-' }}</td>
-                            <td class="px-2 py-1 border truncate">{{ $c->keterangan ?? '-' }}</td>
-                            <td class="px-2 py-1 border">{{ $c->atasanLangsung->nama_atasan ?? '-' }}</td>
-                            <td class="px-2 py-1 border">{{ $c->pejabatPemberiCuti->nama_pejabat ?? '-' }}</td>
-                            <td class="px-2 py-1 border text-center">
-                                @if ($c->status === 'disetujui')
-                                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">Disetujui</span>
-                                @elseif ($c->status === 'ditolak')
-                                    <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">Ditolak</span>
-                                @else
-                                    <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">Menunggu</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="12" class="px-3 py-4 text-center text-gray-500">
-                                Tidak ada riwayat cuti ditemukan.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="h-[360px] min-h-[260px]">
+                <canvas id="sisaCutiChart"></canvas>
             </div>
         </div>
 
-        {{-- Statistik Persentase --}}
-        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 h-fit">
-            <h2 class="text-lg font-bold text-sky-700 mb-4 border-b pb-2 flex items-center gap-2">
-                <i class="fa-solid fa-chart-simple text-sky-600"></i> Statistik Pengajuan Cuti
-            </h2>
+        {{-- ➡️ KANAN --}}
+        <div class="col-span-4 flex flex-col gap-6 items-stretch">
 
-            <div class="space-y-4">
-                @php
-                    $stats = [
-                        ['label' => 'Disetujui', 'value' => $cutiDisetujui ?? 0, 'color' => 'green'],
-                        ['label' => 'Menunggu', 'value' => $cutiPending ?? 0, 'color' => 'yellow'],
-                        ['label' => 'Ditolak', 'value' => $cutiDitolak ?? 0, 'color' => 'red'],
-                    ];
-                    $total = $totalCuti ?? 0;
-                @endphp
+            {{-- STATUS CUTI (3 SEJAJAR) --}}
+            <div class="grid grid-cols-3 gap-4">
 
-                @foreach ($stats as $stat)
-                    <div>
-                        <p class="text-sm font-medium text-gray-700 flex justify-between">
-                            <span>{{ $stat['label'] }}</span>
-                            <span class="font-bold">{{ $stat['value'] }} dari {{ $total }}</span>
+                <div class="bg-yellow-100 rounded-xl p-4 text-center h-28 flex flex-col items-center justify-center">
+                    <p class="text-xs text-yellow-700">Menunggu</p>
+                    <div class="flex items-center gap-2 justify-center mt-2">
+                        <i class="fa-solid fa-hourglass-end text-yellow-500 text-xl"></i>
+                        <p class="text-2xl font-bold text-yellow-700">
+                            {{ $cutiPending ?? 0 }}
                         </p>
-                        <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                            @php $width = $total > 0 ? ($stat['value'] / $total) * 100 : 0; @endphp
-                            <div class="h-2 rounded-full bg-{{ $stat['color'] }}-500" style="width: {{ $width }}%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-green-100 rounded-xl p-4 text-center h-28 flex flex-col items-center justify-center">
+                    <p class="text-xs text-green-700">Disetujui</p>
+                    <div class="flex items-center gap-2 justify-center mt-2">
+                        <i class="fa-solid fa-check text-green-500 text-xl"></i>
+                        <p class="text-2xl font-bold text-green-700">
+                            {{ $cutiDisetujui ?? 0 }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-red-100 rounded-xl p-4 text-center h-28 flex flex-col items-center justify-center">
+                    <p class="text-xs text-red-700">Ditolak</p>
+                    <div class="flex items-center gap-2 justify-center mt-2">
+                        <i class="fa-solid fa-xmark text-red-500 text-xl"></i>
+                        <p class="text-2xl font-bold text-red-700">
+                            {{ $cutiDitolak ?? 0 }}
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            {{-- JUMLAH PEGAWAI --}}
+            <div class="bg-white rounded-xl py-6 flex flex-col items-center justify-center h-36 shadow border border-gray-200">
+                <p class="text-xs text-gray-600">Jumlah Pegawai</p>
+                <div class="flex items-center gap-2 justify-center mt-2">
+                    <i class="fa-solid fa-users text-sky-500 text-2xl"></i>
+                    <p class="text-3xl font-extrabold text-sky-700">
+                        {{ $totalPegawai ?? 0 }}
+                    </p>
+                </div>
+            </div>
+
+            {{-- PEGAWAI YANG SEDANG CUTI --}}
+            <div class="bg-white rounded-xl py-6 flex flex-col items-center justify-center h-36 shadow border border-gray-200">
+                <p class="text-xs text-gray-600">Pegawai Sedang Cuti</p>
+                <div class="flex items-center gap-2 justify-center mt-2">
+                    <i class="fa-solid fa-person-hiking text-purple-500 text-2xl"></i>
+                    <p class="text-3xl font-extrabold text-purple-600">
+                        {{ $pegawaiSedangCuti ?? 0 }}
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    {{-- 📋 TABEL RIWAYAT CUTI (TETAP) --}}
+    <div class="bg-white p-5 rounded-2xl shadow border border-gray-200">
+        <h2 class="text-lg font-bold text-sky-700 mb-3 border-b pb-2">
+            Riwayat Cuti Pegawai
+        </h2>
+
+        <div class="overflow-auto max-h-[28rem] text-xs">
+            <table class="min-w-full border-collapse">
+                <thead class="bg-sky-600 text-white sticky top-0">
+                    <tr>
+                        <th class="border px-2 py-1">No</th>
+                        <th class="border px-2 py-1">Nama</th>
+                        <th class="border px-2 py-1">NIP</th>
+                        <th class="border px-2 py-1">Jabatan</th>
+                        <th class="border px-2 py-1">Jenis Cuti</th>
+                        <th class="border px-2 py-1">Mulai</th>
+                        <th class="border px-2 py-1">Selesai</th>
+                        <th class="border px-2 py-1">Hari</th>
+                        <th class="border px-2 py-1">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($latestCuti ?? [] as $i => $c)
+                    <tr class="hover:bg-gray-100">
+                        <td class="border px-2 py-1 text-center">{{ $i + 1 }}</td>
+                        <td class="border px-2 py-1">{{ $c->pegawai->nama ?? '-' }}</td>
+                        <td class="border px-2 py-1 text-center">{{ $c->pegawai->nip ?? '-' }}</td>
+                        <td class="border px-2 py-1">{{ $c->pegawai->jabatan ?? '-' }}</td>
+                        <td class="border px-2 py-1">{{ $c->jenis_cuti }}</td>
+                        <td class="border px-2 py-1 text-center">{{ $c->tanggal_mulai?->format('d-m-Y') }}</td>
+                        <td class="border px-2 py-1 text-center">{{ $c->tanggal_selesai?->format('d-m-Y') }}</td>
+                        <td class="border px-2 py-1 text-center">{{ $c->jumlah_hari }}</td>
+                        <td class="border px-2 py-1 text-center">
+                            <span class="px-2 py-0.5 rounded-full text-[10px]
+                                {{ $c->status === 'disetujui' ? 'bg-green-100 text-green-700' :
+                                   ($c->status === 'ditolak' ? 'bg-red-100 text-red-700' :
+                                   'bg-yellow-100 text-yellow-700') }}">
+                                {{ ucfirst($c->status) }}
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="9" class="text-center text-gray-500 py-4">
+                            Tidak ada data cuti
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- 📅 KALENDER --}}
+    <div class="bg-white p-5 rounded-2xl shadow border border-gray-200">
+        <h2 class="text-lg font-bold text-sky-700 mb-4 border-b pb-2">
+            Kalender Cuti & Hari Libur
+        </h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Kalender -->
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="prevMonth" class="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700">
+                        <i class="fa-solid fa-chevron-left"></i> Bulan Lalu
+                    </button>
+                    <h3 id="monthYear" class="text-lg font-bold text-sky-700"></h3>
+                    <button id="nextMonth" class="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700">
+                        Bulan Depan <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div id="calendar" class="bg-gray-50 p-4 rounded-lg border border-gray-200"></div>
+            </div>
+
+            <!-- Legenda & Info -->
+            <div class="flex flex-col gap-4">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-gray-700 mb-3">Keterangan</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-red-200 border border-red-400 rounded"></div>
+                            <span>Hari Libur Nasional</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-orange-200 border border-orange-400 rounded"></div>
+                            <span>Hari Libur (Sabtu/Minggu)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-yellow-200 border border-yellow-400 rounded"></div>
+                            <span>Ada Pengajuan Cuti</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-white border border-gray-300 rounded"></div>
+                            <span>Hari Kerja Biasa</span>
                         </div>
                     </div>
-                @endforeach
+                </div>
+
+                <div id="holidayInfo" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-gray-700 mb-3">Hari Libur Bulan Ini</h4>
+                    <div id="holidayList" class="text-sm space-y-2">
+                        <p class="text-gray-500">Memuat hari libur...</p>
+                    </div>
+                </div>
             </div>
         </div>
-
     </div>
+
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('sisaCutiChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Total Hak', 'Terpakai', 'Sisa'],
+        datasets: [{
+            data: [
+                {{ $totalCuti ?? 0 }},
+                {{ $cutiTerpakai ?? 0 }},
+                {{ $sisaCuti ?? 0 }}
+            ],
+            backgroundColor: ['#94a3b8', '#facc15', '#0ea5e9'],
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+// ===================== KALENDER =====================
+let currentDate = new Date();
+let holidays = [];
+let userCuti = [];
+
+// Fetch holidays dari API Indonesia
+async function fetchHolidays(year) {
+    try {
+        const response = await fetch(`https://api.nager.date/v3/publicholidays/${year}/ID`);
+        const data = await response.json();
+        holidays = data.map(h => ({
+            date: h.date,
+            name: h.localName || h.name
+        }));
+        renderCalendar();
+    } catch (error) {
+        console.error('Error fetching holidays:', error);
+        renderCalendar();
+    }
+}
+
+// Ambil data cuti dari server
+function loadUserCuti() {
+    const cutiData = @json($latestCuti ?? []);
+    userCuti = [];
+    cutiData.forEach(c => {
+        const start = new Date(c.tanggal_mulai);
+        const end = new Date(c.tanggal_selesai);
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            userCuti.push(d.toISOString().split('T')[0]);
+        }
+    });
+}
+
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Set month/year display
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
+
+    // Buat kalender
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    let html = '<div class="grid grid-cols-7 gap-2 text-center">';
+
+    // Header hari
+    dayNames.forEach(day => {
+        html += `<div class="font-bold text-sky-700 py-2">${day}</div>`;
+    });
+
+    // Empty cells untuk hari sebelum tanggal 1
+    for (let i = 0; i < startingDayOfWeek; i++) {
+        html += '<div class="p-2"></div>';
+    }
+
+    // Tanggal
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateStr = date.toISOString().split('T')[0];
+        const dayOfWeek = date.getDay();
+        
+        // Cek jenis hari
+        let bgColor = 'bg-white';
+        let borderColor = 'border-gray-300';
+        let isHoliday = false;
+        let isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        let isCuti = userCuti.includes(dateStr);
+
+        if (holidays.some(h => h.date === dateStr)) {
+            bgColor = 'bg-red-200';
+            borderColor = 'border-red-400';
+            isHoliday = true;
+        } else if (isWeekend) {
+            bgColor = 'bg-orange-200';
+            borderColor = 'border-orange-400';
+        } else if (isCuti) {
+            bgColor = 'bg-yellow-200';
+            borderColor = 'border-yellow-400';
+        }
+
+        html += `<div class="p-2 border rounded ${bgColor} ${borderColor} cursor-pointer hover:shadow-md transition" title="${dateStr}">
+            <div class="font-semibold text-sm">${day}</div>
+        </div>`;
+    }
+
+    html += '</div>';
+    document.getElementById('calendar').innerHTML = html;
+
+    // Update holiday list
+    updateHolidayList(month, year);
+}
+
+function updateHolidayList(month, year) {
+    const monthHolidays = holidays.filter(h => {
+        const hDate = new Date(h.date);
+        return hDate.getMonth() === month && hDate.getFullYear() === year;
+    });
+
+    let html = '';
+    if (monthHolidays.length === 0) {
+        html = '<p class="text-gray-500">Tidak ada hari libur nasional</p>';
+    } else {
+        monthHolidays.forEach(h => {
+            const date = new Date(h.date);
+            const formattedDate = date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            html += `<div class="text-xs">
+                <span class="font-semibold text-red-600">${formattedDate}</span>
+                <p class="text-gray-600">${h.name}</p>
+            </div>`;
+        });
+    }
+    document.getElementById('holidayList').innerHTML = html;
+}
+
+// Event listeners
+document.getElementById('prevMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+});
+
+// Init
+loadUserCuti();
+fetchHolidays(currentDate.getFullYear());
+</script>
 @endsection
