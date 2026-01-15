@@ -74,7 +74,7 @@
 
             {{-- JUMLAH PEGAWAI --}}
             <div class="bg-white rounded-xl py-6 flex flex-col items-center justify-center h-36 shadow border border-gray-200">
-                <p class="text-xs text-gray-600">Jumlah Pegawai</p>
+                <p class="text-sm font-semibold text-sky-700 mb-4">Jumlah Pegawai</p>
                 <div class="flex items-center gap-2 justify-center mt-2">
                     <i class="fa-solid fa-users text-sky-500 text-2xl"></i>
                     <p class="text-3xl font-extrabold text-sky-700">
@@ -85,7 +85,7 @@
 
             {{-- PEGAWAI YANG SEDANG CUTI --}}
             <div class="bg-white rounded-xl py-6 flex flex-col items-center justify-center h-36 shadow border border-gray-200">
-                <p class="text-xs text-gray-600">Pegawai Sedang Cuti</p>
+                <p class="text-sm font-semibold text-sky-700 mb-4">Pegawai Sedang Cuti</p>
                 <div class="flex items-center gap-2 justify-center mt-2">
                     <i class="fa-solid fa-person-hiking text-purple-500 text-2xl"></i>
                     <p class="text-3xl font-extrabold text-purple-600">
