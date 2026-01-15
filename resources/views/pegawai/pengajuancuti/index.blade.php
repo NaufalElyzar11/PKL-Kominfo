@@ -37,7 +37,26 @@
     // Inisialisasi Objek (WAJIB ADA AGAR TIDAK ERROR)
     detailPending: {}, 
     detailRiwayat: {},
-    
+    hasPendingCuti: @json($hasPendingCuti ?? false),
+
+    tanggalMulaiTambah: '',
+    tanggalSelesaiTambah: '',
+    jumlahHariTambah: 0,
+    hitungHariTambah() {
+        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) {
+            this.jumlahHariTambah = 0;
+            return;
+        }
+        const mulai = new Date(this.tanggalMulaiTambah);
+        const selesai = new Date(this.tanggalSelesaiTambah);
+        if (mulai > selesai) {
+            this.jumlahHariTambah = 0;
+            return;
+        }
+        this.jumlahHariTambah =
+            Math.floor((selesai - mulai) / (1000 * 60 * 60 * 24)) + 1;
+    },
+
     selectedCuti: {}, // <-- Tambahkan ini
 
     // FORM TAMBAH
@@ -385,124 +404,140 @@
         </div>
     </div>
 </div>
+<!-- MODAL AJUKAN CUTI -->
+<template x-if="showModal">
+    <div
+        class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3"
+        @click.self="showModal = false"
+        x-cloak
+    >
+        <div
+            class="bg-white rounded-xl shadow-xl w-full max-w-sm p-4 border border-gray-200"
+            @click.stop
+        >
 
-<div x-data="{
-    hasPendingCuti: @json($hasPendingCuti ?? false), 
-    tanggalMulaiTambah: '',
-    tanggalSelesaiTambah: '',
-    jumlahHariTambah: 0,
-    hitungHariTambah() {
-        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { this.jumlahHariTambah = 0; return; }
-        const mulai = new Date(this.tanggalMulaiTambah);
-        const selesai = new Date(this.tanggalSelesaiTambah);
-        if (mulai > selesai) { this.jumlahHariTambah = 0; return; }
-        this.jumlahHariTambah = Math.floor((selesai - mulai) / (1000 * 60 * 60 * 24)) + 1;
-    }
-}"
-x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3">
+            <h3 class="text-sm font-bold text-sky-600 mb-2 pb-1.5 border-b flex items-center gap-2">
+                <i class="fa-solid fa-calendar-plus text-xs"></i> Ajukan Cuti
+            </h3>
 
-    <div @click.away="showModal=false" 
-     x-transition.scale
-     class="bg-white rounded-xl shadow-xl w-full max-w-sm p-4 border border-gray-200">
+            <form action="{{ route('pegawai.cuti.store') }}" method="POST" class="space-y-2 text-[10px]">
+                @csrf
 
-    <h3 class="text-sm font-bold text-sky-600 mb-2 pb-1.5 border-b flex items-center gap-2">
-        <i class="fa-solid fa-calendar-plus text-xs"></i> Ajukan Cuti Baru
-    </h3>
+                <!-- WARNING PENDING -->
+                <div x-show="hasPendingCuti"
+                     class="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-[9px] leading-tight">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                    Ada pengajuan yang masih <b>Menunggu Persetujuan</b>.
+                </div>
 
-    <form action="{{ route('pegawai.cuti.store') }}" method="POST" class="space-y-2 text-[10px]">
-        @csrf
-        
-        <div x-show="hasPendingCuti" class="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-[9px] leading-tight">
-            <i class="fa-solid fa-circle-exclamation mr-1"></i> Ada pengajuan yang masih <b>Menunggu Persetujuan</b>.
+                <!-- INFO PEGAWAI -->
+                <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded border border-gray-200 text-gray-500">
+                    <div class="col-span-2 border-b border-gray-200 pb-1 mb-1">
+                        <span class="font-bold">Nama:</span> {{ $pegawai->nama ?? '-' }}
+                    </div>
+                    <div><span class="font-bold">NIP:</span> {{ $pegawai->nip ?? '-' }}</div>
+                    <div><span class="font-bold">Jabatan:</span> {{ $pegawai->jabatan ?? '-' }}</div>
+                </div>
+
+                <fieldset :disabled="hasPendingCuti" class="space-y-2">
+
+                    <!-- JENIS CUTI -->
+                    <div>
+                        <label class="font-bold text-gray-600">Jenis Cuti *</label>
+                        <input type="text"
+                               value="Tahunan"
+                               class="w-full mt-0.5 p-1 rounded border border-gray-300 bg-gray-100"
+                               disabled>
+                        <input type="hidden" name="jenis_cuti" value="Tahunan">
+                    </div>
+
+                    <!-- TANGGAL -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="font-bold text-gray-600">Mulai *</label>
+                            <input type="date"
+                                   name="tanggal_mulai"
+                                   x-model="tanggalMulaiTambah"
+                                   min="{{ \Carbon\Carbon::today()->addDays(3)->toDateString() }}"
+                                   @change="hitungHariTambah()"
+                                   class="w-full mt-0.5 p-1 rounded border border-gray-300"
+                                   required>
+                        </div>
+
+                        <div>
+                            <label class="font-bold text-gray-600">Selesai *</label>
+                            <input type="date"
+                                   name="tanggal_selesai"
+                                   x-model="tanggalSelesaiTambah"
+                                   :min="tanggalMulaiTambah"
+                                   @change="hitungHariTambah()"
+                                   class="w-full mt-0.5 p-1 rounded border border-gray-300"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- ALAMAT -->
+                    <div>
+                        <label class="font-bold text-gray-600">Alamat *</label>
+                        <textarea 
+                            name="alamat"
+                            rows="1"
+                            class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none"
+                            placeholder="Alamat..."
+                            required
+                            oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')"></textarea>
+                    </div>
+                        <div>
+                            <label class="font-bold text-gray-600">Alasan *</label>
+                            <textarea 
+                                name="keterangan" 
+                                rows="1" 
+                                class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" 
+                                placeholder="Alasan..." 
+                                pattern="[A-Za-z\s]+"
+                                title="Alasan cuti hanya boleh huruf"
+                                required
+                                {{-- Mencegah input angka secara real-time --}}
+                                oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
+                                {{-- Validasi regex: hanya huruf dan spasi, minimal 5 karakter --}}
+                                pattern="^[a-zA-Z\s]+$"
+                                title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
+                        </div>
+                    <!-- JUMLAH HARI -->
+                    <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100">
+                        <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">
+                            Jumlah Hari Cuti
+                        </span>
+
+                        <div class="text-sky-800 font-black">
+                            <span x-text="jumlahHariTambah"></span> Hari
+                        </div>
+
+                        <input type="hidden" name="jumlah_hari" :value="jumlahHariTambah">
+                    </div>
+
+                </fieldset>
+
+                <!-- BUTTON -->
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button"
+                            @click="showModal=false"
+                            class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg font-bold">
+                        Batal
+                    </button>
+
+                    <button type="submit"
+                            :disabled="hasPendingCuti"
+                            class="px-3 py-1 text-white rounded-lg font-bold"
+                            :class="hasPendingCuti ? 'bg-gray-400' : 'bg-sky-600 hover:bg-sky-700'">
+                        Kirim
+                    </button>
+                </div>
+            </form>
+
         </div>
-
-        <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded border border-gray-200 text-gray-500">
-            <div class="col-span-2 border-b border-gray-200 pb-1 mb-1">
-                <span class="font-bold">Nama:</span> <span x-text="'{{ $pegawai->nama ?? '-' }}'"></span>
-            </div>
-            <div><span class="font-bold">NIP:</span> {{ $pegawai->nip ?? '-' }}</div>
-            <div><span class="font-bold">Jabatan:</span> {{ $pegawai->jabatan ?? '-' }}</div>
-        </div>
-
-        <fieldset :disabled="hasPendingCuti && !showEditModal" class="space-y-2">
-            <div>
-                <label class="font-bold text-gray-600">Jenis Cuti *</label>
-                <input type="text"
-                    value="Tahunan"
-                    class="w-full mt-0.5 p-1 rounded border border-gray-300 bg-gray-100"
-                    disabled>
-
-                <!-- Nilai yang dikirim ke backend -->
-                <input type="hidden" name="jenis_cuti" value="Tahunan">
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="font-bold text-gray-600">Mulai *</label>
-                    <input type="date" name="tanggal_mulai" x-model="tanggalMulaiTambah" min="{{ \Carbon\Carbon::today()->addDays(3)->toDateString() }}" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
-                </div>
-                <div>
-                    <label class="font-bold text-gray-600">Selesai *</label>
-                    <input type="date" name="tanggal_selesai" x-model="tanggalSelesaiTambah" :min="tanggalMulaiTambah" @change="hitungHariTambah()" class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none" required>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="font-bold text-gray-600">Alamat *</label>
-                    <textarea 
-                        name="alamat"
-                        rows="1"
-                        class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none"
-                        placeholder="Alamat..."
-                        required
-                        oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')">
-                    </textarea>
-
-                </div>
-                <div>
-                    <label class="font-bold text-gray-600">Alasan *</label>
-                    <textarea 
-                        name="keterangan" 
-                        rows="1" 
-                        class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" 
-                        placeholder="Alasan..." 
-                        pattern="[A-Za-z\s]+"
-                        title="Alasan cuti hanya boleh huruf"
-                        required
-                        {{-- Mencegah input angka secara real-time --}}
-                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                        {{-- Validasi regex: hanya huruf dan spasi, minimal 5 karakter --}}
-                        pattern="^[a-zA-Z\s]+$"
-                        title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100 mt-1">
-<<<<<<< HEAD
-                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">Jumlah Hari Cuti</span>
-=======
-                <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">TOTAL CUTI</span>
->>>>>>> 466e774baff932d20b03456a7b05325d1d6889c8
-                <div class="text-sky-800 font-black">
-                    <span x-text="jumlahHariTambah"></span> Hari
-                </div>
-                <input type="hidden" name="jumlah_hari" x-bind:value="jumlahHariTambah">
-            </div>
-        </fieldset>
-
-        <div class="flex justify-end gap-2 pt-2 border-t mt-1">
-            <button type="button" @click="showModal=false" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 transition">Batal</button>
-            <button type="submit" 
-                    :disabled="hasPendingCuti"
-                    class="px-3 py-1 text-white rounded-lg font-bold flex items-center gap-1 transition active:scale-95"
-                    :class="hasPendingCuti ? 'bg-gray-400' : 'bg-sky-600 hover:bg-sky-700'">
-                <i class="fa-solid fa-paper-plane text-[9px]"></i> 
-                <span x-text="hasPendingCuti ? 'Terkunci' : 'Kirim'"></span>
-            </button>
-        </div>
-    </form>
-</div>
+    </div>
+</template>
 
 {{-- 2. MODAL DETAIL (PENDING) --}}
 <div x-show="showDetailPending"
@@ -567,7 +602,7 @@ x-show="showModal" x-cloak class="fixed inset-0 bg-black/40 flex items-center ju
     </div>
 </div>
 
-<<div x-show="showEditModal" x-cloak
+<div x-show="showEditModal" x-cloak
      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3">
 
     <div x-show="showEditModal && selectedCuti"
