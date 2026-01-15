@@ -96,48 +96,114 @@
                 @endif
             </form>
 
-            {{-- Tombol Tambah --}}
-            <div class="relative">
-                <div class="flex space-x-2 mb-3" x-data="{ showPilihanModal: false }">
-                    <button @click="showPilihanModal = true"
-                            class="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition flex items-center gap-1">
-                        <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
-                    </button>
+            {{-- Container Utama --}}
+            <div x-data="{ showCreateModal: false }"> {{-- Langsung gunakan state showCreateModal --}}
+                
+                <div class="relative">
+                    <div class="flex space-x-2 mb-3">
+                        {{-- Tombol sekarang langsung memicu showCreateModal --}}
+                        <button @click="showCreateModal = true"
+                                class="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition flex items-center gap-1">
+                            <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
+                        </button>
+                    </div>
+                </div>
 
-                    {{-- Modal Pilihan --}}
-                    <div x-show="showPilihanModal" x-cloak
-                         x-transition:enter="ease-out duration-300"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         x-transition:leave="ease-in duration-200"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         @click.self="showPilihanModal = false"
-                         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                {{-- ================= MODAL TAMBAH PEGAWAI (LEBIH KECIL) ================= --}}
+                {{-- Modal ini akan muncul karena dipicu oleh tombol di atas --}}
+                <div x-show="showCreateModal" x-cloak 
+                    @keydown.escape.window="showCreateModal = false"
+                    class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 p-4">
 
-                        <div class="bg-white rounded-xl shadow-2xl relative w-full max-w-xs p-5">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Pilih Jenis Penambahan</h3>
+                    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 text-sm" @click.away="showCreateModal = false">
+                        
+                        <h3 class="text-base font-bold text-sky-600 border-b pb-2 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-user-plus"></i>
+                            Formulir Tambah Pegawai Baru
+                        </h3>
 
-                            <button @click="showCreateModal=true; showPilihanModal=false"
-                                    class="w-full py-2 mb-2 bg-green-600 text-white rounded hover:bg-green-700 transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-user"></i> Tambah Pegawai
-                            </button>
+                        <form action="{{ route('admin.pegawai.store') }}" method="POST" class="space-y-3" autocomplete="off">
+                            @csrf
 
-                            <button @click="activeModal='atasan'; showPilihanModal=false"
-                                    class="w-full py-2 mb-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-user-tie"></i> Tambah Atasan Langsung
-                            </button>
+                            {{-- FORM UTAMA --}}
+                            <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                                <div>
+                                    <label class="block font-medium text-gray-700 mb-0.5">Nama Akun <span class="text-red-500">*</span></label>
+                                    <input type="text" name="name" required class="block w-full border rounded-lg p-1 text-xs" placeholder="Nama Login">
+                                </div>
 
-                            <button @click="activeModal='pemberi_cuti'; showPilihanModal=false"
-                                    class="w-full py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-file-signature"></i> Tambah Pejabat Pemberi Cuti
-                            </button>
+                                <div>
+                                    <label class="block font-medium text-gray-700 mb-0.5">Nama Lengkap <span class="text-red-500">*</span></label>
+                                    <input type="text" name="nama" required class="block w-full border rounded-lg p-1 text-xs" 
+                                        placeholder="Nama Pegawai"
+                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
+                                </div>
 
-                            <button @click="showPilihanModal = false"
-                                    class="absolute top-3 right-3 text-gray-500 hover:text-gray-700">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
+                                <div>
+                                    <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
+                                    <input type="text" name="nip" maxlength="18" inputmode="numeric"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                        class="block w-full border rounded-lg p-1 text-xs" placeholder="18 digit NIP" required>
+                                </div>
+
+                                <div>
+                                    <label class="block font-medium text-gray-700 mb-0.5">Jabatan <span class="text-red-500">*</span></label>
+                                    <input type="text" name="jabatan" required class="block w-full border rounded-lg p-1 text-xs" 
+                                        placeholder="Staf IT"
+                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
+                                </div>
+                            </div>
+
+                            {{-- ROLE + STATUS + EMAIL + PASSWORD --}}
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block font-medium text-gray-700 mb-0.5">Role <span class="text-red-500">*</span></label>
+                                    <select name="role" required class="block w-full border rounded-lg p-1 text-xs">
+                                        <option value="">Pilih</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="super_admin">Super Admin</option>
+                                        <option value="kadis">Kadis</option>
+                                        <option value="pegawai">Pegawai</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-medium text-gray-700 mb-0.5">Status <span class="text-red-500">*</span></label>
+                                    <select name="status" required class="block w-full border rounded-lg p-1 text-xs">
+                                        <option value="aktif">Aktif</option>
+                                        <option value="nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-span-2">
+                                    <label class="block font-medium text-gray-700 mb-0.5">Email <span class="text-red-500">*</span></label>
+                                    <input type="email" name="email" required class="block w-full border rounded-lg p-1 text-xs" placeholder="email@mail.com">
+                                </div>
+
+                                <div class="col-span-2" x-data="{ show: false }">
+                                    <label class="block font-medium text-gray-700 mb-0.5">Password <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <input :type="show ? 'text' : 'password'" name="password" required minlength="8"
+                                            class="block w-full border rounded-lg p-1 pr-8 text-xs" placeholder="Minimal 8 karakter">
+                                        <span @click="show = !show" class="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
+                                            <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- BUTTON --}}
+                            <div class="flex justify-end gap-2 pt-2 border-t">
+                                <button type="button" @click="showCreateModal = false"
+                                        class="px-3 py-1 text-xs rounded-lg bg-gray-200 hover:bg-gray-300">
+                                    Batal
+                                </button>
+                                <button type="submit"
+                                        class="px-3 py-1 text-xs font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700">
+                                    Simpan Data
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -675,97 +741,110 @@
             </button>
         </div>
 
-        {{-- FORM --}}
-        <form x-bind:action="selectedPegawai ? editRoute.replace(':pegawaiId', selectedPegawai.id) : '#'" method="POST">
-            @csrf
-            @method('PUT')
+<form 
+    x-bind:action="selectedPegawai ? editRoute.replace(':pegawaiId', selectedPegawai.id) : '#'" 
+    method="POST">
 
-            <div class="grid grid-cols-2 gap-3 text-sm">
+    @csrf
+    @method('PUT')
 
-                <div>
-                    <label class="font-medium text-xs">Nama</label>
-                    <input type="text" name="nama" 
-                        x-bind:value="selectedPegawai?.nama" 
-                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
-                        class="w-full border rounded px-2 py-1 text-sm">
-                </div>
+    <div class="grid grid-cols-2 gap-3 text-sm">
 
-                <div>
-                    <label class="font-medium text-xs">NIP</label>
-                    <input type="text" name="nip" 
-                        x-bind:value="selectedPegawai?.nip" 
-                        maxlength="18"
-                        @input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').slice(0, 18)"
-                        class="w-full border rounded px-2 py-1 text-sm">
-                </div>
+        {{-- Nama --}}
+        <div>
+            <label class="font-medium text-xs">Nama</label>
+            <input type="text" name="nama"
+                x-model="selectedPegawai.nama"
+                @input="selectedPegawai.nama = selectedPegawai.nama.replace(/[^a-zA-Z\s]/g, '')"
+                class="w-full border rounded px-2 py-1 text-sm">
+        </div>
 
-                <div>
-                    <label class="font-medium text-xs">Email</label>
-                    <input type="email" name="email" 
-                           x-bind:value="selectedPegawai?.email" 
-                           class="w-full border rounded px-2 py-1 text-sm">
-                </div>
+        {{-- NIP --}}
+        <div>
+            <label class="font-medium text-xs">NIP</label>
+            <input type="text" name="nip"
+                x-model="selectedPegawai.nip"
+                maxlength="18"
+                @input="selectedPegawai.nip = selectedPegawai.nip.replace(/[^0-9]/g, '').slice(0,18)"
+                class="w-full border rounded px-2 py-1 text-sm">
+        </div>
 
-                <div>
-                    <label class="font-medium text-xs">Role</label>
-                    <select name="role" class="w-full border rounded px-2 py-1 text-sm">
-                        <option value="pegawai"     x-bind:selected="selectedPegawai?.role=='pegawai'">Pegawai</option>
-                        <option value="admin"       x-bind:selected="selectedPegawai?.role=='admin'">Admin</option>
-                        <option value="super_admin" x-bind:selected="selectedPegawai?.role=='super_admin'">Super Admin</option>
-                        <option value="kadis"       x-bind:selected="selectedPegawai?.role=='kadis'">Kadis</option>
-                    </select>
-                </div>
+        {{-- Email --}}
+        <div>
+            <label class="font-medium text-xs">Email</label>
+            <input type="email" name="email"
+                x-model="selectedPegawai.email"
+                class="w-full border rounded px-2 py-1 text-sm">
+        </div>
 
-                <div>
-                    <label class="font-medium text-xs">Jabatan</label>
-                    <input type="text" name="jabatan" 
-                        x-bind:value="selectedPegawai?.jabatan" 
-                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
-                        class="w-full border rounded px-2 py-1 text-sm">
-                </div>
+        {{-- Role --}}
+        <div>
+            <label class="font-medium text-xs">Role</label>
+            <select name="role"
+                x-model="selectedPegawai.role"
+                class="w-full border rounded px-2 py-1 text-sm">
+                <option value="pegawai">Pegawai</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+                <option value="kadis">Kadis</option>
+            </select>
+        </div>
 
-                <div>
-                    <label class="font-medium text-xs">Unit Kerja</label>
-                    <input type="text" name="unit_kerja" 
-                        x-bind:value="selectedPegawai?.unit_kerja" 
-                        @input="$event.target.value = $event.target.value.replace(/[^a-zA-Z\s]/g, '')"
-                        class="w-full border rounded px-2 py-1 text-sm">
-                </div>
+        {{-- Jabatan --}}
+        <div>
+            <label class="font-medium text-xs">Jabatan</label>
+            <input type="text" name="jabatan"
+                x-model="selectedPegawai.jabatan"
+                @input="selectedPegawai.jabatan = selectedPegawai.jabatan.replace(/[^a-zA-Z\s]/g, '')"
+                class="w-full border rounded px-2 py-1 text-sm">
+        </div>
 
-                <div>
-                    <label class="font-medium text-xs">Telepon</label>
-                    <input type="text" name="telepon" 
-                        x-bind:value="selectedPegawai?.telepon" 
-                        maxlength="13"
-                        @input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').slice(0, 13)"
-                        class="w-full border rounded px-2 py-1 text-sm">
-                </div>
+        {{-- Unit Kerja --}}
+        <div>
+            <label class="font-medium text-xs">Unit Kerja</label>
+            <input type="text" name="unit_kerja"
+                x-model="selectedPegawai.unit_kerja"
+                @input="selectedPegawai.unit_kerja = selectedPegawai.unit_kerja.replace(/[^a-zA-Z\s]/g, '')"
+                class="w-full border rounded px-2 py-1 text-sm">
+        </div>
 
-                <div>
-                    <label class="font-medium text-xs">Status</label>
-                    <select name="status" class="w-full border rounded px-2 py-1 text-sm">
-                        <option value="aktif"     x-bind:selected="selectedPegawai?.status=='aktif'">Aktif</option>
-                        <option value="nonaktif"  x-bind:selected="selectedPegawai?.status=='nonaktif'">Nonaktif</option>
-                    </select>
-                </div>
+        {{-- Telepon --}}
+        <div>
+            <label class="font-medium text-xs">Telepon</label>
+            <input type="text" name="telepon"
+                x-model="selectedPegawai.telepon"
+                maxlength="13"
+                @input="selectedPegawai.telepon = selectedPegawai.telepon.replace(/[^0-9]/g, '').slice(0,13)"
+                class="w-full border rounded px-2 py-1 text-sm">
+        </div>
 
-            </div>
+        {{-- Status --}}
+        <div>
+            <label class="font-medium text-xs">Status</label>
+            <select name="status"
+                x-model="selectedPegawai.status"
+                class="w-full border rounded px-2 py-1 text-sm">
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+            </select>
+        </div>
 
-            {{-- FOOTER --}}
-            <div class="mt-4 text-right border-t pt-3">
-                <button type="button" @click="closeModal()" 
-                        class="px-3 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="px-3 py-1.5 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm">
-                    Update
-                </button>
-            </div>
-
-        </form>
     </div>
-</div>
+
+    {{-- FOOTER --}}
+    <div class="mt-4 text-right border-t pt-3">
+        <button type="button" @click="closeModal()"
+            class="px-3 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
+            Batal
+        </button>
+
+        <button type="submit"
+            class="px-3 py-1.5 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm">
+            Update
+        </button>
+    </div>
+</form>
+
 
 {{-- =============================================== --}}
 {{-- MODAL GLOBAL NOTIFIKASI --}}

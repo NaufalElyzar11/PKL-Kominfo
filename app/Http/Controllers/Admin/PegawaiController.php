@@ -194,4 +194,5 @@ class PegawaiController extends Controller
 
         return redirect()->route('admin.pegawai.index')->with('success', 'Data pegawai berhasil dihapus.');
     }
+
 }

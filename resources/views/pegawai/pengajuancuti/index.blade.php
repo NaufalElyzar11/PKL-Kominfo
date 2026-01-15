@@ -28,10 +28,7 @@
     showEditModal: false, 
     showDetailPending: false, 
     showDetailRiwayat: false, 
-    showDelete: false, 
     openCatatanKadis: false,
-    deleteId: null,
-    namaHapus: '',
     catatanContent: '',
     
     // Inisialisasi Objek (WAJIB ADA AGAR TIDAK ERROR)
@@ -126,15 +123,9 @@
     },
 
     showCatatanKadis(pesan) { this.catatanContent = pesan; this.openCatatanKadis = true; },
-    openDelete(id, nama) { this.deleteId = id; this.namaHapus = nama; this.showDelete = true; }
 
 }" class="space-y-4 font-sans text-gray-800">
     {{-- Alert --}}
-    @if(session('success'))
-        <div x-init="setTimeout(() => $el.remove(), 4000)" class="fixed top-5 right-5 z-[9999] bg-green-500 text-white px-6 py-3 rounded shadow-lg text-sm">
-            <i class="fa-solid fa-check-circle mr-2"></i> {{ session('success') }}
-        </div>
-    @endif
 
     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
         <div class="flex items-center justify-between mb-4">
@@ -224,7 +215,19 @@
                                     </button>
 
 
-                                    <button @click="openDelete({{ $c->id }}, '{{ $c->pegawai->nama }}')" class="p-1 text-red-600 hover:bg-red-50 rounded"><i class="fa-solid fa-trash text-[12px]"></i></button>
+                                    <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
+                                        method="POST"
+                                        class="form-delete inline">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button type="submit"
+                                                data-nama="{{ $c->pegawai->nama }}"
+                                                class="p-1 text-red-600 hover:bg-red-50 rounded">
+                                            <i class="fa-solid fa-trash text-[12px]"></i>
+                                        </button>
+                                    </form>
+
                                 </td>
                             </tr>
                         @empty
@@ -344,9 +347,19 @@
                                 </button>
                             @endif
 
-                            <button @click="openDelete({{ $r->id }}, '{{ $r->pegawai->nama }}')" class="p-1 text-red-600 hover:bg-red-100 rounded">
-                                <i class="fa-solid fa-trash text-[12px]"></i>
-                            </button>
+                            <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
+                                method="POST"
+                                class="form-delete inline">
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit"
+                                        data-nama="{{ $c->pegawai->nama }}"
+                                        class="p-1 text-red-600 hover:bg-red-50 rounded">
+                                    <i class="fa-solid fa-trash text-[12px]"></i>
+                                </button>
+                            </form>
+
                         </td>
                     </tr>
                 @empty
@@ -417,7 +430,7 @@
         >
 
             <h3 class="text-sm font-bold text-sky-600 mb-2 pb-1.5 border-b flex items-center gap-2">
-                <i class="fa-solid fa-calendar-plus text-xs"></i> Ajukan Cuti
+                <i class="fa-solid fa-calendar-plus text-xs"></i> AJUKAN CUTI
             </h3>
 
             <form action="{{ route('pegawai.cuti.store') }}" method="POST" class="space-y-2 text-[10px]">
@@ -506,7 +519,7 @@
                     <!-- JUMLAH HARI -->
                     <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100">
                         <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">
-                            Jumlah Hari Cuti
+                            Jumlah Cuti
                         </span>
 
                         <div class="text-sky-800 font-black">
@@ -781,39 +794,45 @@
 
 
 {{-- 5. MODAL DELETE FINAL (showDelete) --}}
-<div x-show="showDelete"
-      x-cloak
-      x-transition.opacity
-      class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999]">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <div x-transition.scale
-          class="bg-white w-full max-w-xs p-4 rounded-xl shadow-xl text-center">
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.form-delete').forEach(form => {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
 
-        <i class="fa-solid fa-triangle-exclamation text-red-600 text-4xl mb-2"></i>
+            const nama = form.querySelector('button').dataset.nama;
 
-        <h2 class="text-sm font-semibold mb-2">Hapus Pengajuan Cuti?</h2>
+            Swal.fire({
+                title: 'Yakin ingin menghapus?',
+                text: `Pengajuan cuti milik ${nama} akan dihapus permanen!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+</script>
 
-        <p class="text-[11px] text-gray-600 mb-4">
-            Pengajuan milik <b x-text="namaHapus"></b> akan dihapus permanen.
-        </p>
-
-        <div class="flex items-center justify-between gap-2">
-            <button @click="showDelete=false"
-                    class="flex-1 py-1 rounded bg-gray-300 text-gray-800 text-[11px] hover:bg-gray-400">
-                Batal
-            </button>
-
-            <form :action="'/pegawai/cuti/' + deleteId" method="POST" class="flex-1">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                        class="w-full py-1 rounded bg-red-600 text-white text-[11px] hover:bg-red-700">
-                    Hapus
-                </button>
-            </form>
-        </div>
-
-    </div>
-</div>
+@if (session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: '{{ session('success') }}',
+        timer: 2000,
+        showConfirmButton: false
+    });
+</script>
+@endif
 
 @endsection
