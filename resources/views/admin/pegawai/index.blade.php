@@ -96,118 +96,12 @@
                 @endif
             </form>
 
-            {{-- Container Utama --}}
-            <div x-data="{ showCreateModal: false }"> {{-- Langsung gunakan state showCreateModal --}}
-                
-                <div class="relative">
-                    <div class="flex space-x-2 mb-3">
-                        {{-- Tombol sekarang langsung memicu showCreateModal --}}
-                        <button @click="showCreateModal = true"
-                                class="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition flex items-center gap-1">
-                            <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
-                        </button>
-                    </div>
-                </div>
-
-                {{-- ================= MODAL TAMBAH PEGAWAI (LEBIH KECIL) ================= --}}
-                {{-- Modal ini akan muncul karena dipicu oleh tombol di atas --}}
-                <div x-show="showCreateModal" x-cloak 
-                    @keydown.escape.window="showCreateModal = false"
-                    class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 p-4">
-
-                    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 text-sm" @click.away="showCreateModal = false">
-                        
-                        <h3 class="text-base font-bold text-sky-600 border-b pb-2 mb-2 flex items-center gap-2">
-                            <i class="fa-solid fa-user-plus"></i>
-                            Formulir Tambah Pegawai Baru
-                        </h3>
-
-                        <form action="{{ route('admin.pegawai.store') }}" method="POST" class="space-y-3" autocomplete="off">
-                            @csrf
-
-                            {{-- FORM UTAMA --}}
-                            <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-0.5">Nama Akun <span class="text-red-500">*</span></label>
-                                    <input type="text" name="name" required class="block w-full border rounded-lg p-1 text-xs" placeholder="Nama Login">
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-0.5">Nama Lengkap <span class="text-red-500">*</span></label>
-                                    <input type="text" name="nama" required class="block w-full border rounded-lg p-1 text-xs" 
-                                        placeholder="Nama Pegawai"
-                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
-                                    <input type="text" name="nip" maxlength="18" inputmode="numeric"
-                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                        class="block w-full border rounded-lg p-1 text-xs" placeholder="18 digit NIP" required>
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-0.5">Jabatan <span class="text-red-500">*</span></label>
-                                    <input type="text" name="jabatan" required class="block w-full border rounded-lg p-1 text-xs" 
-                                        placeholder="Staf IT"
-                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')">
-                                </div>
-                            </div>
-
-                            {{-- ROLE + STATUS + EMAIL + PASSWORD --}}
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-0.5">Role <span class="text-red-500">*</span></label>
-                                    <select name="role" required class="block w-full border rounded-lg p-1 text-xs">
-                                        <option value="">Pilih</option>
-                                        <option value="admin">Admin</option>
-                                        <option value="super_admin">Super Admin</option>
-                                        <option value="kadis">Kadis</option>
-                                        <option value="pegawai">Pegawai</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block font-medium text-gray-700 mb-0.5">Status <span class="text-red-500">*</span></label>
-                                    <select name="status" required class="block w-full border rounded-lg p-1 text-xs">
-                                        <option value="aktif">Aktif</option>
-                                        <option value="nonaktif">Nonaktif</option>
-                                    </select>
-                                </div>
-
-                                <div class="col-span-2">
-                                    <label class="block font-medium text-gray-700 mb-0.5">Email <span class="text-red-500">*</span></label>
-                                    <input type="email" name="email" required class="block w-full border rounded-lg p-1 text-xs" placeholder="email@mail.com">
-                                </div>
-
-                                <div class="col-span-2" x-data="{ show: false }">
-                                    <label class="block font-medium text-gray-700 mb-0.5">Password <span class="text-red-500">*</span></label>
-                                    <div class="relative">
-                                        <input :type="show ? 'text' : 'password'" name="password" required minlength="8"
-                                            class="block w-full border rounded-lg p-1 pr-8 text-xs" placeholder="Minimal 8 karakter">
-                                        <span @click="show = !show" class="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
-                                            <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- BUTTON --}}
-                            <div class="flex justify-end gap-2 pt-2 border-t">
-                                <button type="button" @click="showCreateModal = false"
-                                        class="px-3 py-1 text-xs rounded-lg bg-gray-200 hover:bg-gray-300">
-                                    Batal
-                                </button>
-                                <button type="submit"
-                                        class="px-3 py-1 text-xs font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700">
-                                    Simpan Data
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+            <div class="flex items-center">
+                <button @click="showCreateModal = true"
+                        class="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
+                </button>
             </div>
-        </div>
 
        {{-- 📑 Table Pegawai --}}
 <div>
@@ -352,50 +246,6 @@
     </div>
 
     <hr>
-    {{-- ===================== MODAL KONFIRMASI HAPUS (PEGAWAI) ===================== --}}
-<div x-show="showDelete" x-cloak 
-    class="fixed inset-0 bg-black/60 flex items-center justify-center z-[60]"
-    x-transition.opacity>
-
-    <div @click.outside="closeDelete()"
-        x-transition.scale.duration.200ms
-        class="bg-white w-full max-w-sm rounded-xl shadow-xl p-5 text-sm">
-
-        {{-- Icon --}}
-        <div class="text-center">
-            <div class="text-red-600 text-4xl mb-2">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <h2 class="text-lg font-bold text-gray-800">Yakin ingin menghapus?</h2>
-            <p class="text-gray-600 mt-1 text-sm">
-                Data pegawai <b x-text="deleteName"></b> akan dihapus permanen.
-            </p>
-        </div>
-
-        {{-- Form Delete --}}
-        <form :action="deleteUrl" method="POST" class="mt-4">
-            @csrf
-            @method('DELETE')
-
-            <div class="flex flex-col items-center gap-2 mt-5">
-
-                {{-- Tombol Batal --}}
-                <button type="button"
-                        @click="closeDelete()"
-                        class="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg text-sm">
-                    Batal
-                </button>
-
-                {{-- Tombol Hapus --}}
-                <button type="submit"
-                        class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm">
-                    Hapus
-                </button>
-
-            </div>
-        </form>
-    </div>
-</div>
 
     {{-- ================= MODAL TAMBAH PEGAWAI (LEBIH KECIL) ================= --}}
 <div x-show="showCreateModal" x-cloak @click.self="closeModal()"
@@ -494,8 +344,7 @@
                     <select name="role" required class="block w-full border rounded-lg p-1">
                         <option value="">Pilih</option>
                         <option value="admin">Admin</option>
-                        <option value="super_admin">Super Admin</option>
-                        <option value="kadis">Kadis</option>
+                        <option value="atasan">Atasan</option>
                         <option value="pegawai">Pegawai</option>
                     </select>
                 </div>
@@ -575,73 +424,6 @@
         </form>
     </div>
 </div>
-
-{{-- =============================================== --}}
-{{-- MODAL NOTIFIKASI SUKSES --}}
-{{-- =============================================== --}}
-@if(session('success'))
-<div x-data="{ open: true }" x-show="open" x-cloak 
-     class="fixed inset-0 flex items-center justify-center bg-black/60 z-50"
-     x-transition.opacity>
-
-    <div @click.outside="open=false"
-         x-transition.scale.duration.200ms
-         class="bg-white p-5 rounded-xl shadow-xl max-w-sm w-full text-center">
-
-        <div class="text-green-600 text-4xl mb-2">
-            <i class="fa-solid fa-circle-check"></i>
-        </div>
-
-        <h2 class="text-lg font-bold text-green-600 mb-1">Berhasil!</h2>
-
-        <p class="text-gray-700 text-sm mt-1">
-            {{ session('success') }}
-        </p>
-
-        <div class="flex flex-col items-center gap-2 mt-5">
-            <button @click="open=false"
-                class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
-                OK
-            </button>
-        </div>
-    </div>
-</div>
-@endif
-
-
-{{-- =============================================== --}}
-{{-- MODAL NOTIFIKASI ERROR --}}
-{{-- =============================================== --}}
-@if ($errors->any())
-<div x-data="{ open: true }" x-show="open" x-cloak 
-     class="fixed inset-0 flex items-center justify-center bg-black/60 z-50"
-     x-transition.opacity>
-
-    <div @click.outside="open=false"
-         x-transition.scale.duration.200ms
-         class="bg-white p-5 rounded-xl shadow-xl max-w-sm w-full text-center">
-
-        <div class="text-red-600 text-4xl mb-2">
-            <i class="fa-solid fa-circle-xmark"></i>
-        </div>
-
-        <h2 class="text-lg font-bold text-gray-800 mb-1">Terjadi Kesalahan</h2>
-
-        <ul class="list-disc text-left text-sm text-red-600 ml-6 mt-2">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-
-        <div class="flex flex-col items-center gap-2 mt-5">
-            <button @click="open=false"
-                class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm">
-                Tutup
-            </button>
-        </div>
-    </div>
-</div>
-@endif
 
 {{-- ================= MODAL DETAIL (COMPACT VERSION) ================= --}}
 <div x-show="showDetailModal" x-cloak @click.self="closeModal()" 
@@ -786,7 +568,7 @@
                 <option value="pegawai">Pegawai</option>
                 <option value="admin">Admin</option>
                 <option value="super_admin">Super Admin</option>
-                <option value="kadis">Kadis</option>
+                <option value="atasan">Atasan</option>
             </select>
         </div>
 
@@ -912,4 +694,51 @@
 
 
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // 1. Notifikasi Otomatis (Muncul setelah Tambah / Edit / Hapus)
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            showConfirmButton: false,
+            timer: 2500,
+            borderRadius: '15px'
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Terjadi Kesalahan',
+            text: "{{ session('error') }}",
+            borderRadius: '15px'
+        });
+    @endif
+
+    // 2. Fungsi Konfirmasi Hapus Data
+    function confirmDelete(id, nama) {
+        Swal.fire({
+            title: 'Hapus Pegawai?',
+            text: "Data " + nama + " akan dihapus secara permanen.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            borderRadius: '15px'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Mencari form delete tersembunyi dan melakukan submit
+                document.getElementById('delete-form-' + id).submit();
+            }
+        })
+    }
+</script>
+
 @endsection
