@@ -177,24 +177,46 @@
             <div class="flex flex-col gap-4">
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <h4 class="font-bold text-gray-700 mb-3">Keterangan</h4>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center gap-2">
-                            <div class="w-4 h-4 bg-red-200 border border-red-400 rounded"></div>
-                            <span>Hari Libur Nasional</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-4 h-4 bg-orange-200 border border-orange-400 rounded"></div>
-                            <span>Hari Libur (Sabtu/Minggu)</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-4 h-4 bg-yellow-200 border border-yellow-400 rounded"></div>
-                            <span>Ada Pengajuan Cuti</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-4 h-4 bg-white border border-gray-300 rounded"></div>
-                            <span>Hari Kerja Biasa</span>
-                        </div>
-                    </div>
+                    <div class="space-y-3 text-sm">
+
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center justify-center
+                            w-6 h-6 rounded-md
+                            bg-red-500 text-white text-xs font-bold">
+                    N
+                </span>
+                <span class="font-medium text-gray-700">Hari Libur Nasional</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center justify-center
+                            w-6 h-6 rounded-md
+                            bg-orange-400 text-white text-xs font-bold">
+                    W
+                </span>
+                <span class="font-medium text-gray-700">Hari Libur</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center justify-center
+                            w-6 h-6 rounded-md
+                            bg-yellow-400 text-white text-xs font-bold">
+                    C
+                </span>
+                <span class="font-medium text-gray-700">Ada Pengajuan Cuti</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center justify-center
+                            w-6 h-6 rounded-md
+                            bg-white border border-gray-400
+                            text-xs font-bold text-gray-600">
+                    K
+                </span>
+                <span class="font-medium text-gray-700">Hari Kerja Biasa</span>
+            </div>
+
+        </div>
                 </div>
 
                 <div id="holidayInfo" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -237,45 +259,61 @@ let currentDate = new Date();
 let holidays = [];
 let userCuti = [];
 
-// Fetch holidays dari API Indonesia
-async function fetchHolidays(year) {
+// ===================== AMBIL HARI LIBUR (DAYOFF API) =====================
+async function fetchHolidays(year, month = null) {
     try {
-        const response = await fetch(`https://api.nager.date/v3/publicholidays/${year}/ID`);
+        let url = 'https://dayoffapi.vercel.app/api';
+
+        if (year && month) {
+            url += `?year=${year}&month=${month}`;
+        } else if (year) {
+            url += `?year=${year}`;
+        }
+
+        const response = await fetch(url);
         const data = await response.json();
+
         holidays = data.map(h => ({
-            date: h.date,
-            name: h.localName || h.name
+            date: h.tanggal,
+            display: h.tanggal_display,
+            name: h.keterangan,
+            isCuti: h.is_cuti
         }));
+
         renderCalendar();
     } catch (error) {
-        console.error('Error fetching holidays:', error);
+        console.error('Gagal mengambil hari libur:', error);
         renderCalendar();
     }
 }
 
-// Ambil data cuti dari server
+// ===================== DATA CUTI USER =====================
 function loadUserCuti() {
     const cutiData = @json($latestCuti ?? []);
     userCuti = [];
+
     cutiData.forEach(c => {
         const start = new Date(c.tanggal_mulai);
         const end = new Date(c.tanggal_selesai);
+
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
             userCuti.push(d.toISOString().split('T')[0]);
         }
     });
 }
 
+// ===================== RENDER KALENDER =====================
 function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
-    // Set month/year display
-    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    document.getElementById('monthYear').textContent = `${monthNames[month]} ${year}`;
 
-    // Buat kalender
+    const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    document.getElementById('monthYear').textContent =
+        `${monthNames[month]} ${year}`;
+
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
@@ -284,33 +322,36 @@ function renderCalendar() {
     const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
     let html = '<div class="grid grid-cols-7 gap-2 text-center">';
 
-    // Header hari
     dayNames.forEach(day => {
         html += `<div class="font-bold text-sky-700 py-2">${day}</div>`;
     });
 
-    // Empty cells untuk hari sebelum tanggal 1
     for (let i = 0; i < startingDayOfWeek; i++) {
-        html += '<div class="p-2"></div>';
+        html += '<div></div>';
     }
 
-    // Tanggal
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
         const dayOfWeek = date.getDay();
-        
-        // Cek jenis hari
+
         let bgColor = 'bg-white';
         let borderColor = 'border-gray-300';
-        let isHoliday = false;
-        let isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        let isCuti = userCuti.includes(dateStr);
+        let title = dateStr;
 
-        if (holidays.some(h => h.date === dateStr)) {
+        const holiday = holidays.find(h => h.date === dateStr);
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isCuti = userCuti.includes(dateStr);
+
+        if (holiday) {
             bgColor = 'bg-red-200';
-            borderColor = 'border-red-400';
-            isHoliday = true;
+            borderColor = 'border-red-400'; 
+            title = `${holiday.display} - ${holiday.name}`;
         } else if (isWeekend) {
             bgColor = 'bg-orange-200';
             borderColor = 'border-orange-400';
@@ -319,7 +360,10 @@ function renderCalendar() {
             borderColor = 'border-yellow-400';
         }
 
-        html += `<div class="p-2 border rounded ${bgColor} ${borderColor} cursor-pointer hover:shadow-md transition" title="${dateStr}">
+        html += `
+        <div class="p-2 border rounded ${bgColor} ${borderColor}
+                    cursor-pointer hover:shadow-md transition"
+             title="${title}">
             <div class="font-semibold text-sm">${day}</div>
         </div>`;
     }
@@ -327,45 +371,46 @@ function renderCalendar() {
     html += '</div>';
     document.getElementById('calendar').innerHTML = html;
 
-    // Update holiday list
     updateHolidayList(month, year);
 }
 
+// ===================== LIST HARI LIBUR =====================
 function updateHolidayList(month, year) {
     const monthHolidays = holidays.filter(h => {
-        const hDate = new Date(h.date);
-        return hDate.getMonth() === month && hDate.getFullYear() === year;
+        const d = new Date(h.date);
+        return d.getMonth() === month && d.getFullYear() === year;
     });
 
     let html = '';
+
     if (monthHolidays.length === 0) {
         html = '<p class="text-gray-500">Tidak ada hari libur nasional</p>';
     } else {
         monthHolidays.forEach(h => {
-            const date = new Date(h.date);
-            const formattedDate = date.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            html += `<div class="text-xs">
-                <span class="font-semibold text-red-600">${formattedDate}</span>
+            html += `
+            <div class="text-xs">
+                <span class="font-semibold text-red-600">${h.display}</span>
                 <p class="text-gray-600">${h.name}</p>
             </div>`;
         });
     }
+
     document.getElementById('holidayList').innerHTML = html;
 }
 
-// Event listeners
+// ===================== EVENT =====================
 document.getElementById('prevMonth').addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() - 1);
-    renderCalendar();
+    fetchHolidays(currentDate.getFullYear(), currentDate.getMonth() + 1);
 });
 
 document.getElementById('nextMonth').addEventListener('click', () => {
     currentDate.setMonth(currentDate.getMonth() + 1);
-    renderCalendar();
+    fetchHolidays(currentDate.getFullYear(), currentDate.getMonth() + 1);
 });
 
-// Init
+// ===================== INIT =====================
 loadUserCuti();
-fetchHolidays(currentDate.getFullYear());
+fetchHolidays(currentDate.getFullYear(), currentDate.getMonth() + 1);
 </script>
 @endsection
