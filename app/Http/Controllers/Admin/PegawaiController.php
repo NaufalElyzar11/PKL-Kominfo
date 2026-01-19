@@ -22,7 +22,7 @@ class PegawaiController extends Controller
 
         $query = Pegawai::with('user')
             ->whereHas('user', function ($q) {
-                $q->whereIn('role', ['pegawai', 'admin', 'super_admin', 'kadis']);
+                $q->whereIn('role', ['pegawai', 'admin', 'super_admin', 'atasan']);
             });
 
         if ($search) {
@@ -57,80 +57,58 @@ class PegawaiController extends Controller
      * Simpan pegawai baru
      */
     public function store(Request $request)
-    {
-        \Log::info('Store request received', $request->all());
-        
-        $validated = $request->validate([
-            'nama'       => 'required|string|max:255',
-            'nip'        => 'nullable|string|max:50|unique:pegawai,nip',
-            'jabatan'    => 'nullable|string|max:100',
-            'unit_kerja' => 'nullable|string|max:100',
-            'role'       => 'required|in:pegawai,admin,super_admin,kadis',
-            'status'     => 'required|string',
-            'email'      => 'required|email|unique:users,email',
-            'telepon'    => 'nullable|string|max:20',
-            'password'   => 'required|string|min:8',
+{
+    \Log::info('Store request received', $request->all());
+    
+    $validated = $request->validate([
+        'nama'       => 'required|string|max:255',
+        'nip'        => 'required|string|max:50|unique:pegawai,nip', // Ubah ke required jika di DB wajib
+        'jabatan'    => 'required|string|max:100',                  // Ubah ke required
+        'unit_kerja' => 'required|string|max:100',                  // WAJIB REQUIRED agar tidak null di DB
+        'role'       => 'required|in:pegawai,admin,super_admin,atasan',
+        'status'     => 'required|string',
+        'email'      => 'required|email|unique:users,email',
+        'telepon'    => 'required|string|max:20',                  // Ubah ke required
+        'password'   => 'required|string|min:8',
+    ]);
+
+    // Konversi role untuk database
+    $roleForDatabase = $validated['role'] === 'atasan' ? 'kepala_dinas' : $validated['role'];
+
+    DB::beginTransaction();
+
+    try {
+        // 1. Simpan ke tabel Pegawai
+        $pegawai = Pegawai::create([
+            'nama'       => $validated['nama'],
+            'email'      => $validated['email'],
+            'nip'        => $validated['nip'],
+            'jabatan'    => $validated['jabatan'],
+            'unit_kerja' => $validated['unit_kerja'], // Data ini sekarang dijamin ada
+            'status'     => $validated['status'],
+            'telepon'    => $validated['telepon'],
         ]);
 
-        \Log::info('Validation passed', $validated);
-        
-        // 🔧 PENTING: Convert 'kadis' ke 'kepala_dinas' sesuai enum di database
-        $roleForDatabase = $validated['role'] === 'kadis' ? 'kepala_dinas' : $validated['role'];
+        // 2. Simpan ke tabel User
+        User::create([
+            'name'       => $validated['nama'],
+            'email'      => $validated['email'],
+            'password'   => Hash::make($validated['password']),
+            'role'       => $roleForDatabase,
+            'id_pegawai' => $pegawai->id, 
+        ]);
 
-        // Mulai Transaksi Database
-        DB::beginTransaction();
+        DB::commit();
+        return redirect()->route('admin.pegawai.index')->with('success', 'Pegawai berhasil ditambahkan.');
 
-        try {
-            \Log::info('Creating pegawai...');
-            
-            // 1. Buat Pegawai terlebih dahulu
-            $pegawai = Pegawai::create([
-                'nama'       => $validated['nama'],
-                'email'      => $validated['email'],
-                'nip'        => $validated['nip'] ?? null,
-                'jabatan'    => $validated['jabatan'] ?? null,
-                'unit_kerja' => $validated['unit_kerja'] ?? null,
-                'status'     => $validated['status'],
-                'telepon'    => $validated['telepon'] ?? null,
-            ]);
-
-            \Log::info('Pegawai created', ['id' => $pegawai->id, 'nama' => $pegawai->nama]);
-
-            // 2. Buat User dengan referensi ke pegawai yang baru dibuat
-            $user = User::create([
-                'name'       => $validated['nama'],
-                'email'      => $validated['email'],
-                'password'   => Hash::make($validated['password']),
-                'role'       => $roleForDatabase,  // ✅ Gunakan role yang sudah di-convert
-                'id_pegawai' => $pegawai->id, // Hubungkan ke pegawai
-            ]);
-
-            \Log::info('User created', ['id' => $user->id, 'role' => $user->role]);
-
-            // Jika semua sukses, simpan permanen
-            DB::commit();
-
-            \Log::info('Transaction committed successfully');
-
-            return redirect()->back()->with('success', 'Pegawai berhasil ditambahkan.');
-
-        } catch (\Exception $e) {
-            // Jika ada error di tengah jalan, batalkan SEMUANYA (Hapus user yang sempat dibuat)
-            DB::rollBack();
-            
-            \Log::error('Error creating pegawai: ' . $e->getMessage(), [
-                'exception' => $e,
-                'validated' => $validated,
-            ]);
-            
-            // Kembalikan error ke halaman
-            return redirect()->back()->with('error', 'Gagal menambah data: ' . $e->getMessage());
-        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Gagal Simpan Pegawai: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal: ' . $e->getMessage())->withInput();
     }
+}
 
-    /**
-     * Update data pegawai (PERLU UPDATE EMAIL JUGA DI TABEL PEGAWAI)
-     */
+
     public function update(Request $request, $id)
     {
         $pegawai = Pegawai::with('user')->findOrFail($id);
@@ -139,7 +117,7 @@ class PegawaiController extends Controller
             'nama'       => 'required|string|max:255',
             'nip'        => 'nullable|string|max:255|unique:pegawai,nip,' . $pegawai->id,
             'email'      => 'required|email|max:255|unique:users,email,' . $pegawai->user->id,
-            'role'       => 'required|in:pegawai,admin,super_admin,kadis',
+            'role'       => 'required|in:pegawai,admin,super_admin,atasan',
             'jabatan'    => 'nullable|string|max:255',
             'unit_kerja' => 'nullable|string|max:255',
             'telepon'    => 'nullable|string|max:20',
@@ -147,7 +125,7 @@ class PegawaiController extends Controller
         ]);
 
         // 🔧 PENTING: Convert 'kadis' ke 'kepala_dinas' sesuai enum di database
-        $roleForDatabase = $validated['role'] === 'kadis' ? 'kepala_dinas' : $validated['role'];
+        $roleForDatabase = $validated['role'] === 'atasan' ? 'kepala_dinas' : $validated['role'];
 
         DB::beginTransaction(); // Pakai transaction juga di sini biar aman
 

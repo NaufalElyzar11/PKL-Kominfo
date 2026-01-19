@@ -19,7 +19,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // ✅ Cegah akses jika user belum login atau bukan kepala dinas
-        if (!$user || $user->role !== 'kadis') {   // ⬅ PERBAIKAN: pakai kolom role di tabel users
+        if (!$user || $user->role !== 'atasan') {   // ⬅ PERBAIKAN: pakai kolom role di tabel users
             Auth::logout();
 
             return redirect()
