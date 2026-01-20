@@ -346,7 +346,8 @@
                     <select name="role" required class="block w-full border rounded-lg p-1">
                         <option value="">Pilih</option>
                         <option value="admin">Admin</option>
-                        <option value="atasan">Atasan</option>
+                        <option value="atasan">Atasan Langsung</option>
+                        <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
                         <option value="pegawai">Pegawai</option>
                     </select>
                 </div>
@@ -569,8 +570,8 @@
                 class="w-full border rounded px-2 py-1 text-sm">
                 <option value="pegawai">Pegawai</option>
                 <option value="admin">Admin</option>
-                <option value="super_admin">Super Admin</option>
                 <option value="atasan">Atasan</option>
+                <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
             </select>
         </div>
 

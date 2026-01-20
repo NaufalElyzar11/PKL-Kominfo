@@ -22,7 +22,7 @@ class PegawaiController extends Controller
 
         $query = Pegawai::with('user')
             ->whereHas('user', function ($q) {
-                $q->whereIn('role', ['pegawai', 'admin', 'super_admin', 'atasan']);
+                $q->whereIn('role', ['pegawai', 'admin', 'atasan', 'pemberi_cuti']);
             });
 
         if ($search) {
@@ -65,7 +65,7 @@ class PegawaiController extends Controller
         'nip'        => 'required|string|max:50|unique:pegawai,nip', // Ubah ke required jika di DB wajib
         'jabatan'    => 'required|string|max:100',                  // Ubah ke required
         'unit_kerja' => 'required|string|max:100',                  // WAJIB REQUIRED agar tidak null di DB
-        'role'       => 'required|in:pegawai,admin,super_admin,atasan',
+        'role'       => 'required|in:pegawai,admin,pemberi_cuti,atasan',
         'status'     => 'required|string',
         'email'      => 'required|email|unique:users,email',
         'telepon'    => 'required|string|max:20',                  // Ubah ke required
@@ -117,7 +117,7 @@ class PegawaiController extends Controller
             'nama'       => 'required|string|max:255',
             'nip'        => 'nullable|string|max:255|unique:pegawai,nip,' . $pegawai->id,
             'email'      => 'required|email|max:255|unique:users,email,' . $pegawai->user->id,
-            'role'       => 'required|in:pegawai,admin,super_admin,atasan',
+            'role'       => 'required|in:pegawai,admin,pemberi_cuti,atasan',
             'jabatan'    => 'nullable|string|max:255',
             'unit_kerja' => 'nullable|string|max:255',
             'telepon'    => 'nullable|string|max:20',
@@ -125,7 +125,7 @@ class PegawaiController extends Controller
         ]);
 
         // 🔧 PENTING: Convert 'kadis' ke 'kepala_dinas' sesuai enum di database
-        $roleForDatabase = $validated['role'] === 'atasan' ? 'kepala_dinas' : $validated['role'];
+        $roleForDatabase = $validated['role'] === 'atasan' ? 'pemberi_cuti' : $validated['role'];
 
         DB::beginTransaction(); // Pakai transaction juga di sini biar aman
 
@@ -134,7 +134,7 @@ class PegawaiController extends Controller
             $userData = [
                 'name'  => $validated['nama'],
                 'email' => $validated['email'],
-                'role'  => $roleForDatabase,  // ✅ Gunakan role yang sudah di-convert
+                'role'  => $roleForDatabase,  //
             ];
 
             if (!empty($validated['password'])) {
