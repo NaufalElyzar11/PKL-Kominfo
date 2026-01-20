@@ -29,10 +29,14 @@ class PegawaiController extends Controller
         }
 
         // Statistik cuti
+        $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending'];
+        $statusDisetujui = ['Disetujui', 'disetujui'];
+        $statusDitolak   = ['Ditolak', 'ditolak'];
+
         $totalCuti     = (clone $cutiQuery)->count();
-        $cutiPending   = (clone $cutiQuery)->where('status', 'pending')->count();
-        $cutiDisetujui = (clone $cutiQuery)->where('status', 'disetujui')->count();
-        $cutiDitolak   = (clone $cutiQuery)->where('status', 'ditolak')->count();
+        $cutiPending   = (clone $cutiQuery)->whereIn('status', $statusMenunggu)->count();
+        $cutiDisetujui = (clone $cutiQuery)->whereIn('status', $statusDisetujui)->count();
+        $cutiDitolak   = (clone $cutiQuery)->whereIn('status', $statusDitolak)->count();
 
         // 5 data cuti terbaru beserta relasi pegawai
         $latestCuti = (clone $cutiQuery)

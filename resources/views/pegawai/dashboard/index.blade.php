@@ -3,39 +3,39 @@
 @section('title', 'Dashboard Pegawai')
 
 @section('content')
-<div class="p-6 space-y-8">
+<div class="p-4 sm:p-6 space-y-6 sm:space-y-8">
 
     {{-- 🌟 KARTU SELAMAT DATANG --}}
-    <div class="bg-gradient-to-r from-sky-500 to-sky-700 text-white p-6 rounded-2xl shadow flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold">
+    <div class="bg-gradient-to-r from-sky-500 to-sky-700 text-white p-4 sm:p-6 rounded-2xl shadow flex justify-between items-center">
+        <div class="flex-1 min-w-0">
+            <h1 class="text-xl sm:text-2xl font-bold">
                 Selamat Datang, {{ Auth::user()->name }}
             </h1>
-            <p class="text-sm text-sky-100 mt-1">
+            <p class="text-xs sm:text-sm text-sky-100 mt-1">
                 Pantau dan kelola pengajuan cuti pegawai
             </p>
         </div>
-        <div class="hidden sm:block bg-white/20 p-4 rounded-full">
+        <div class="hidden sm:block bg-white/20 p-4 rounded-full flex-shrink-0 ml-4">
             <i class="fa-solid fa-clipboard-user text-4xl"></i>
         </div>
     </div>
 
-    {{-- 🧩 GRID STATISTIK (DESKTOP-FIRST) --}}
-    <div class="grid grid-cols-12 gap-6 items-start">
+    {{-- 🧩 GRID STATISTIK (RESPONSIVE) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
         {{-- ⬅️ STATISTIK SISA CUTI --}}
-        <div class="col-span-8 bg-white rounded-xl p-6 flex flex-col shadow border border-gray-200">
+        <div class="lg:col-span-8 bg-white rounded-xl p-4 sm:p-6 flex flex-col shadow border border-gray-200">
             <h2 class="text-sm font-semibold text-sky-700 mb-4">
                 Statistik Sisa Cuti
             </h2>
 
-            <div class="h-[360px] min-h-[260px]">
-                <div class="space-y-6">
+            <div class="h-auto lg:h-[362px] min-h-[220px]">
+                <div class="space-y-4 sm:space-y-6">
 
                     <!-- Angka Utama -->
                     <div class="text-center">
-                        <p class="text-sm text-gray-500">Hak Cuti Tahunan</p>
-                        <p class="text-4xl font-extrabold text-sky-700">12 Hari</p>
+                        <p class="text-xs sm:text-sm text-gray-500">Hak Cuti Tahunan</p>
+                        <p class="text-3xl sm:text-4xl font-extrabold text-sky-700">12 Hari</p>
                     </div>
 
                     <!-- Progress -->
@@ -62,9 +62,9 @@
                     </div>
 
                     <!-- Sisa -->
-                    <div class="flex justify-between items-center bg-sky-50 rounded-lg p-4">
-                        <span class="text-gray-700 font-medium">Sisa Cuti</span>
-                        <span class="text-3xl font-extrabold text-sky-700">
+                    <div class="flex justify-between items-center bg-sky-50 rounded-lg p-3 sm:p-4">
+                        <span class="text-sm sm:text-base text-gray-700 font-medium">Sisa Cuti</span>
+                        <span class="text-2xl sm:text-3xl font-extrabold text-sky-700">
                             {{ $sisa }} Hari
                         </span>
                     </div>
@@ -80,36 +80,36 @@
         </div>
 
         {{-- ➡️ KANAN --}}
-        <div class="col-span-4 flex flex-col gap-6 items-stretch">
+        <div class="lg:col-span-4 flex flex-col gap-4 sm:gap-6 items-stretch">
 
             {{-- STATUS CUTI (3 SEJAJAR) --}}
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-3 gap-2 sm:gap-4">
 
-                <div class="bg-yellow-100 rounded-xl p-4 text-center h-28 flex flex-col items-center justify-center">
-                    <p class="text-xs text-yellow-700">Menunggu</p>
-                    <div class="flex items-center gap-2 justify-center mt-2">
-                        <i class="fa-solid fa-hourglass-end text-yellow-500 text-xl"></i>
-                        <p class="text-2xl font-bold text-yellow-700">
+                <div class="bg-yellow-100 rounded-xl p-2 sm:p-4 text-center h-24 sm:h-28 flex flex-col items-center justify-center">
+                    <p class="text-[10px] sm:text-xs text-yellow-700">Menunggu</p>
+                    <div class="flex items-center gap-1 sm:gap-2 justify-center mt-1 sm:mt-2">
+                        <i class="fa-solid fa-hourglass-end text-yellow-500 text-lg sm:text-xl"></i>
+                        <p class="text-xl sm:text-2xl font-bold text-yellow-700">
                             {{ $cutiPending ?? 0 }}
                         </p>
                     </div>
                 </div>
 
-                <div class="bg-green-100 rounded-xl p-4 text-center h-28 flex flex-col items-center justify-center">
-                    <p class="text-xs text-green-700">Disetujui</p>
-                    <div class="flex items-center gap-2 justify-center mt-2">
-                        <i class="fa-solid fa-check text-green-500 text-xl"></i>
-                        <p class="text-2xl font-bold text-green-700">
+                <div class="bg-green-100 rounded-xl p-2 sm:p-4 text-center h-24 sm:h-28 flex flex-col items-center justify-center">
+                    <p class="text-[10px] sm:text-xs text-green-700">Disetujui</p>
+                    <div class="flex items-center gap-1 sm:gap-2 justify-center mt-1 sm:mt-2">
+                        <i class="fa-solid fa-check text-green-500 text-lg sm:text-xl"></i>
+                        <p class="text-xl sm:text-2xl font-bold text-green-700">
                             {{ $cutiDisetujui ?? 0 }}
                         </p>
                     </div>
                 </div>
 
-                <div class="bg-red-100 rounded-xl p-4 text-center h-28 flex flex-col items-center justify-center">
-                    <p class="text-xs text-red-700">Ditolak</p>
-                    <div class="flex items-center gap-2 justify-center mt-2">
-                        <i class="fa-solid fa-xmark text-red-500 text-xl"></i>
-                        <p class="text-2xl font-bold text-red-700">
+                <div class="bg-red-100 rounded-xl p-2 sm:p-4 text-center h-24 sm:h-28 flex flex-col items-center justify-center">
+                    <p class="text-[10px] sm:text-xs text-red-700">Ditolak</p>
+                    <div class="flex items-center gap-1 sm:gap-2 justify-center mt-1 sm:mt-2">
+                        <i class="fa-solid fa-xmark text-red-500 text-lg sm:text-xl"></i>
+                        <p class="text-xl sm:text-2xl font-bold text-red-700">
                             {{ $cutiDitolak ?? 0 }}
                         </p>
                     </div>
@@ -118,22 +118,22 @@
             </div>
 
             {{-- JUMLAH PEGAWAI --}}
-            <div class="bg-white rounded-xl py-6 flex flex-col items-center justify-center h-36 shadow border border-gray-200">
-                <p class="text-sm font-semibold text-sky-700 mb-4">Jumlah Pegawai</p>
-                <div class="flex items-center gap-2 justify-center mt-2">
-                    <i class="fa-solid fa-users text-sky-500 text-2xl"></i>
-                    <p class="text-3xl font-extrabold text-sky-700">
+            <div class="bg-white rounded-xl py-4 sm:py-6 flex flex-col items-center justify-center h-32 sm:h-36 shadow border border-gray-200">
+                <p class="text-xs sm:text-sm font-semibold text-sky-700 mb-3 sm:mb-4">Jumlah Pegawai</p>
+                <div class="flex items-center gap-2 justify-center">
+                    <i class="fa-solid fa-users text-sky-500 text-xl sm:text-2xl"></i>
+                    <p class="text-2xl sm:text-3xl font-extrabold text-sky-700">
                         {{ $totalPegawai ?? 0 }}
                     </p>
                 </div>
             </div>
 
             {{-- PEGAWAI YANG SEDANG CUTI --}}
-            <div class="bg-white rounded-xl py-6 flex flex-col items-center justify-center h-36 shadow border border-gray-200">
-                <p class="text-sm font-semibold text-sky-700 mb-4">Pegawai Sedang Cuti</p>
-                <div class="flex items-center gap-2 justify-center mt-2">
-                    <i class="fa-solid fa-person-hiking text-purple-500 text-2xl"></i>
-                    <p class="text-3xl font-extrabold text-purple-600">
+            <div class="bg-white rounded-xl py-4 sm:py-6 flex flex-col items-center justify-center h-32 sm:h-36 shadow border border-gray-200">
+                <p class="text-xs sm:text-sm font-semibold text-sky-700 mb-3 sm:mb-4">Pegawai Sedang Cuti</p>
+                <div class="flex items-center gap-2 justify-center">
+                    <i class="fa-solid fa-person-hiking text-purple-500 text-xl sm:text-2xl"></i>
+                    <p class="text-2xl sm:text-3xl font-extrabold text-purple-600">
                         {{ $pegawaiSedangCuti ?? 0 }}
                     </p>
                 </div>
@@ -144,85 +144,87 @@
 
 
     {{-- 📋 TABEL RIWAYAT CUTI (TETAP) --}}
-    <div class="bg-white p-5 rounded-2xl shadow border border-gray-200">
-        <h2 class="text-lg font-bold text-sky-700 mb-3 border-b pb-2">
+    <div class="bg-white p-3 sm:p-5 rounded-2xl shadow border border-gray-200">
+        <h2 class="text-base sm:text-lg font-bold text-sky-700 mb-3 border-b pb-2">
             Riwayat Cuti Pegawai
         </h2>
 
-        <div class="overflow-auto max-h-[28rem] text-xs">
-            <table class="min-w-full border-collapse">
-                <thead class="bg-sky-600 text-white sticky top-0">
-                    <tr>
-                        <th class="border px-2 py-1">No</th>
-                        <th class="border px-2 py-1">Nama</th>
-                        <th class="border px-2 py-1">NIP</th>
-                        <th class="border px-2 py-1">Jabatan</th>
-                        <th class="border px-2 py-1">Jenis Cuti</th>
-                        <th class="border px-2 py-1">Mulai</th>
-                        <th class="border px-2 py-1">Selesai</th>
-                        <th class="border px-2 py-1">Hari</th>
-                        <th class="border px-2 py-1">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($latestCuti ?? [] as $i => $c)
-                    <tr class="hover:bg-gray-100">
-                        <td class="border px-2 py-1 text-center">{{ $i + 1 }}</td>
-                        <td class="border px-2 py-1">{{ $c->pegawai->nama ?? '-' }}</td>
-                        <td class="border px-2 py-1 text-center">{{ $c->pegawai->nip ?? '-' }}</td>
-                        <td class="border px-2 py-1">{{ $c->pegawai->jabatan ?? '-' }}</td>
-                        <td class="border px-2 py-1">{{ $c->jenis_cuti }}</td>
-                        <td class="border px-2 py-1 text-center">{{ $c->tanggal_mulai?->format('d-m-Y') }}</td>
-                        <td class="border px-2 py-1 text-center">{{ $c->tanggal_selesai?->format('d-m-Y') }}</td>
-                        <td class="border px-2 py-1 text-center">{{ $c->jumlah_hari }}</td>
-                        <td class="border px-2 py-1 text-center">
-                            <span class="px-2 py-0.5 rounded-full text-[10px]
-                                {{ $c->status === 'disetujui' ? 'bg-green-100 text-green-700' :
-                                   ($c->status === 'ditolak' ? 'bg-red-100 text-red-700' :
-                                   'bg-yellow-100 text-yellow-700') }}">
-                                {{ ucfirst($c->status) }}
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="9" class="text-center text-gray-500 py-4">
-                            Tidak ada data cuti
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+        <div class="overflow-x-auto overflow-y-auto max-h-[28rem] -mx-3 sm:mx-0">
+            <div class="inline-block min-w-full align-middle px-3 sm:px-0">
+                <table class="min-w-full border-collapse text-[10px] sm:text-xs">
+                    <thead class="bg-sky-600 text-white sticky top-0">
+                        <tr>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left">No</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left">Nama</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left hidden sm:table-cell">NIP</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left hidden md:table-cell">Jabatan</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left">Jenis Cuti</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left">Mulai</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left hidden lg:table-cell">Selesai</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-center">Hari</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($latestCuti ?? [] as $i => $c)
+                        <tr class="hover:bg-gray-100">
+                            <td class="border px-1.5 sm:px-2 py-1 text-center">{{ $i + 1 }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1 font-medium">{{ $c->pegawai->nama ?? '-' }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1 text-center hidden sm:table-cell">{{ $c->pegawai->nip ?? '-' }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1 hidden md:table-cell">{{ $c->pegawai->jabatan ?? '-' }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1">{{ $c->jenis_cuti }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1 text-center whitespace-nowrap">{{ $c->tanggal_mulai?->format('d-m-Y') }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1 text-center whitespace-nowrap hidden lg:table-cell">{{ $c->tanggal_selesai?->format('d-m-Y') }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1 text-center">{{ $c->jumlah_hari }}</td>
+                            <td class="border px-1.5 sm:px-2 py-1 text-center">
+                                <span class="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px]
+                                    {{ $c->status === 'disetujui' ? 'bg-green-100 text-green-700' :
+                                       ($c->status === 'ditolak' ? 'bg-red-100 text-red-700' :
+                                       'bg-yellow-100 text-yellow-700') }}">
+                                    {{ ucfirst($c->status) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="9" class="text-center text-gray-500 py-4">
+                                Tidak ada data cuti
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     {{-- 📅 KALENDER --}}
-    <div class="bg-white p-5 rounded-2xl shadow border border-gray-200">
-        <h2 class="text-lg font-bold text-sky-700 mb-4 border-b pb-2">
+    <div class="bg-white p-3 sm:p-5 rounded-2xl shadow border border-gray-200">
+        <h2 class="text-base sm:text-lg font-bold text-sky-700 mb-4 border-b pb-2">
             Kalender Cuti & Hari Libur
         </h2>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <!-- Kalender -->
             <div class="lg:col-span-2">
-                <div class="flex justify-between items-center mb-4">
-                    <button id="prevMonth" class="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700">
-                        <i class="fa-solid fa-chevron-left"></i> Bulan Lalu
+                <div class="flex justify-between items-center mb-4 gap-2">
+                    <button id="prevMonth" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-xs sm:text-sm">
+                        <i class="fa-solid fa-chevron-left"></i> <span class="hidden sm:inline">Bulan Lalu</span>
                     </button>
-                    <h3 id="monthYear" class="text-lg font-bold text-sky-700"></h3>
-                    <button id="nextMonth" class="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700">
-                        Bulan Depan <i class="fa-solid fa-chevron-right"></i>
+                    <h3 id="monthYear" class="text-sm sm:text-lg font-bold text-sky-700 text-center flex-1"></h3>
+                    <button id="nextMonth" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-xs sm:text-sm">
+                        <span class="hidden sm:inline">Bulan Depan</span> <i class="fa-solid fa-chevron-right"></i>
                     </button>
                 </div>
 
-                <div id="calendar" class="bg-gray-50 p-4 rounded-lg border border-gray-200"></div>
+                <div id="calendar" class="bg-gray-50 p-2 sm:p-4 rounded-lg border border-gray-200"></div>
             </div>
 
             <!-- Legenda & Info -->
             <div class="flex flex-col gap-4">
-                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h4 class="font-bold text-gray-700 mb-3">Keterangan</h4>
-                    <div class="space-y-3 text-sm">
+                <div class="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-gray-700 mb-3 text-sm sm:text-base">Keterangan</h4>
+                    <div class="space-y-2 sm:space-y-3 text-xs sm:text-sm">
 
             <div class="flex items-center gap-3">
                 <span class="inline-flex items-center justify-center
@@ -264,9 +266,9 @@
         </div>
                 </div>
 
-                <div id="holidayInfo" class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <h4 class="font-bold text-gray-700 mb-3">Hari Libur Bulan Ini</h4>
-                    <div id="holidayList" class="text-sm space-y-2">
+                <div id="holidayInfo" class="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200">
+                    <h4 class="font-bold text-gray-700 mb-3 text-sm sm:text-base">Hari Libur Bulan Ini</h4>
+                    <div id="holidayList" class="text-xs sm:text-sm space-y-2">
                         <p class="text-gray-500">Memuat hari libur...</p>
                     </div>
                 </div>
@@ -365,10 +367,10 @@ function renderCalendar() {
     const startingDayOfWeek = firstDay.getDay();
 
     const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    let html = '<div class="grid grid-cols-7 gap-2 text-center">';
+    let html = '<div class="grid grid-cols-7 gap-1 sm:gap-2 text-center">';
 
     dayNames.forEach(day => {
-        html += `<div class="font-bold text-sky-700 py-2">${day}</div>`;
+        html += `<div class="font-bold text-sky-700 py-1 sm:py-2 text-xs sm:text-sm">${day}</div>`;
     });
 
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -406,10 +408,10 @@ function renderCalendar() {
         }
 
         html += `
-        <div class="p-2 border rounded ${bgColor} ${borderColor}
+        <div class="p-1 sm:p-2 border rounded ${bgColor} ${borderColor}
                     cursor-pointer hover:shadow-md transition"
              title="${title}">
-            <div class="font-semibold text-sm">${day}</div>
+            <div class="font-semibold text-xs sm:text-sm">${day}</div>
         </div>`;
     }
 

@@ -26,10 +26,17 @@ class DashboardController extends Controller
         }
         // Query data cuti pegawai
         $cutiQuery = Cuti::where('user_id', $user->id);
-        $totalCuti     = $cutiQuery->count();
-        $cutiPending   = (clone $cutiQuery)->where('status', 'pending')->count();
-        $cutiDisetujui = (clone $cutiQuery)->where('status', 'disetujui')->count();
-        $cutiDitolak   = (clone $cutiQuery)->where('status', 'ditolak')->count();
+
+        // Normalisasi status (karena di beberapa bagian aplikasi ada yang pakai "Menunggu"/"Disetujui"/"Ditolak"
+        // dan ada juga yang pakai lowercase seperti "pending"/"disetujui"/"ditolak")
+        $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending'];
+        $statusDisetujui = ['Disetujui', 'disetujui'];
+        $statusDitolak   = ['Ditolak', 'ditolak'];
+
+        $totalCuti     = (clone $cutiQuery)->count();
+        $cutiPending   = (clone $cutiQuery)->whereIn('status', $statusMenunggu)->count();
+        $cutiDisetujui = (clone $cutiQuery)->whereIn('status', $statusDisetujui)->count();
+        $cutiDitolak   = (clone $cutiQuery)->whereIn('status', $statusDitolak)->count();
         // Ambil 5 cuti terbaru lengkap dengan relasi
         $latestCuti = $cutiQuery
             ->with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
