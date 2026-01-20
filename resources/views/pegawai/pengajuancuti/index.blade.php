@@ -84,7 +84,8 @@
             pejabat: data.pejabat,
             alasan_cuti: data.alasan_cuti,
             status: data.status,
-            jumlah_hari: data.jumlah_hari // Tambahkan agar durasi awal langsung muncul
+            jumlah_hari: data.jumlah_hari,
+            alamat: data.alamat
         };
             this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
             this.isChanged = false;
@@ -192,12 +193,22 @@
                                     <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
                                 </td>
                                 <td class="px-1 py-2 text-center flex justify-center gap-1">
-                                    <button @click="showPendingDetail({
-                                        nama: '{{ $c->pegawai->nama }}', nip: '{{ $c->pegawai->nip }}', jabatan: '{{ $c->pegawai->jabatan }}',
-                                        jenis_cuti: '{{ $c->jenis_cuti }}', tanggal_mulai: '{{ $c->tanggal_mulai->translatedFormat('d M Y') }}',
-                                        tanggal_selesai: '{{ $c->tanggal_selesai->translatedFormat('d M Y') }}', jumlah_hari: '{{ $c->jumlah_hari }}',
-                                    })" class="p-1 text-sky-600 hover:bg-sky-50 rounded"><i class="fa-solid fa-eye text-[12px]"></i></button>
+                                {{-- Tambahkan baris alasan_cuti di dalam parameter showPendingDetail --}}
+                                <button @click="showPendingDetail({
+                                    nama: '{{ $c->pegawai->nama }}', 
+                                    nip: '{{ $c->pegawai->nip }}', 
+                                    jabatan: '{{ $c->pegawai->jabatan }}',
+                                    jenis_cuti: '{{ $c->jenis_cuti }}', 
+                                    tanggal_mulai: '{{ $c->tanggal_mulai->translatedFormat('d M Y') }}',
+                                    tanggal_selesai: '{{ $c->tanggal_selesai->translatedFormat('d M Y') }}', 
+                                    jumlah_hari: '{{ $c->jumlah_hari }}',
+                                    sisa_cuti: '{{ $sisaCuti }}',
+                                    alasan_cuti: '{{ addslashes($c->alasan_cuti) }}' {{-- <-- BARIS INI YANG KURANG --}}
+                                })" class="p-1 text-sky-600 hover:bg-sky-50 rounded">
+                                    <i class="fa-solid fa-eye text-[12px]"></i>
+                                </button>
                                     
+                                    {{-- Tambahkan data alamat di bagian paling bawah parameter @click --}}
                                     <button @click="openEditModal({
                                         id: {{ $c->id }},
                                         nama: @js($c->pegawai->nama),
@@ -207,11 +218,12 @@
                                         sisa_cuti: @js($c->sisa_cuti ?? 0),
                                         tanggal_mulai_raw: @js($c->tanggal_mulai->format('Y-m-d')),
                                         tanggal_selesai_raw: @js($c->tanggal_selesai->format('Y-m-d')),
-                                        alasan_cuti: @js($c->alasan_cuti),
-                                        jumlah_hari: @js($c->jumlah_hari)
+                                        alasan_cuti: @js($c->keterangan ?? $c->alasan_cuti),
+                                        jumlah_hari: @js($c->jumlah_hari),
+                                        alamat: @js($c->alamat) {{-- <-- BARIS INI WAJIB ADA --}}
                                     })"
                                     class="p-1 text-yellow-600 hover:bg-yellow-50 rounded">
-                                        <i class="fa-solid fa-pen-to-square text-[12px]"></i>
+                                        <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
 
 
@@ -496,7 +508,7 @@
                             name="alamat"
                             rows="1"
                             class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none"
-                            placeholder="Alamat..."
+                            placeholder="Contoh: Komplek Bukit Permata Indah Jl. Permata Jamrud Blok E No 127"
                             required
                             oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')"></textarea>
                     </div>
@@ -506,7 +518,7 @@
                                 name="keterangan" 
                                 rows="1" 
                                 class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" 
-                                placeholder="Alasan..." 
+                                placeholder="Contoh: Menghadiri acara keluarga atau keperluan mendesak lainnya.." 
                                 pattern="[A-Za-z\s]+"
                                 title="Alasan cuti hanya boleh huruf"
                                 required
@@ -631,7 +643,8 @@
         </div>
 
         <form :action="'/pegawai/cuti/' + selectedCuti.id" method="POST">
-            @csrf @method('PUT')
+            @csrf 
+            @method('PUT')
 
             <div class="bg-gray-50 p-2.5 rounded-lg text-[10px] border border-gray-200 space-y-2 text-gray-700">
                 <div class="border-b border-gray-200 pb-2">
@@ -642,72 +655,66 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">NIP:</label>
-                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium"
-                            x-text="selectedCuti.nip"></div>
-                        <input type="hidden" name="nip" :value="selectedCuti.nip">
+                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium" x-text="selectedCuti.nip"></div>
                     </div>
-                <div>
-                    <label class="font-bold text-gray-500 block mb-0.5">Jabatan:</label>
-                    <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium"
-                        x-text="selectedCuti.jabatan"></div>
-                    <input type="hidden" name="jabatan" :value="selectedCuti.jabatan">
-                </div>
-
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Jenis Cuti:</label>
-
-                        <!-- Tampilan saja (tidak bisa diedit) -->
-                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200
-                                    font-bold text-sky-700">
-                            Tahunan
-                        </div>
-
-                        <!-- Nilai tetap dikirim ke backend -->
-                        <input type="hidden" name="jenis_cuti" value="Tahunan">
-                    </div>
-                <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Sisa Kuota:</label>
-                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-sky-600 font-bold"
-                            x-text="selectedCuti.sisa_cuti"></div>
-                        <input type="hidden" name="sisa_cuti" :value="selectedCuti.sisa_cuti">
+                        <label class="font-bold text-gray-500 block mb-0.5">Jabatan:</label>
+                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium" x-text="selectedCuti.jabatan"></div>
                     </div>
                 </div>
+
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Mulai:</label>
-                        <input type="date" name="tanggal_mulai" x-model="selectedCuti.tanggal_mulai" min="{{ \Carbon\Carbon::today()->addDays(3)->toDateString() }}" @change="hitungHariEdit(); checkChange()" class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none">
+                        <input type="date" name="tanggal_mulai" 
+                               x-model="selectedCuti.tanggal_mulai" 
+                               @change="hitungHariEdit(); isChanged = true" 
+                               class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
                     </div>
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Selesai:</label>
-                        <input type="date" name="tanggal_selesai" x-model="selectedCuti.tanggal_selesai" :min="selectedCuti.tanggal_mulai" @change="hitungHariEdit(); checkChange()" class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none">
+                        <input type="date" name="tanggal_selesai" 
+                               x-model="selectedCuti.tanggal_selesai" 
+                               :min="selectedCuti.tanggal_mulai" 
+                               @change="hitungHariEdit(); isChanged = true" 
+                               class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
                     </div>
+                </div>
+
+                <div>
+                    <label class="font-bold text-gray-500 block mb-0.5 text-[10px]">Alamat:</label>
+                    <textarea 
+                        name="alamat" 
+                        x-model="selectedCuti.alamat"
+                        @input="isChanged = true"
+                        required
+                        class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none resize-none italic min-h-[40px] text-[10px] focus:ring-1 focus:ring-sky-400"
+                        placeholder="Masukkan alamat lengkap..."></textarea>
                 </div>
 
                 <div>
                     <label class="font-bold text-gray-500 block mb-0.5">Alasan Cuti:</label>
-                    <textarea name="alasan_cuti"
+                    <textarea 
+                        name="keterangan" {{-- WAJIB: Sama dengan Controller dan Database --}}
                         x-model="selectedCuti.alasan_cuti"
-                        @input="checkChange()"
-                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                        class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none resize-none italic">
-                    </textarea>
+                        @input="isChanged = true"
+                        oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
+                        class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none resize-none italic min-h-[60px] text-[10px] focus:ring-1 focus:ring-sky-400"
+                        placeholder="Contoh: Menghadiri acara keluarga atau keperluan mendesak lainnya.."></textarea>
                 </div>
+
                 <div class="flex justify-between items-center bg-sky-100/50 p-1.5 rounded border border-sky-200">
                     <span class="font-bold text-sky-700">Total Hari:</span>
-                    <span class="font-black text-sky-800"><span x-text="selectedCuti.jumlah_hari || '0'"></span> Hari</span>
+                    <span class="font-black text-sky-800"><span x-text="selectedCuti.jumlah_hari"></span> Hari</span>
                     <input type="hidden" name="jumlah_hari" :value="selectedCuti.jumlah_hari">
                 </div>
             </div>
 
             <div class="flex justify-end mt-3 gap-2">
+                <button type="button" @click="showEditModal=false" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-[10px] font-bold">Batal</button>
                 <button type="submit"
                     :disabled="!isChanged"
-                    :class="!isChanged 
-                        ? 'bg-gray-400 cursor-not-allowed' 
-                        : 'bg-sky-600 hover:bg-sky-700'"
+                    :class="!isChanged ? 'bg-gray-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700'"
                     class="px-3 py-1.5 text-white rounded text-[10px] font-bold shadow-sm transition">
                     Update Data
                 </button>
@@ -823,14 +830,29 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-@if (session('success'))
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+@if(session('success'))
 <script>
     Swal.fire({
         icon: 'success',
-        title: 'Berhasil',
-        text: '{{ session('success') }}',
-        timer: 2000,
-        showConfirmButton: false
+        title: 'Berhasil!',
+        text: "{{ session('success') }}",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        borderRadius: '15px'
+    });
+</script>
+@endif
+
+@if($errors->any())
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal Update',
+        html: '{!! implode("<br>", $errors->all()) !!}',
+        confirmButtonColor: '#0288D1'
     });
 </script>
 @endif

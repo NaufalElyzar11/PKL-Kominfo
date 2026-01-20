@@ -16,219 +16,188 @@
 
     {{-- 📊 Statistik --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-
-        {{-- Card --}}
-        <div class="p-4 bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-800 dark:to-sky-900 
-            rounded-xl shadow-md border-l-4 border-sky-500 flex items-center justify-between 
-            transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+        {{-- Total Pegawai --}}
+        <div class="p-4 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl shadow-md border-l-4 border-sky-500 flex items-center justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
             <div>
-                <p class="text-[11px] font-semibold text-gray-600 dark:text-gray-300">Total Pegawai</p>
-                <p class="text-2xl font-extrabold text-sky-700 dark:text-sky-300 mt-1">{{ $totalPegawai ?? 0 }}</p>
+                <p class="text-[11px] font-semibold text-gray-600">Total Pegawai</p>
+                <p class="text-2xl font-extrabold text-sky-700 mt-1">{{ $totalPegawai ?? 0 }}</p>
             </div>
             <i class="fa-solid fa-users text-sky-400 text-2xl opacity-70"></i>
         </div>
 
-        <div class="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-800 dark:to-yellow-900 
-            rounded-xl shadow-md border-l-4 border-yellow-500 flex items-center justify-between
-            transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+        {{-- Cuti Menunggu --}}
+        <div class="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl shadow-md border-l-4 border-yellow-500 flex items-center justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
             <div>
-                <p class="text-[11px] font-semibold text-gray-600 dark:text-gray-300">Cuti Menunggu</p>
-                <p class="text-2xl font-extrabold text-yellow-700 dark:text-yellow-300 mt-1">{{ $cutiPending ?? 0 }}</p>
+                <p class="text-[11px] font-semibold text-gray-600">Cuti Menunggu</p>
+                <p class="text-2xl font-extrabold text-yellow-700 mt-1">{{ $cutiPending ?? 0 }}</p>
             </div>
             <i class="fa-solid fa-hourglass-half text-yellow-400 text-2xl opacity-70"></i>
         </div>
 
-        <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-800 dark:to-green-900 
-            rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between
-            transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+        {{-- Cuti Disetujui --}}
+        <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md border-l-4 border-green-500 flex items-center justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
             <div>
-                <p class="text-[11px] font-semibold ttext-gray-600 dark:text-gray-300">Cuti Disetujui</p>
-                <p class="text-2xl font-extrabold text-green-700 dark:text-green-300 mt-1">{{ $cutiDisetujui ?? 0 }}</p>
+                <p class="text-[11px] font-semibold text-gray-600">Cuti Disetujui</p>
+                <p class="text-2xl font-extrabold text-green-700 mt-1">{{ $cutiDisetujui ?? 0 }}</p>
             </div>
             <i class="fa-solid fa-check-circle text-green-400 text-2xl opacity-70"></i>
         </div>
 
-        <div class="p-4 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-800 dark:to-red-900 
-            rounded-xl shadow-md border-l-4 border-red-500 flex items-center justify-between
-            transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+        {{-- Cuti Ditolak --}}
+        <div class="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-md border-l-4 border-red-500 flex items-center justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
             <div>
-                <p class="text-[11px] font-semibold text-gray-600 dark:text-gray-300">Cuti Ditolak</p>
-                <p class="text-2xl font-extrabold text-red-700 dark:text-red-300 mt-1">{{ $cutiDitolak ?? 0 }}</p>
+                <p class="text-[11px] font-semibold text-gray-600">Cuti Ditolak</p>
+                <p class="text-2xl font-extrabold text-red-700 mt-1">{{ $cutiDitolak ?? 0 }}</p>
             </div>
             <i class="fa-solid fa-times-circle text-red-400 text-2xl opacity-70"></i>
         </div>
-
     </div>
 
     {{-- 🧾 Tabel Utama --}}
     <div class="space-y-6">
 
-        {{-- 📋 Data Pegawai --}}
-        <div class="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-            <h2 class="text-base font-bold text-sky-700 dark:text-sky-400 mb-3 border-b pb-2">
-                Data Pegawai Terbaru
-            </h2>
+        {{-- 📋 Data Pegawai Terbaru --}}
+        <div class="bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-base font-bold text-sky-700 mb-3 border-b pb-2">Data Pegawai Terbaru</h2>
 
             <div class="overflow-auto max-h-80 border rounded-lg text-[11px]">
-                <table class="min-w-full border-collapse">
+                <table class="min-w-full border-collapse bg-white">
                     <thead class="bg-sky-600 text-white sticky top-0 z-10 text-[10px]">
                         <tr>
                             <th class="px-2 py-1 border w-10 text-center">No</th>
-                            <th class="px-2 py-1 border w-32">Nama</th>
-                            <th class="px-2 py-1 border w-24">NIP</th>
-                            <th class="px-2 py-1 border w-36">Email</th>
-                            <th class="px-2 py-1 border w-16 text-center">Role</th>
-                            <th class="px-2 py-1 border w-24">Jabatan</th>
-                            <th class="px-2 py-1 border w-24">Unit</th>
-                            <th class="px-2 py-1 border w-20 text-center">Telepon</th>
-                            <th class="px-2 py-1 border w-20 text-center">Status</th>
+                            <th class="px-2 py-1 border">Nama</th>
+                            <th class="px-2 py-1 border">NIP</th>
+                            <th class="px-2 py-1 border">Email</th>
+                            <th class="px-2 py-1 border text-center">Role</th>
+                            <th class="px-2 py-1 border text-center">Jabatan</th>
+                            <th class="px-2 py-1 border text-center">Status</th>
                         </tr>
                     </thead>
-
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($pegawaiTerbaru as $index => $p)
                             @php
                                 $nip = $p->nip ? substr($p->nip, 0, 4).'•••'.substr($p->nip, -2) : '-';
-                                $email = $p->user->email ?? '-';
+                                $email = $p->user?->email ?? '-';
                                 if ($email !== '-') {
                                     [$name, $domain] = explode('@', $email);
-                                    $masked = substr($name, 0, 3) . str_repeat('*', max(0, strlen($name) - 3));
-                                    $email = $masked . '@' . $domain;
+                                    $email = substr($name, 0, 3) . '***@' . $domain;
                                 }
                             @endphp
-
-                            <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
+                            <tr class="hover:bg-gray-50 transition">
                                 <td class="px-2 py-1 border text-center">{{ $index + 1 }}</td>
-                                <td class="px-2 py-1 border">{{ $p->nama }}</td>
-                                <td class="px-2 py-1 border text-center">{{ $nip }}</td>
-                                <td class="px-2 py-1 border">{{ $email }}</td>
-                                <td class="px-2 py-1 border text-center">{{ $p->user->role ?? '-' }}</td>
-                                <td class="px-2 py-1 border text-center">{{ $p->jabatan }}</td>
-                                <td class="px-2 py-1 border text-center">{{ $p->unit_kerja }}</td>
+                                <td class="px-2 py-1 border font-medium text-gray-800">{{ $p->nama }}</td>
+                                <td class="px-2 py-1 border text-center font-mono text-gray-600">{{ $nip }}</td>
+                                <td class="px-2 py-1 border text-gray-600">{{ $email }}</td>
+                                <td class="px-2 py-1 border text-center capitalize">{{ $p->user?->role ?? '-' }}</td>
+                                <td class="px-2 py-1 border text-center">{{ $p->jabatan ?? '-' }}</td>
                                 <td class="px-2 py-1 border text-center">
-                                    @php
-                                        $telp = $p->telepon;
-                                        if ($telp) {
-                                            $maskedTelp = substr($telp, 0, 4) . str_repeat('*', max(strlen($telp) - 4, 0));
-                                        } else {
-                                            $maskedTelp = '-';
-                                        }
-                                    @endphp
-
-                                    {{ $maskedTelp }}
-                                </td>
-                                <td class="px-2 py-1 border text-center">
-                                    @if ($p->status === 'aktif')
-                                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[9px]">Aktif</span>
-                                    @else
-                                        <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[9px]">Nonaktif</span>
-                                    @endif
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $p->status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        {{ ucfirst($p->status) }}
+                                    </span>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="9" class="px-3 py-3 text-center text-gray-500">
-                                    Tidak ada data pegawai ditemukan.
-                                </td>
-                            </tr>
+                            <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500 italic">Belum ada data pegawai.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        {{-- 📋 Data Pengajuan Cuti --}}
-        <div class="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-            <h2 class="text-base font-bold text-sky-700 dark:text-sky-400 mb-3 border-b pb-2">
-                Data Pengajuan Cuti Terbaru
-            </h2>
+        {{-- 📋 Data Pengajuan Cuti Terbaru --}}
+        <div class="bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+            <h2 class="text-base font-bold text-sky-700 mb-3 border-b pb-2">Data Pengajuan Cuti Terbaru</h2>
 
             <div class="overflow-auto max-h-80 border rounded-lg text-[11px]">
-                <table class="min-w-full border-collapse">
-                    <thead class="bg-sky-600 text-white text-[10px] sticky top-0">
+                <table class="min-w-full border-collapse bg-white">
+                    <thead class="bg-sky-600 text-white text-[10px] sticky top-0 z-10">
                         <tr>
                             <th class="px-2 py-1 border w-10 text-center">No</th>
-                            <th class="px-2 py-1 border w-32">Nama / NIP</th>
-                            <th class="px-2 py-1 border w-24">Jabatan</th>
-                            <th class="px-2 py-1 border w-20">Jenis</th>
-                            <th class="px-2 py-1 border w-36">Alasan</th>
-                            <th class="px-2 py-1 border w-28">Tanggal</th>
-                            <th class="px-2 py-1 border w-14 text-center">Hari</th>
-                            <th class="px-2 py-1 border w-20 text-center">Status</th>
+                            <th class="px-2 py-1 border">Nama / NIP</th>
+                            <th class="px-2 py-1 border text-center">Jabatan</th>
+                            <th class="px-2 py-1 border text-center">Jenis</th>
+                            <th class="px-2 py-1 border">Alasan</th>
+                            <th class="px-2 py-1 border text-center">Tanggal</th>
+                            <th class="px-2 py-1 border text-center">Status</th>
                         </tr>
                     </thead>
-
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($cutiTerbaru as $i => $c)
-                            <tr class="hover:bg-gray-100 dark:hover:bg-gray-800">
+                            @php
+                                // FIX: Gunakan ?-> agar tidak error jika pegawai tidak ditemukan
+                                $pegawaiNama = $c->pegawai?->nama ?? 'Pegawai Terhapus';
+                                $pegawaiNip = $c->pegawai?->nip;
+                                $nipPrivasi = $pegawaiNip ? substr($pegawaiNip, 0, 5) . '****' . substr($pegawaiNip, -4) : '-';
+                            @endphp
+                            <tr class="hover:bg-gray-50 transition">
                                 <td class="px-2 py-1 border text-center">{{ $i + 1 }}</td>
-
-                               <td class="px-2 py-1 border">
-                                    {{ $c->pegawai->nama }} <br>
-
-                                    @php
-                                        $nip = $c->pegawai->nip;
-                                        if ($nip) {
-                                            // 5 digit awal + ***** + 4 digit akhir
-                                            $nipPrivasi = substr($nip, 0, 5)
-                                                        . str_repeat('*', max(strlen($nip) - 9, 0))
-                                                        . substr($nip, -4);
-                                        } else {
-                                            $nipPrivasi = '-';
-                                        }
-                                    @endphp
-
-                                    <span class="text-gray-500 text-[9px]">{{ $nipPrivasi }}</span>
+                                <td class="px-2 py-1 border leading-tight">
+                                    <span class="font-bold text-gray-800">{{ $pegawaiNama }}</span> <br>
+                                    <span class="text-gray-500 text-[9px] font-mono">{{ $nipPrivasi }}</span>
                                 </td>
-
-                                <td class="px-2 py-1 border text-center">{{ $c->pegawai->jabatan }}</td>
+                                <td class="px-2 py-1 border text-center text-gray-600">{{ $c->pegawai?->jabatan ?? '-' }}</td>
                                 <td class="px-2 py-1 border text-center">{{ $c->jenis_cuti }}</td>
-
-                                <td class="px-2 py-1 border">
-                                    {{ $c->alasan_cuti ? Str::limit($c->alasan_cuti, 35) : '-' }}
+                                <td class="px-2 py-1 border max-w-[150px] truncate" title="{{ $c->alasan_cuti }}">
+                                    {{ $c->alasan_cuti ? Str::limit($c->alasan_cuti, 30) : '-' }}
                                 </td>
-
-                               <td class="px-2 py-1 border text-center text-[11px] leading-tight">
-                                    {{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d-m-Y') }}
-                                    <span class="block">s/d {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d-m-Y') }}</span>
+                                <td class="px-2 py-1 border text-center text-[10px] leading-tight font-mono">
+                                    {{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d/m/y') }} <br>
+                                    <span class="text-gray-400">s/d</span> {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d/m/y') }}
                                 </td>
-
-                                <td class="px-2 py-1 border text-center">{{ $c->jumlah_hari }}</td>
-
                                 <td class="px-2 py-1 border text-center">
-                                    @if ($c->status === 'menunggu')
-                                        <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-[9px]">
-                                            Menunggu
-                                        </span>
-                                    @elseif ($c->status === 'disetujui')
-                                        <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[9px]">
-                                            Disetujui
-                                        </span>
-                                    @elseif ($c->status === 'ditolak')
-                                        <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-[9px]">
-                                            Ditolak
-                                        </span>
-                                    @else
-                                        <span class="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full text-[9px]">
-                                            -
-                                        </span>
-                                    @endif
+                                    @php
+                                        $color = match($c->status) {
+                                            'disetujui' => 'bg-green-100 text-green-700',
+                                            'ditolak'   => 'bg-red-100 text-red-700',
+                                            default     => 'bg-yellow-100 text-yellow-700'
+                                        };
+                                    @endphp
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold {{ $color }}">
+                                        {{ ucfirst($c->status) }}
+                                    </span>
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="10" class="px-3 py-3 text-center text-gray-500">
-                                    Tidak ada data cuti ditemukan.
-                                </td>
-                            </tr>
+                            <tr><td colspan="7" class="px-3 py-4 text-center text-gray-500 italic">Tidak ada pengajuan terbaru.</td></tr>
                         @endforelse
                     </tbody>
-
                 </table>
             </div>
         </div>
-
     </div>
-
 </div>
+
+{{-- 📜 SCRIPT AREA --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{{-- PISAHKAN SCRIPT DI DALAM BLOK @IF AGAR VS CODE TIDAK MERAH --}}
+@if(session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: "{{ session('success') }}",
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+    });
+</script>
+@endif
+
+@if(session('error'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: "{{ session('error') }}",
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000
+    });
+</script>
+@endif
+
 @endsection

@@ -210,56 +210,42 @@ public function store(Request $request)
     /** ========================== ✏️ UPDATE CUTI ============================= */
 public function update(Request $request, $id)
 {
-    // ================= VALIDASI =================
-    $request->validate([
-        'nama' => 'required|string|max:255',
-        'nip' => 'required',
-        'jenis_cuti' => 'required',
+    $cuti = Cuti::findOrFail($id);
 
+    // 1. VALIDASI (Gunakan 'keterangan' agar sinkron dengan Database/Model)
+    $request->validate([
         'tanggal_mulai' => [
             'required',
             'date',
             function ($attribute, $value, $fail) {
-                $minDate = Carbon::today()->addDays(3);
-
-                if (Carbon::parse($value)->lt($minDate)) {
+                $minDate = \Carbon\Carbon::today()->addDays(3);
+                if (\Carbon\Carbon::parse($value)->lt($minDate)) {
                     $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
                 }
             },
         ],
-
         'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-        'alamat' => [
-        'required',
-            'regex:/^[A-Za-z0-9\s]+$/'
-        ],
-
-        'keterangan' => [
-            'required',
-            'regex:/^[A-Za-z\s]+$/'
-        ],
-
-
+        'keterangan'      => 'required|string|max:500', // Sesuai kolom database
+        'alamat'          => 'nullable|string|max:255',
     ]);
 
-    // ================= HITUNG JUMLAH HARI =================
-    $start = Carbon::parse($request->tanggal_mulai);
-    $end   = Carbon::parse($request->tanggal_selesai);
+    // 2. HITUNG DURASI
+    $start = \Carbon\Carbon::parse($request->tanggal_mulai);
+    $end   = \Carbon\Carbon::parse($request->tanggal_selesai);
     $jumlahHari = $start->diffInDays($end) + 1;
 
-    // ================= UPDATE =================
-    $cuti = Cuti::findOrFail($id);
+    // 3. EKSEKUSI UPDATE (Gunakan nama properti sesuai Model)
+    $cuti->update([
+        'tanggal_mulai'   => $request->tanggal_mulai,
+        'tanggal_selesai' => $request->tanggal_selesai,
+        'jumlah_hari'     => $jumlahHari,
+        'keterangan'      => $request->keterangan, // Update kolom keterangan
+        'alamat'          => $request->alamat,
+    ]);
 
-    $cuti->tanggal_mulai = $request->tanggal_mulai;
-    $cuti->tanggal_selesai = $request->tanggal_selesai;
-    $cuti->jumlah_hari = $jumlahHari;
-    $cuti->alamat = $request->alamat;
-    $cuti->keterangan = $request->keterangan;
-
-    $cuti->save();
-
-    return back()->with('success', 'Pengajuan cuti berhasil diperbarui.');
+    return redirect()->route('pegawai.cuti.index')->with('success', 'Data pengajuan cuti berhasil diperbarui.');
 }
+
     /** ========================== 🔍 DETAIL CUTI ============================ */
     public function detail($id)
     {
@@ -314,33 +300,21 @@ public function update(Request $request, $id)
  */
 private function hitungSisaCuti($pegawaiId)
 {
-    $tahunSekarang = date('Y');
-    $tahunLalu = $tahunSekarang - 1;
+    $tahunSekarang = date('Y'); // Mengambil tahun 2026
 
-    // Jatah cuti standar per tahun
+    // 1. Jatah cuti standar hanya untuk tahun berjalan
     $jatahTahunan = 12;
 
-    // 1. Hitung penggunaan cuti tahun lalu (Hanya yang Disetujui)
-    $cutiDisetujuiTahunLalu = Cuti::where('user_id', $pegawaiId)
-        ->whereIn('status', ['Disetujui', 'disetujui']) // Mengantisipasi perbedaan penulisan
-        ->where('tahun', $tahunLalu)
-        ->sum('jumlah_hari');
-
-    // 2. Hitung sisa tahun lalu (Jatah 12 - Terpakai Tahun Lalu)
-    // Jika ingin dibatasi sesuai aturan umum (max 6 hari), gunakan: min(6, max(0, ...))
-    $sisaTahunLalu = max(0, $jatahTahunan - $cutiDisetujuiTahunLalu);
-
-    // 3. Total jatah yang dimiliki di tahun ini (12 + sisa tahun lalu)
-    $totalJatahTahunIni = $jatahTahunan + $sisaTahunLalu;
-
-    // 4. Hitung penggunaan cuti tahun berjalan (Tahun Sekarang)
-    $cutiDisetujuiTahunIni = Cuti::where('user_id', $pegawaiId)
-        ->whereIn('status', ['Disetujui', 'disetujui'])
+    // 2. Hitung penggunaan cuti tahun berjalan
+    // Sertakan status 'Menunggu' agar kuota langsung terpotong saat diajukan
+    $terpakaiTahunIni = Cuti::where('user_id', $pegawaiId)
         ->where('tahun', $tahunSekarang)
+        ->whereIn('status', ['Disetujui', 'disetujui', 'Menunggu', 'menunggu'])
         ->sum('jumlah_hari');
 
-    // 5. Hasil Akhir: Total Jatah - Terpakai Tahun Ini
-    $sisaFinal = max(0, $totalJatahTahunIni - $cutiDisetujuiTahunIni);
+    // 3. Hasil Akhir: 12 - (Cuti Disetujui + Cuti Menunggu)
+    // Perhitungan: 12 - 5 = 7
+    $sisaFinal = max(0, $jatahTahunan - $terpakaiTahunIni);
 
     return $sisaFinal;
 }

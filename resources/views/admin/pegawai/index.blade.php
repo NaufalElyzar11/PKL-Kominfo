@@ -185,20 +185,22 @@
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
 
-                                {{-- Tombol Hapus --}}
-                                <button type="button"
-                                    @click="
-                                        showDelete = true;
-                                        deleteUrl = '{{ route('admin.pegawai.destroy', $p->id) }}';
-                                        deleteName = '{{ $p->nama }}';
-                                    "
-                                    class="text-red-600 hover:text-red-800"
-                                    title="Hapus">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
+{{-- Tombol Hapus yang Baru --}}
+        <button type="button" 
+                onclick="confirmDelete('{{ $p->id }}', '{{ addslashes($p->nama) }}')"
+                class="text-red-600 hover:text-red-800" title="Hapus">
+            <i class="fa-solid fa-trash-can"></i>
+        </button>
 
-                            </div>
-                        </td>
+        {{-- Form Delete Tersembunyi (Sangat Penting: Harus Unik per ID) --}}
+        <form id="delete-form-{{ $p->id }}" 
+              action="{{ route('admin.pegawai.destroy', $p->id) }}" 
+              method="POST" style="display: none;">
+            @csrf
+            @method('DELETE')
+        </form>
+    </div>
+</td>
                     </tr>
 
                 @empty
