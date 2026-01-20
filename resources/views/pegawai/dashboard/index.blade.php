@@ -30,7 +30,52 @@
             </h2>
 
             <div class="h-[360px] min-h-[260px]">
-                <canvas id="sisaCutiChart"></canvas>
+                <div class="space-y-6">
+
+                    <!-- Angka Utama -->
+                    <div class="text-center">
+                        <p class="text-sm text-gray-500">Hak Cuti Tahunan</p>
+                        <p class="text-4xl font-extrabold text-sky-700">12 Hari</p>
+                    </div>
+
+                    <!-- Progress -->
+                    @php
+                        $hakCuti = 12;
+                        $terpakai = $cutiTerpakai ?? 0;
+                        $sisa = $hakCuti - $terpakai;
+                        $persen = ($terpakai / $hakCuti) * 100;
+                    @endphp
+
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Terpakai</span>
+                            <span class="font-semibold text-gray-700">
+                                {{ $terpakai }} / {{ $hakCuti }} hari
+                            </span>
+                        </div>
+
+                        <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
+                            <div class="bg-yellow-400 h-5 rounded-full transition-all"
+                                style="width: {{ $persen }}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sisa -->
+                    <div class="flex justify-between items-center bg-sky-50 rounded-lg p-4">
+                        <span class="text-gray-700 font-medium">Sisa Cuti</span>
+                        <span class="text-3xl font-extrabold text-sky-700">
+                            {{ $sisa }} Hari
+                        </span>
+                    </div>
+
+                    <!-- Catatan -->
+                    <p class="text-xs text-gray-500 text-center">
+                        * Perhitungan berdasarkan cuti yang sudah <b>disetujui</b>
+                    </p>
+
+                </div>
+
             </div>
         </div>
 
