@@ -297,6 +297,8 @@ Route::prefix('pegawai')->as('pegawai.')->middleware('role:pegawai')->group(func
     // Profile Pegawai
     Route::prefix('profile')->as('profile.')->group(function () {
         Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
+        Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');     // Wajib Ada
+        Route::patch('/update', [PegawaiProfileController::class, 'update'])->name('update'); // Wajib Ada
     });
 });
 });

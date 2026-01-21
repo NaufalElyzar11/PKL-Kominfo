@@ -17,9 +17,10 @@
 
                 <select name="status" class="px-2 py-1 border border-gray-300 rounded w-32 text-[10px] focus:ring-1 focus:ring-blue-400 outline-none">
                     <option value="">Semua Status</option>
-                    <option value="pending" {{ request('status')=='pending'? 'selected':'' }}>⏳ Menunggu</option>
-                    <option value="disetujui" {{ request('status')=='disetujui'? 'selected':'' }}>✅ Disetujui</option>
-                    <option value="ditolak" {{ request('status')=='ditolak'? 'selected':'' }}>❌ Ditolak</option>
+                    {{-- Ubah value="pending" menjadi value="Menunggu" --}}
+                    <option value="Menunggu" {{ request('status') == 'Menunggu' ? 'selected' : '' }}>⏳ Menunggu</option>
+                    <option value="Disetujui" {{ request('status') == 'Disetujui' ? 'selected' : '' }}>✅ Disetujui</option>
+                    <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>❌ Ditolak</option>
                 </select>
 
                 <button type="submit" class="px-2 py-1 bg-sky-600 text-white rounded text-[10px] hover:bg-sky-700 transition shadow-sm">
