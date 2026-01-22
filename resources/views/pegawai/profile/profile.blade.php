@@ -177,9 +177,10 @@
                     <button @click="showProfileModal = false" class="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition font-semibold text-sm">
                         <i class="fa-solid fa-times mr-2"></i>Tutup
                     </button>
-                    <button class="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition font-semibold text-sm">
-                        <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Profile
-                    </button>
+                <a href="/pegawai/profile/edit"
+                class="px-6 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition font-semibold text-sm flex items-center justify-center">
+                    <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Profile
+                </a>
                 </div>
             </div>
         </div>

@@ -28,7 +28,8 @@
     // Fungsi buka modal Edit
     // =========================
     openEditModal(pegawai) {
-        this.selectedPegawai = pegawai;
+        this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
+        this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
         this.showEditModal = true;
     },
 
@@ -117,6 +118,8 @@
                     <th class="px-2 py-1 border">Role</th>
                     <th class="px-2 py-1 border">Jabatan</th>
                     <th class="px-2 py-1 border">Unit</th>
+                    <th class="px-2 py-1 border">Atasan</th>
+                    <th class="px-2 py-1 border">Pemberi Cuti</th>
                     <th class="px-2 py-1 border">Telepon</th>
                     <th class="px-2 py-1 border">Status</th>
                     <th class="px-2 py-1 border text-center">Aksi</th>
@@ -134,6 +137,8 @@
                             'role' => optional($p->user)->role,
                             'jabatan' => $p->jabatan,
                             'unit_kerja' => $p->unit_kerja,
+                            'atasan' => $p->atasan, 
+                            'pemberi_cuti' => $p->pemberi_cuti,
                             'telepon' => $p->telepon,
                             'status' => $p->status
                         ];
@@ -157,6 +162,8 @@
                         <td class="px-2 py-1 border capitalize">{{ optional($p->user)->role ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $p->jabatan ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $p->unit_kerja ?? '-' }}</td>
+                        <td class="px-2 py-1 border">{{ $p->atasan ?? '-' }}</td>
+                        <td class="px-2 py-1 border">{{ $p->pemberi_cuti ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $telepon }}</td>
                         <td class="px-2 py-1 border text-center">{{ $p->status ?? '-' }}</td>
 
@@ -185,22 +192,22 @@
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
 
-{{-- Tombol Hapus yang Baru --}}
-        <button type="button" 
-                onclick="confirmDelete('{{ $p->id }}', '{{ addslashes($p->nama) }}')"
-                class="text-red-600 hover:text-red-800" title="Hapus">
-            <i class="fa-solid fa-trash-can"></i>
-        </button>
+                    {{-- Tombol Hapus yang Baru --}}
+                            <button type="button" 
+                                    onclick="confirmDelete('{{ $p->id }}', '{{ addslashes($p->nama) }}')"
+                                    class="text-red-600 hover:text-red-800" title="Hapus">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
 
-        {{-- Form Delete Tersembunyi (Sangat Penting: Harus Unik per ID) --}}
-        <form id="delete-form-{{ $p->id }}" 
-              action="{{ route('admin.pegawai.destroy', $p->id) }}" 
-              method="POST" style="display: none;">
-            @csrf
-            @method('DELETE')
-        </form>
-    </div>
-</td>
+                            {{-- Form Delete Tersembunyi (Sangat Penting: Harus Unik per ID) --}}
+                            <form id="delete-form-{{ $p->id }}" 
+                                action="{{ route('admin.pegawai.destroy', $p->id) }}" 
+                                method="POST" style="display: none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        </div>
+                    </td>
                     </tr>
 
                 @empty
@@ -210,46 +217,51 @@
                 @endforelse
             </tbody>
         </table>
+
+
     </div>
     </div>
 
-        {{-- Pagination --}}
-        <div x-data="{ 
-                currentPage: {{ $pegawai->currentPage() }},
-                totalPages: {{ $pegawai->lastPage() }},
-                goToPage(page) {
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('page', page);
-                    window.location.href = url.toString();
-                }
-             }" 
-             class="mt-4 flex items-center justify-end space-x-2 text-sm select-none">
+    {{-- Container Pagination --}}
+    <div class="mt-4 flex items-center justify-end space-x-2 text-[11px] select-none">
+        
+        {{-- Tombol Sebelumnya (<) --}}
+        @if ($pegawai->onFirstPage())
+            <span class="px-2 py-1 border rounded bg-gray-50 text-gray-400 cursor-not-allowed">
+                <i class="fa-solid fa-chevron-left"></i>
+            </span>
+        @else
+            <a href="{{ $pegawai->previousPageUrl() }}" 
+            class="px-2 py-1 border rounded hover:bg-gray-100 text-gray-600 transition shadow-sm">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+        @endif
 
-            <button @click="if(currentPage > 1) goToPage(currentPage - 1)"
-                    class="px-2 py-1 border rounded hover:bg-gray-200"
-                    :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''">
-                &lt;
-            </button>
-
-            <template x-for="page in totalPages">
-                <button @click="goToPage(page)" x-text="page"
-                        :class="page === currentPage 
-                            ? 'px-3 py-1 bg-blue-600 text-white rounded' 
-                            : 'px-3 py-1 border rounded hover:bg-gray-200'">
-                </button>
-            </template>
-
-            <button @click="if(currentPage < totalPages) goToPage(currentPage + 1)"
-                    class="px-2 py-1 border rounded hover:bg-gray-200"
-                    :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''">
-                &gt;
-            </button>
+        {{-- Indikator Halaman (Angka 1) --}}
+        <div class="flex items-center">
+            <span class="px-3 py-1 bg-blue-600 text-white rounded font-bold shadow-sm">
+                {{ $pegawai->currentPage() }}
+            </span>
+            {{-- Opsional: Menampilkan total halaman --}}
+            <span class="ml-2 text-gray-500">dari {{ $pegawai->lastPage() }}</span>
         </div>
+
+        {{-- Tombol Selanjutnya (>) --}}
+        @if ($pegawai->hasMorePages())
+            <a href="{{ $pegawai->nextPageUrl() }}" 
+            class="px-2 py-1 border rounded hover:bg-gray-100 text-gray-600 transition shadow-sm">
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        @else
+            <span class="px-2 py-1 border rounded bg-gray-50 text-gray-400 cursor-not-allowed">
+                <i class="fa-solid fa-chevron-right"></i>
+            </span>
+        @endif
     </div>
 
     <hr>
 
-    {{-- ================= MODAL TAMBAH PEGAWAI (LEBIH KECIL) ================= --}}
+{{-- ================= MODAL TAMBAH PEGAWAI (LEBIH KECIL) ================= --}}
 <div x-show="showCreateModal" x-cloak @click.self="closeModal()"
      class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50">
 
@@ -263,80 +275,88 @@
         <form action="{{ route('admin.pegawai.store') }}" method="POST" class="space-y-3" autocomplete="off">
             @csrf
 
-            {{-- FORM UTAMA --}}
-            <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Nama Akun <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" required
-                           class="block w-full border rounded-lg p-1"
-                           placeholder="Nama Login">
-                </div>
+        {{-- FORM UTAMA --}}
+        <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
 
+            {{-- ATASAN & PEMBERI CUTI (PALING ATAS, FULL WIDTH) --}}
+            <div class="col-span-2">
+                <div class="grid grid-cols-2 gap-2 bg-blue-50/50 p-2 rounded-lg border border-blue-100">
                 <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Nama Lengkap <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama" required
+                    <label class="block font-medium text-gray-700 mb-0.5">Atasan Langsung</label>
+                    <input type="text" name="atasan"
                         class="block w-full border rounded-lg p-1"
-                        placeholder="Nama Pegawai"
-                        {{-- Menghapus angka DAN simbol secara otomatis saat diketik --}}
-                        oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                        {{-- Validasi HTML5 untuk memastikan hanya huruf dan spasi yang dikirim --}}
-                        pattern="^[a-zA-Z\s]+$"
-                        title="Nama hanya boleh berisi huruf dan spasi">
-                    @error('nama')
-                        <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
-                    @enderror
+                        placeholder="Nama Atasan"
+                        oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')"
+                        pattern="^[a-zA-Z\s.,]+$"
+                        title="Hanya diperbolehkan huruf, spasi, titik, dan koma">
                 </div>
-
                 <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
-                    <input type="text" name="nip" 
-                        {{-- Batasi maksimal 18 karakter --}}
-                        maxlength="18" 
-                        {{-- Paksa keyboard angka pada perangkat mobile --}}
-                        inputmode="numeric"
-                        {{-- Hapus karakter selain angka secara otomatis saat diketik --}}
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                        class="block w-full border rounded-lg p-1"
-                        placeholder="Masukkan 18 digit NIP"
-                        required>
-                    @error('nip')
-                        <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
-                    @enderror
+                    <label class="block font-medium text-gray-700 mb-0.5">Pejabat Pemberi Cuti</label>
+                    <input type="text" 
+                        name="pemberi_cuti" 
+                        value="Kanafi, S.IP, MM"
+                        readonly 
+                        class="block w-full border border-gray-200 rounded-lg p-1" 
+                        placeholder="Nama Pejabat">
                 </div>
+                </div>
+            </div>
 
+            {{-- NAMA LENGKAP --}}
             <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Jabatan <span class="text-red-500">*</span></label>
+                <label class="block font-medium text-gray-700 mb-0.5">
+                    Nama Lengkap <span class="text-red-500">*</span>
+                </label>
+                <input type="text" name="nama" required
+                    class="block w-full border rounded-lg p-1 focus:ring-1 focus:ring-sky-500 outline-none"
+                    placeholder="Nama Pegawai"
+                    {{-- Mengizinkan huruf, spasi, titik, dan koma --}}
+                    oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')"
+                    {{-- Validasi pola agar menyertakan titik dan koma --}}
+                    pattern="^[a-zA-Z\s.,]+$"
+                    {{-- Pesan peringatan diperbarui --}}
+                    title="Nama hanya boleh berisi huruf, spasi, titik, dan koma">
+            </div>
+
+            {{-- NIP --}}
+            <div>
+                <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
+                <input type="text" name="nip"
+                    maxlength="18"
+                    inputmode="numeric"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    class="block w-full border rounded-lg p-1"
+                    placeholder="Masukkan 18 digit NIP"
+                    required>
+            </div>
+
+            {{-- JABATAN (KINI BERDAMPINGAN DENGAN UNIT KERJA) --}}
+            <div>
+                <label class="block font-medium text-gray-700 mb-0.5">
+                    Jabatan <span class="text-red-500">*</span>
+                </label>
                 <input type="text" name="jabatan" required
                     class="block w-full border rounded-lg p-1"
                     placeholder="Staf IT"
-                    {{-- Menghapus APAPUN yang BUKAN huruf dan BUKAN spasi secara otomatis --}}
                     oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                    {{-- Pola validasi untuk memastikan hanya huruf dan spasi yang dikirim --}}
                     pattern="^[a-zA-Z\s]+$"
                     title="Jabatan hanya boleh berisi huruf dan spasi">
-                @error('jabatan')
-                    <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
-                @enderror
             </div>
 
-           <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Unit Kerja <span class="text-red-500">*</span></label>
+            {{-- UNIT KERJA (PENGHAPUSAN col-span-2 AGAR MASUK KE KOLOM SEBELAHNYA) --}}
+            <div>
+                <label class="block font-medium text-gray-700 mb-0.5">
+                    Unit Kerja <span class="text-red-500">*</span>
+                </label>
                 <input type="text" name="unit_kerja" required
                     class="block w-full border rounded-lg p-1"
                     placeholder="Contoh: Bidang Informatika"
-                    {{-- Menghapus APAPUN yang BUKAN huruf dan BUKAN spasi secara otomatis --}}
                     oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                    {{-- Pola validasi untuk memastikan hanya huruf dan spasi yang dikirim --}}
                     pattern="^[a-zA-Z\s]+$"
                     title="Unit kerja hanya boleh berisi huruf dan spasi">
-                
-                @error('unit_kerja')
-                    <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
-                @enderror
             </div>
 
-            </div>
+        </div>
 
             {{-- ROLE + STATUS + EMAIL + PASSWORD --}}
             <div class="grid grid-cols-2 gap-2">
@@ -368,23 +388,54 @@
                            placeholder="email@mail.com">
                 </div>
 
-                {{-- PASSWORD --}}
-                <div x-data="{ show: false }">
-                    <label class="block font-medium text-gray-700 mb-0.5">Password <span class="text-red-500">*</span></label>
+                {{-- PASSWORD DENGAN VALIDASI KOMBINASI --}}
+                <div x-data="{ 
+                    show: false, 
+                    pw: '',
+                    get hasUpper() { return /[A-Z]/.test(this.pw) },
+                    get hasNumber() { return /[0-9]/.test(this.pw) },
+                    get hasSymbol() { return /[!@#$%^&*(),.?':{}|<>]/.test(this.pw) },
+                    get isLongEnough() { return this.pw.length >= 8 }
+                }">
+                    <label class="block font-medium text-gray-700 mb-0.5 text-xs">
+                        Password <span class="text-red-500">*</span>
+                    </label>
+                    
                     <div class="relative">
-                        <input :type="show ? 'text' : 'password'" name="password" required minlength="8"
-                               class="block w-full border rounded-lg p-1 pr-8"
-                               placeholder="Minimal 8 karakter">
+                        <input :type="show ? 'text' : 'password'" 
+                            name="password" 
+                            x-model="pw"
+                            required 
+                            {{-- Regex Pattern untuk browser --}}
+                            pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}"
+                            title="Password harus minimal 8 karakter, mengandung huruf kapital, angka, dan simbol."
+                            class="block w-full border rounded-lg p-1.5 pr-8 text-xs focus:ring-1 focus:ring-sky-500 outline-none"
+                            placeholder="Kombinasi minimal 8 karakter">
 
                         <span @click="show = !show"
-                              class="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-500">
-                            <template x-if="!show">
-                                <i class="fa-solid fa-eye text-xs"></i>
-                            </template>
-                            <template x-if="show">
-                                <i class="fa-solid fa-eye-slash text-xs"></i>
-                            </template>
+                            class="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-400 hover:text-sky-600 transition">
+                            <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'" style="font-size: 10px;"></i>
                         </span>
+                    </div>
+
+                    {{-- INDIKATOR VALIDASI REAL-TIME --}}
+                    <div class="mt-2 space-y-1 text-[10px]">
+                        <div class="flex items-center gap-1.5" :class="hasUpper ? 'text-green-600' : 'text-gray-400'">
+                            <i class="fa-solid" :class="hasUpper ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                            <span>Huruf Kapital (A-Z)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5" :class="hasNumber ? 'text-green-600' : 'text-gray-400'">
+                            <i class="fa-solid" :class="hasNumber ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                            <span>Angka (0-9)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5" :class="hasSymbol ? 'text-green-600' : 'text-gray-400'">
+                            <i class="fa-solid" :class="hasSymbol ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                            <span>Simbol (!@#$%^&*)</span>
+                        </div>
+                        <div class="flex items-center gap-1.5" :class="isLongEnough ? 'text-green-600' : 'text-gray-400'">
+                            <i class="fa-solid" :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                            <span>Minimal 8 Karakter</span>
+                        </div>
                     </div>
                 </div>
 
@@ -483,6 +534,18 @@
                 <p x-text="selectedPegawai?.unit_kerja || '-'" class="font-medium"></p>
             </div>
 
+            {{-- Atasan Langsung --}}
+            <div class="p-1.5 border border-gray-200 rounded-md">
+                <p class="font-semibold text-[10px] text-gray-500">Atasan Langsung</p>
+                <p x-text="selectedPegawai?.atasan || '-'" class="font-medium"></p>
+            </div>
+
+            {{-- Pejabat Pemberi Cuti --}}
+            <div class="p-1.5 border border-gray-200 rounded-md">
+                <p class="font-semibold text-[10px] text-gray-500">Pejabat Pemberi Cuti</p>
+                <p x-text="selectedPegawai?.pemberi_cuti || '-'" class="font-medium"></p>
+            </div>
+
             {{-- Telepon --}}
             <div class="p-1.5 border border-gray-200 rounded-md">
                 <p class="font-semibold text-[10px] text-gray-500">Telepon</p>
@@ -535,13 +598,17 @@
 
     <div class="grid grid-cols-2 gap-3 text-sm">
 
-        {{-- Nama --}}
+        {{-- Nama Lengkap --}}
         <div>
-            <label class="font-medium text-xs">Nama</label>
+            <label class="font-medium text-xs">Nama Lengkap</label>
             <input type="text" name="nama"
                 x-model="selectedPegawai.nama"
-                @input="selectedPegawai.nama = selectedPegawai.nama.replace(/[^a-zA-Z\s]/g, '')"
-                class="w-full border rounded px-2 py-1 text-sm">
+                {{-- Mengizinkan huruf, spasi, titik (.), dan koma (,) --}}
+                @input="selectedPegawai.nama = selectedPegawai.nama.replace(/[^a-zA-Z\s.,]/g, '')"
+                {{-- Tambahkan pattern agar browser memvalidasi saat submit --}}
+                pattern="^[a-zA-Z\s.,]+$"
+                title="Nama hanya boleh berisi huruf, spasi, titik, dan koma"
+                class="w-full border rounded px-2 py-1 text-sm focus:ring-1 focus:ring-sky-500 outline-none">
         </div>
 
         {{-- NIP --}}
@@ -593,6 +660,31 @@
                 class="w-full border rounded px-2 py-1 text-sm">
         </div>
 
+        {{-- Atasan Langsung --}}
+        <div>
+            <label class="font-medium text-xs">Atasan Langsung</label>
+            <input type="text" 
+                name="atasan" 
+                x-model="selectedPegawai.atasan" 
+                {{-- 1. Menambahkan . dan , di dalam regex --}}
+                @input="selectedPegawai.atasan = selectedPegawai.atasan.replace(/[^a-zA-Z\s.,]/g, '')"
+                {{-- 2. Memperbarui pattern agar mengizinkan . dan , --}}
+                pattern="^[a-zA-Z\s.,]+$"
+                {{-- 3. Memperbarui pesan panduan --}}
+                title="Hanya diperbolehkan huruf, spasi, titik, dan koma"
+                class="w-full border rounded px-2 py-1 text-sm">
+        </div>
+
+        {{-- Pejabat Pemberi Cuti --}}
+        <div>
+            <label class="font-medium text-xs">Pejabat Pemberi Cuti</label>
+            <input type="text" 
+                name="pemberi_cuti" 
+                value="Kanafi, S.IP, MM" 
+                readonly
+                class="w-full border border-gray-200 bg-gray-100 rounded px-2 py-1 text-sm cursor-not-allowed">
+        </div>
+
         {{-- Telepon --}}
         <div>
             <label class="font-medium text-xs">Telepon</label>
@@ -624,9 +716,16 @@
         </button>
 
         <button type="submit"
-            class="px-3 py-1.5 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm">
+            {{-- Button mati jika data sekarang sama persis dengan data awal --}}
+            :disabled="JSON.stringify(selectedPegawai) === JSON.stringify(originalPegawai)"
+            
+            {{-- Tambahkan styling agar terlihat transparan saat mati --}}
+            :class="JSON.stringify(selectedPegawai) === JSON.stringify(originalPegawai) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-700'"
+            
+            class="px-3 py-1.5 bg-yellow-600 text-white rounded text-sm transition-all duration-200">
             Update
         </button>
+        
     </div>
 </form>
 

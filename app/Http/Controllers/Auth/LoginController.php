@@ -19,35 +19,41 @@ class LoginController extends Controller
     // Proses login
     public function login(Request $request)
     {
-        // Validasi input
+        // 1. Ubah validasi dari 'email' menjadi 'name'
         $request->validate([
-            'email'    => ['required', 'email'],
+            'name'     => ['required', 'string'],
             'password' => ['required'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        // 2. Cari user berdasarkan kolom 'name' (Nama Lengkap)
+        $user = User::where('name', $request->name)->first();
 
+        // 3. Penyesuaian pesan error
         if (!$user) {
-            return back()->withInput()->with('email_error', 'Email tidak terdaftar!');
+            return back()->withInput()->with('error', 'Nama Lengkap tidak terdaftar!');
         }
 
         if (!Hash::check($request->password, $user->password)) {
-            return back()->withInput()->with('password_error', 'Password salah!');
+            return back()->withInput()->with('error', 'Kata sandi salah!');
         }
 
-        // Login user dan regenerate session untuk keamanan
+        // Login user dan regenerate session
         Auth::login($user);
         $request->session()->regenerate();
 
-        // Ambil role dari kolom user->role
+        // Ambil role dan pastikan formatnya kecil (lowercase)
         $role = strtolower($user->role);
 
-        // Cek role Spatie, jika belum ada, tambahkan
-        if (!in_array($role, ['super_admin','admin','kadis','pegawai'])) {
+        // 4. Update daftar role agar sinkron dengan PegawaiController Anda
+        // Menambahkan 'kepala_dinas' dan 'pemberi_cuti' ke dalam daftar izin
+        $allowedRoles = ['super_admin', 'admin', 'kepala_dinas', 'pegawai', 'pemberi_cuti'];
+
+        if (!in_array($role, $allowedRoles)) {
             Auth::logout();
-            return redirect()->route('login')->with('error', 'Role tidak dikenali.');
+            return redirect()->route('login')->with('error', 'Hak akses (role) tidak dikenali.');
         }
 
+        // Sinkronisasi dengan Spatie Roles jika belum ada
         if (!$user->hasRole($role)) {
             $user->syncRoles([$role]);
         }
