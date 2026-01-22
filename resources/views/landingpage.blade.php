@@ -19,8 +19,8 @@
         <header class="sticky top-0 z-50 w-full bg-white border-b border-[#e7edf3] dark:bg-[#1a2632] dark:border-slate-700 shadow-sm transition-all duration-300">
             <div class="max-w-[1280px] mx-auto px-4 lg:px-10 h-[80px] flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <div class="flex items-center justify-center size-12 rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden">
-                        <img src="{{ asset('image/diskominfobjb.jpg') }}" alt="Logo" class="w-full h-full object-cover">
+                    <div class="flex items-center justify-center h-10 w-auto rounded-lg bg-white overflow-hidden">
+                        <img src="{{ asset('image/diskominfobjb.jpg') }}" alt="Logo" class="h-full w-auto object-contain">
                     </div>
                     <div class="flex flex-col">
                         <h1 class="text-[#0d141b] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">SIAP CUTI</h1>
@@ -270,7 +270,7 @@
                             <span class="text-2xl font-bold text-slate-400 group-hover:text-primary">1</span>
                         </div>
                         <h3 class="text-lg font-bold text-[#0d141b] dark:text-white mb-3">Login Pegawai</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Masuk ke sistem menggunakan NIP dan password yang telah terdaftar.</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Masuk ke sistem menggunakan NIP atau nama dan password yang telah terdaftar.</p>
                     </div>
                     <!-- Step 2 -->
                     <div class="relative flex flex-col items-center text-center z-10 group">
@@ -294,7 +294,7 @@
                             <span class="text-2xl font-bold text-slate-400 group-hover:text-primary">4</span>
                         </div>
                         <h3 class="text-lg font-bold text-[#0d141b] dark:text-white mb-3">Selesai</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Surat izin cuti terbit dan dapat diunduh setelah disetujui.</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Pegawai dapat melihat hasil pengajuan cuti.</p>
                     </div>
                 </div>
             </div>
@@ -354,8 +354,8 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16 mb-16">
                     <div class="col-span-1 md:col-span-2 flex flex-col gap-6">
                         <div class="flex items-center gap-4 text-white">
-                            <div class="size-10 bg-white rounded flex items-center justify-center">
-                                <img src="{{ asset('image/diskominfobjb.jpg') }}" class="w-full h-full object-cover rounded" alt="Logo">
+                            <div class="h-10 w-auto bg-white rounded flex items-center justify-center p-0.5">
+                                <img src="{{ asset('image/diskominfobjb.jpg') }}" class="h-full w-auto object-contain rounded-sm" alt="Logo">
                             </div>
                             <div class="flex flex-col">
                                 <span class="font-bold text-xl tracking-tight leading-none">SIAP CUTI</span>
