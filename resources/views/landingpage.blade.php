@@ -1,392 +1,416 @@
-{{-- resources/views/landingpage.blade.php --}}
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html class="light scroll-smooth" lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>SIAP CUTI | Dinas Komunikasi dan Informatika Kota Banjarbaru</title>
     @vite('resources/css/app.css')
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <style>
-        :root {
-            --primary: #1e40af;
-            --primary-dark: #1e3a8a;
-            --secondary: #0f766e;
-            --accent: #f59e0b;
-        }
-        body { 
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; 
-            line-height: 1.6;
-        }
-        h1,h2,h3,h4,h5,h6 {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 700;
-        }
-        .navbar-shadow {
-            box-shadow: 0 10px 25px -3px rgba(0, 0,0, 0.1), 0 4px 6px -2px rgba(0, 0,0, 0.05);
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
     </style>
 </head>
-
-<body class="bg-white text-slate-900 antialiased">
-
-    {{-- HEADER UTILITY --}}
-    <div class="bg-slate-900 text-white text-xs py-3 px-4 md:px-8 hidden md:flex items-center justify-between shadow-lg">
-        <div class="flex items-center gap-8">
-            <div class="flex items-center gap-2">
-                <i class="ph-fill ph-map-pin text-blue-400 w-4 h-4"></i>
-                <span>Banjarbaru, Kalimantan Selatan</span>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#1f2937]">
+    <div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+        <!-- Sticky Header -->
+        <header class="sticky top-0 z-50 w-full bg-white border-b border-[#e7edf3] dark:bg-[#1a2632] dark:border-slate-700 shadow-sm transition-all duration-300">
+            <div class="max-w-[1280px] mx-auto px-4 lg:px-10 h-[80px] flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-center size-12 rounded-lg bg-white border border-slate-200 shadow-sm overflow-hidden">
+                        <img src="{{ asset('image/diskominfobjb.jpg') }}" alt="Logo" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex flex-col">
+                        <h1 class="text-[#0d141b] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">SIAP CUTI</h1>
+                        <span class="text-xs text-slate-500 font-medium">Diskominfo Banjarbaru</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 md:gap-8">
+                    <nav class="hidden md:flex items-center gap-8">
+                        <a class="text-[#0d141b] dark:text-slate-200 text-sm font-medium hover:text-primary transition-colors" href="#beranda">Beranda</a>
+                        <a class="text-[#0d141b] dark:text-slate-200 text-sm font-medium hover:text-primary transition-colors" href="#tentang">Tentang</a>
+                        <a class="text-[#0d141b] dark:text-slate-200 text-sm font-medium hover:text-primary transition-colors" href="#fitur">Fitur</a>
+                        <a class="text-[#0d141b] dark:text-slate-200 text-sm font-medium hover:text-primary transition-colors" href="#panduan">Panduan</a>
+                        <a class="text-[#0d141b] dark:text-slate-200 text-sm font-medium hover:text-primary transition-colors" href="#kontak">Kontak</a>
+                    </nav>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <i class="ph-fill ph-clock text-blue-400 w-4 h-4"></i>
-                <span>08:00 - 16:00 WITA</span>
-            </div>
-        </div>
-    </div>
+        </header>
 
-    {{-- MAIN HEADER + NAVBAR COMBINED (ALWAYS VISIBLE) --}}
-    <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 navbar-shadow sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col lg:flex-row items-center justify-between py-4 lg:py-5 gap-4 lg:gap-0">
-                <!-- Logo Section -->
-                <div class="flex items-center gap-4 order-1 lg:order-1">
-                    <div class="relative">
-                        <img src="{{ asset('image/diskominfobjb.jpg') }}" 
-                             class="h-14 w-14 md:h-16 md:w-16 border-2 border-slate-200 rounded-lg shadow-md object-cover"
-                             alt="Logo Diskominfo" loading="lazy">
-                        <div class="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-lg">ID</div>
+        <!-- Hero Section -->
+        <section id="beranda" class="relative w-full bg-[#003366] text-white py-16 lg:py-24 overflow-hidden">
+            <div class="absolute inset-0 z-0 opacity-10" data-alt="Abstract dotted pattern background" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+            <!-- Decorative gradient blobs -->
+            <div class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[500px] h-[500px] bg-primary/30 rounded-full blur-[100px]"></div>
+            <div class="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px]"></div>
+
+            <div class="layout-container flex h-full grow flex-col relative z-10">
+                <div class="max-w-[1280px] mx-auto px-4 lg:px-10 flex flex-col md:flex-row items-center gap-12 lg:gap-20">
+                    <div class="flex flex-col gap-6 max-w-[640px] text-center md:text-left">
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 w-fit mx-auto md:mx-0 border border-white/20 backdrop-blur-sm animate-fade-in-up">
+                            <span class="size-2 rounded-full bg-green-400 animate-pulse"></span>
+                            <span class="text-xs font-bold tracking-wide uppercase text-white/90">Sistem Cuti Digital Terintegrasi</span>
+                        </div>
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.15] tracking-tight">
+                            SIAP CUTI
+                            <span class="block text-primary-300 bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white">Diskominfo Banjarbaru</span>
+                        </h1>
+                        <p class="text-lg md:text-xl text-slate-200 font-light leading-relaxed max-w-[540px] mx-auto md:mx-0">
+                            Transformasi digital pengelolaan cuti pegawai. Transparan, efisien, dan akuntabel untuk tata kelola kepegawaian yang lebih baik.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 pt-4 justify-center md:justify-start">
+                            <a href="{{ route('login') }}" class="h-12 px-8 rounded-lg bg-primary hover:bg-blue-500 text-white font-bold text-base transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                                <span>Ajukan Cuti Sekarang</span>
+                                <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                            </a>
+                            <a href="#panduan" class="h-12 px-8 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-base backdrop-blur-sm transition-all flex items-center justify-center">
+                                Pelajari Panduan
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full max-w-[500px] hidden md:block relative group">
+                        <!-- Card decoration -->
+                        <div class="absolute -inset-1 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                        
+                        <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 shadow-2xl relative transform rotate-1 group-hover:rotate-0 transition-transform duration-500">
+                            <!-- User Profile Mock -->
+                            <div class="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
+                                <div class="size-12 rounded-full bg-slate-200/20 border-2 border-white/10"></div>
+                                <div class="flex flex-col gap-2 w-full">
+                                    <div class="h-3 w-32 bg-slate-200/20 rounded-full animate-pulse"></div>
+                                    <div class="h-2 w-20 bg-slate-200/10 rounded-full"></div>
+                                </div>
+                            </div>
+                            <!-- Status Items -->
+                            <div class="space-y-4">
+                                <div class="p-4 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center gap-4">
+                                    <div class="size-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-green-400">check_circle</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-white">Cuti Tahunan Disetujui</div>
+                                        <div class="text-xs text-white/60">Bapak Kepala Dinas • Baru saja</div>
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center gap-4 opacity-80">
+                                    <div class="size-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-yellow-400">schedule</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-white">Menunggu Validasi</div>
+                                        <div class="text-xs text-white/60">Sedang diproses Kasubag</div>
+                                    </div>
+                                </div>
+                                <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center gap-4 opacity-70">
+                                    <div class="size-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-blue-400">notifications</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-white">Sisa Cuti: 6 Hari</div>
+                                        <div class="text-xs text-white/60">Periode 2024</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Focus/About Section -->
+        <section id="tentang" class="w-full bg-white dark:bg-slate-900 py-20 lg:py-28">
+            <div class="max-w-[960px] mx-auto px-4 lg:px-10 flex flex-col items-center text-center">
+                <span class="text-primary font-bold tracking-wider uppercase text-sm mb-3">Tentang SIAP CUTI</span>
+                <h2 class="text-[#0d141b] dark:text-white text-3xl md:text-4xl font-bold leading-tight tracking-tight mb-8">
+                    Fokus & Tujuan
+                </h2>
+                <p class="text-slate-600 dark:text-slate-300 text-lg md:text-xl font-normal leading-relaxed max-w-[800px]">
+                    SIAP CUTI merupakan sistem informasi pengajuan cuti terintegrasi yang mendukung tata kelola kepegawaian yang modern, transparan, dan akuntabel. Kami menghilangkan kerumitan birokrasi manual demi efisiensi kerja.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 w-full">
+                    <div class="flex flex-col items-center gap-4 p-6 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <div class="size-16 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-2 shadow-sm">
+                            <span class="material-symbols-outlined text-4xl">description</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-[#0d141b] dark:text-white">Paperless</h3>
+                        <p class="text-slate-500 dark:text-slate-400 leading-relaxed">Mengurangi penggunaan kertas secara signifikan dengan digitalisasi penuh seluruh dokumen pengajuan.</p>
+                    </div>
+                    <div class="flex flex-col items-center gap-4 p-6 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <div class="size-16 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-2 shadow-sm">
+                            <span class="material-symbols-outlined text-4xl">speed</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-[#0d141b] dark:text-white">Cepat & Tepat</h3>
+                        <p class="text-slate-500 dark:text-slate-400 leading-relaxed">Proses validasi real-time tanpa penundaan berkas fisik, mempercepat persetujuan cuti.</p>
+                    </div>
+                    <div class="flex flex-col items-center gap-4 p-6 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        <div class="size-16 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-2 shadow-sm">
+                            <span class="material-symbols-outlined text-4xl">database</span>
+                        </div>
+                        <h3 class="font-bold text-xl text-[#0d141b] dark:text-white">Terpusat</h3>
+                        <p class="text-slate-500 dark:text-slate-400 leading-relaxed">Database cuti terintegrasi satu pintu, memudahkan rekapitulasi dan monitoring data.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="fitur" class="w-full bg-background-light dark:bg-[#101922] py-24 border-y border-[#e7edf3] dark:border-slate-800">
+            <div class="max-w-[1280px] mx-auto px-4 lg:px-10">
+                <div class="flex flex-col gap-4 mb-16 text-center md:text-left">
+                    <h2 class="text-[#0d141b] dark:text-white text-3xl md:text-4xl font-bold leading-tight">Fitur Unggulan</h2>
+                    <p class="text-slate-600 dark:text-slate-400 text-lg max-w-2xl">Layanan lengkap untuk kebutuhan administrasi cuti Anda.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                    <!-- Feature 1 -->
+                    <div class="group flex flex-col gap-5 p-8 bg-white dark:bg-[#1a2632] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:border-primary/50 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
+                            <span class="material-symbols-outlined text-6xl">devices</span>
+                        </div>
+                        <div class="size-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-3xl">devices</span>
+                        </div>
+                        <div>
+                            <h3 class="text-[#0d141b] dark:text-white text-lg font-bold mb-3">Pengajuan Online</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Ajukan permohonan cuti kapan saja dan di mana saja melalui perangkat desktop maupun mobile.</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="group flex flex-col gap-5 p-8 bg-white dark:bg-[#1a2632] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:border-primary/50 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
+                            <span class="material-symbols-outlined text-6xl">verified_user</span>
+                        </div>
+                        <div class="size-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-3xl">verified_user</span>
+                        </div>
+                        <div>
+                            <h3 class="text-[#0d141b] dark:text-white text-lg font-bold mb-3">Approval Cepat</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Sistem validasi otomatis yang diteruskan kepada atasan langsung, mempercepat proses persetujuan.</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="group flex flex-col gap-5 p-8 bg-white dark:bg-[#1a2632] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:border-primary/50 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
+                            <span class="material-symbols-outlined text-6xl">visibility</span>
+                        </div>
+                        <div class="size-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-3xl">visibility</span>
+                        </div>
+                        <div>
+                            <h3 class="text-[#0d141b] dark:text-white text-lg font-bold mb-3">Monitoring Kuota</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Pantau sisa kuota cuti tahunan dan status pengajuan secara real-time dan transparan.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Feature 4 -->
+                    <div class="group flex flex-col gap-5 p-8 bg-white dark:bg-[#1a2632] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:border-primary/50 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
+                            <span class="material-symbols-outlined text-6xl">lock</span>
+                        </div>
+                        <div class="size-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-3xl">lock</span>
+                        </div>
+                        <div>
+                            <h3 class="text-[#0d141b] dark:text-white text-lg font-bold mb-3">Keamanan Tinggi</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Data kepegawaian dilindungi dengan enkripsi standar pemerintah dan autentikasi aman.</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="group flex flex-col gap-5 p-8 bg-white dark:bg-[#1a2632] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:border-primary/50 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
+                            <span class="material-symbols-outlined text-6xl">analytics</span>
+                        </div>
+                        <div class="size-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-3xl">analytics</span>
+                        </div>
+                        <div>
+                            <h3 class="text-[#0d141b] dark:text-white text-lg font-bold mb-3">Rekapitulasi Otomatis</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Laporan cuti pegawai dapat digenerate secara otomatis untuk kebutuhan administrasi.</p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="group flex flex-col gap-5 p-8 bg-white dark:bg-[#1a2632] rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 hover:border-primary/50 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-125 duration-500">
+                            <span class="material-symbols-outlined text-6xl">notifications_active</span>
+                        </div>
+                        <div class="size-14 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-3xl">notifications_active</span>
+                        </div>
+                        <div>
+                            <h3 class="text-[#0d141b] dark:text-white text-lg font-bold mb-3">Notifikasi Real-time</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">Dapatkan pembaruan status pengajuan Anda secara langsung melalui sistem.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Workflow / Steps Section -->
+        <section class="w-full bg-white dark:bg-slate-900 py-24" id="panduan">
+            <div class="max-w-[1280px] mx-auto px-4 lg:px-10">
+                <div class="text-center mb-20">
+                    <span class="text-primary font-bold tracking-wider uppercase text-sm mb-3">Panduan Penggunaan</span>
+                    <h2 class="text-[#0d141b] dark:text-white text-3xl md:text-4xl font-bold mb-4">Alur Pengajuan Cuti</h2>
+                    <p class="text-slate-600 dark:text-slate-400 text-lg">Proses mudah dalam 4 langkah sederhana.</p>
+                </div>
+                <div class="relative grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <!-- Connector Line (Desktop) -->
+                    <div class="hidden md:block absolute top-[2.25rem] left-0 w-full h-1 bg-slate-100 dark:bg-slate-800 -z-0"></div>
+                    
+                    <!-- Step 1 -->
+                    <div class="relative flex flex-col items-center text-center z-10 group">
+                        <div class="size-20 rounded-full bg-white dark:bg-slate-900 border-[6px] border-slate-100 dark:border-slate-800 group-hover:border-primary transition-colors flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 duration-300">
+                            <span class="text-2xl font-bold text-slate-400 group-hover:text-primary">1</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-[#0d141b] dark:text-white mb-3">Login Pegawai</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Masuk ke sistem menggunakan NIP dan password yang telah terdaftar.</p>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="relative flex flex-col items-center text-center z-10 group">
+                        <div class="size-20 rounded-full bg-white dark:bg-slate-900 border-[6px] border-slate-100 dark:border-slate-800 group-hover:border-primary transition-colors flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 duration-300">
+                            <span class="text-2xl font-bold text-slate-400 group-hover:text-primary">2</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-[#0d141b] dark:text-white mb-3">Isi Formulir</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Pilih jenis cuti, tentukan tanggal, dan alasan pengajuan cuti Anda.</p>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="relative flex flex-col items-center text-center z-10 group">
+                        <div class="size-20 rounded-full bg-white dark:bg-slate-900 border-[6px] border-slate-100 dark:border-slate-800 group-hover:border-primary transition-colors flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 duration-300">
+                            <span class="text-2xl font-bold text-slate-400 group-hover:text-primary">3</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-[#0d141b] dark:text-white mb-3">Validasi Atasan</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Pengajuan akan diperiksa dan divalidasi oleh atasan berwenang.</p>
+                    </div>
+                    <!-- Step 4 -->
+                    <div class="relative flex flex-col items-center text-center z-10 group">
+                        <div class="size-20 rounded-full bg-white dark:bg-slate-900 border-[6px] border-slate-100 dark:border-slate-800 group-hover:border-primary transition-colors flex items-center justify-center mb-8 shadow-sm group-hover:scale-110 duration-300">
+                            <span class="text-2xl font-bold text-slate-400 group-hover:text-primary">4</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-[#0d141b] dark:text-white mb-3">Selesai</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed px-4">Surat izin cuti terbit dan dapat diunduh setelah disetujui.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Banner -->
+        <section class="w-full bg-slate-50 dark:bg-[#15202b] py-16 border-y border-[#e7edf3] dark:border-slate-800">
+            <div class="max-w-[1280px] mx-auto px-4 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-10">
+                <div class="flex items-start gap-6 max-w-[700px]">
+                    <div class="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-primary shrink-0">
+                        <span class="material-symbols-outlined text-4xl">lock</span>
                     </div>
                     <div>
-                        <h1 class="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
-                            Dinas Komunikasi dan Informatika
-                        </h1>
-                        <p class="text-blue-600 font-semibold text-sm uppercase tracking-wide">Kota Banjarbaru</p>
+                        <h3 class="text-xl font-bold text-[#0d141b] dark:text-white mb-2">Akses Terbatas & Aman</h3>
+                        <p class="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+                            Sistem ini hanya diperuntukkan bagi pegawai internal Dinas Komunikasi dan Informatika. Seluruh data dilindungi dengan protokol keamanan standar pemerintah.
+                        </p>
                     </div>
                 </div>
-
-                <!-- Navbar -->
-                <nav class="order-3 lg:order-2 flex justify-center flex-1 px-4 lg:px-0">
-                    <div class="flex space-x-1 md:space-x-8 bg-slate-50/50 rounded-2xl p-1 backdrop-blur-sm">
-                        <a href="#beranda" class="nav-item flex items-center gap-2 px-4 py-3 lg:px-6 lg:py-3 text-sm font-semibold text-slate-700 hover:text-blue-600 hover:bg-white rounded-xl border-b-2 border-transparent hover:border-blue-500 transition-all duration-200 whitespace-nowrap">
-                            <i class="ph ph-house w-5 h-5"></i>
-                            <span>Beranda</span>
-                        </a>
-                        <a href="#tentang" class="nav-item flex items-center gap-2 px-4 py-3 lg:px-6 lg:py-3 text-sm font-semibold text-slate-700 hover:text-blue-600 hover:bg-white rounded-xl border-b-2 border-transparent hover:border-blue-500 transition-all duration-200 whitespace-nowrap">
-                            <i class="ph ph-info w-5 h-5"></i>
-                            <span>Tentang</span>
-                        </a>
-                        <a href="#fitur" class="nav-item flex items-center gap-2 px-4 py-3 lg:px-6 lg:py-3 text-sm font-semibold text-slate-700 hover:text-blue-600 hover:bg-white rounded-xl border-b-2 border-transparent hover:border-blue-500 transition-all duration-200 whitespace-nowrap">
-                            <i class="ph ph-sparkle w-5 h-5"></i>
-                            <span>Fitur</span>
-                        </a>
-                    </div>
-                </nav>
-
-                <!-- CTA Button (SATU SAJA) -->
-                <div class="order-2 lg:order-3">
-                    <a href="{{ route('login') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl text-base shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 whitespace-nowrap">
-                        <i class="ph ph-sign-in w-5 h-5"></i>
-                        Masuk Sistem
-                    </a>
+                <div class="flex items-center gap-3 px-5 py-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400 font-mono shadow-sm">
+                    <span class="relative flex h-3 w-3">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+                    System Operational: Normal
                 </div>
             </div>
-        </div>
-    </header>
-
-    {{-- HERO BANNER DENGAN GAMBAR FULL --}}
-    <section id="beranda" class="relative overflow-hidden">
-        <!-- Background Image FULL -->
-        <div class="absolute inset-0">
-            <img src="{{ asset('image/diskominfo.jpg') }}" 
-                 alt="Hero Banner Diskominfo" 
-                 class="w-full h-[70vh] md:h-screen object-cover brightness-50">
-            <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-slate-900/40 to-black/60"></div>
-        </div>
+        </section>
         
-        <!-- Hero Content -->
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 md:pt-40 md:pb-32 text-white">
-            <div class="text-center max-w-4xl mx-auto">
-                <div class="inline-flex items-center bg-white/20 backdrop-blur-sm border border-white/30 text-white px-8 py-4 rounded-2xl font-semibold uppercase tracking-wide text-lg md:text-xl mb-12 shadow-2xl">
-                    <i class="ph ph-rocket w-6 h-6 mr-3"></i>
-                    Selamat Datang di Sistem Cuti Digital
+        <!-- Closing CTA -->
+        <section class="w-full py-24 px-4 bg-white dark:bg-slate-900">
+            <div class="max-w-[1000px] mx-auto bg-gradient-to-br from-[#003366] to-[#004b93] rounded-3xl p-10 md:p-20 text-center text-white shadow-2xl relative overflow-hidden group">
+                <!-- Background decoration -->
+                <div class="absolute top-0 right-0 p-20 opacity-5 transform translate-x-1/3 -translate-y-1/3 transition-transform duration-700 group-hover:scale-110">
+                    <span class="material-symbols-outlined text-[400px]">description</span>
                 </div>
-                <h2 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight bg-gradient-to-r from-white to-blue-100 bg-clip-text">
-                    SIAP CUTI
-                </h2>
-                <h3 class="text-2xl md:text-3xl lg:text-4xl font-semibold mb-8 max-w-3xl mx-auto leading-relaxed opacity-95">
-                    Transformasi Digital Pengelolaan Cuti Pegawai
-                </h3>
-                <p class="text-lg md:text-xl lg:text-2xl font-medium mb-12 max-w-2xl mx-auto leading-relaxed opacity-90">
-                    Sistem informasi terintegrasi untuk pengajuan, persetujuan, dan monitoring cuti yang transparan, efisien, dan akuntabel.
-                </p>
-                <!-- SATU BUTTON SAJA -->
-                <div class="flex justify-center">
-                    <a href="{{ route('login') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-16 rounded-2xl text-xl shadow-2xl hover:shadow-3xl transition-all duration-400 flex items-center gap-3 backdrop-blur-sm">
-                        <i class="ph ph-sign-in w-6 h-6"></i>
-                        Akses Sistem Sekarang
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    {{-- MAIN CONTENT --}}
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 -mt-16 lg:-mt-24 relative z-10">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-            
-            <!-- Main Content -->
-            <div class="lg:col-span-8 space-y-20 lg:space-y-28">
                 
-                <!-- Tentang Section -->
-                <section id="tentang" class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-200/50 overflow-hidden">
-                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-12 md:px-12 md:py-16 text-white">
-                        <h3 class="text-3xl md:text-4xl font-bold flex items-center gap-4">
-                            <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-2xl backdrop-blur-sm">
-                                <i class="ph-fill ph-target"></i>
-                            </div>
-                            Fokus & Tujuan
-                        </h3>
-                        <p class="mt-4 text-lg md:text-xl font-medium opacity-90">
-                            Inovasi Digital Diskominfo Banjarbaru
-                        </p>
-                    </div>
-                    <div class="p-10 md:p-12 lg:p-16 space-y-10">
-                        <p class="text-xl lg:text-2xl text-slate-800 leading-relaxed font-medium text-center md:text-left max-w-3xl mx-auto md:mx-0">
-                            <strong class="text-4xl lg:text-5xl text-blue-600 block mb-6 font-bold">SIAP CUTI</strong> 
-                            merupakan sistem informasi pengajuan cuti terintegrasi yang mendukung tata kelola 
-                            kepegawaian yang <strong class="text-blue-600">modern, transparan, dan akuntabel</strong>.
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="group p-10 rounded-3xl bg-gradient-to-br from-blue-50 to-slate-50 border-l-6 border-blue-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer backdrop-blur-sm">
-                                <div class="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 group-hover:scale-110 transition-transform shadow-xl mx-auto">
-                                    <i class="ph-fill ph-lightning"></i>
-                                </div>
-                                <h4 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-6 text-center">Proses Digital</h4>
-                                <p class="text-slate-700 text-lg leading-relaxed text-center">Pengajuan dan persetujuan cuti digital tanpa kertas.</p>
-                            </div>
-                            <div class="group p-10 rounded-3xl bg-gradient-to-br from-emerald-50 to-slate-50 border-l-6 border-emerald-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer backdrop-blur-sm">
-                                <div class="w-20 h-20 bg-emerald-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 group-hover:scale-110 transition-transform shadow-xl mx-auto">
-                                    <i class="ph-fill ph-eye"></i>
-                                </div>
-                                <h4 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-6 text-center">Transparansi</h4>
-                                <p class="text-slate-700 text-lg leading-relaxed text-center">Monitoring real-time sisa kuota dan histori cuti.</p>
-                            </div>
-                            <div class="group p-10 rounded-3xl bg-gradient-to-br from-purple-50 to-slate-50 border-l-6 border-purple-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer backdrop-blur-sm">
-                                <div class="w-20 h-20 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 group-hover:scale-110 transition-transform shadow-xl mx-auto">
-                                    <i class="ph-fill ph-hard-drive"></i>
-                                </div>
-                                <h4 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-6 text-center">Akurat</h4>
-                                <p class="text-slate-700 text-lg leading-relaxed text-center">Hilangkan kesalahan administrasi manual.</p>
-                            </div>
-                            <div class="group p-10 rounded-3xl bg-gradient-to-br from-amber-50 to-slate-50 border-l-6 border-amber-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer backdrop-blur-sm">
-                                <div class="w-20 h-20 bg-amber-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-8 group-hover:scale-110 transition-transform shadow-xl mx-auto">
-                                    <i class="ph-fill ph-chart-line"></i>
-                                </div>
-                                <h4 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-6 text-center">Data-Driven</h4>
-                                <p class="text-slate-700 text-lg leading-relaxed text-center">Keputusan berbasis analisis data akurat.</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Fitur Section -->
-                <section id="fitur" class="space-y-20">
-                    <div class="text-center max-w-4xl mx-auto space-y-8">
-                        <div class="inline-flex items-center bg-gradient-to-r from-blue-500 to-blue-600 text-white px-10 py-6 rounded-3xl font-bold text-xl lg:text-2xl shadow-2xl backdrop-blur-sm">
-                            <i class="ph-fill ph-sparkle text-3xl mr-4"></i>
-                            Fitur Unggulan SIAP CUTI
-                        </div>
-                        <h3 class="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
-                            Sistem Cuti Terlengkap & Modern
-                        </h3>
-                    </div>
-
-                    @php
-                        $fitur = [
-                            ['icon' => 'ph-fill ph-file-text', 'title' => 'Pengajuan Online', 'desc' => 'Form digital intuitif dengan auto-save dan validasi otomatis.', 'color' => 'blue'],
-                            ['icon' => 'ph-fill ph-check-circle', 'title' => 'Approval Cepat', 'desc' => 'Alur persetujuan berjenjang dengan notifikasi real-time.', 'color' => 'emerald'],
-                            ['icon' => 'ph-fill ph-chart-line-up', 'title' => 'Monitoring Kuota', 'desc' => 'Dashboard visual sisa cuti dan histori lengkap.', 'color' => 'purple'],
-                            ['icon' => 'ph-fill ph-shield-check', 'title' => 'Keamanan Tinggi', 'desc' => 'Enkripsi end-to-end dan autentikasi 2-faktor.', 'color' => 'amber']
-                        ];
-                    @endphp
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12">
-                        @foreach($fitur as $f)
-                        <div class="group bg-white/90 backdrop-blur-sm rounded-3xl p-12 border border-slate-200/50 hover:shadow-3xl hover:-translate-y-4 transition-all duration-700 hover:border-{{ $f['color'] }}-200/50 cursor-pointer">
-                            <div class="w-28 h-28 bg-gradient-to-br from-{{ $f['color'] }}-500 to-{{ $f['color'] }}-600 rounded-3xl flex items-center justify-center mb-10 mx-auto group-hover:scale-110 transition-all duration-500 shadow-2xl">
-                                <i class="{{ $f['icon'] }} text-4xl text-white"></i>
-                            </div>
-                            <h4 class="text-3xl font-bold text-slate-900 text-center mb-8 group-hover:text-{{ $f['color'] }}-600 transition-colors">{{ $f['title'] }}</h4>
-                            <p class="text-slate-700 text-center text-xl leading-relaxed mb-10 opacity-90">{{ $f['desc'] }}</p>
-                            <div class="flex items-center justify-center text-{{ $f['color'] }}-600 font-bold text-lg group-hover:translate-x-4 transition-transform">
-                                <i class="ph-fill ph-arrow-right mr-3 w-6 h-6"></i>
-                                Pelajari Lebih Lanjut
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </section>
-            </div>
-
-            <!-- Sidebar CTA (SATU SAJA) -->
-            <div class="lg:col-span-4 space-y-10 lg:sticky lg:top-32 self-start lg:h-screen lg:flex lg:flex-col lg:justify-center">
-                <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-12 lg:p-16 text-white shadow-3xl border-t-8 border-blue-600 relative overflow-hidden">
-                    <div class="absolute top-8 right-8 text-7xl opacity-10">
-                        <i class="ph ph-lock-simple"></i>
-                    </div>
-                    <div class="relative z-10 text-center lg:text-left">
-                        <h3 class="text-3xl lg:text-4xl font-bold mb-8 bg-gradient-to-r from-blue-300 to-blue-100 bg-clip-text text-transparent">Portal Pegawai</h3>
-                        <p class="text-slate-200 mb-12 leading-relaxed text-xl lg:text-2xl opacity-95">
-                            Akses sistem pengajuan cuti dengan akun resmi pegawai Anda
-                        </p>
-                        <!-- SATU BUTTON SAJA -->
-                        <a href="{{ route('login') }}" class="block w-full max-w-sm mx-auto lg:mx-0 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-6 px-12 rounded-2xl text-xl uppercase tracking-wide shadow-2xl hover:shadow-3xl transition-all duration-400 flex items-center justify-center gap-4 backdrop-blur-sm mx-auto lg:mx-0">
-                            <i class="ph ph-sign-in w-7 h-7"></i>
-                            Masuk ke SIAP CUTI
-                        </a>
-                        <div class="text-sm text-slate-400 mt-8 text-center lg:text-left font-medium tracking-wide">
-                            ✅ Sistem Resmi • 🔒 Terjamin Aman • ⚡ Cepat & Mudah
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    {{-- FOOTER --}}
-    <footer class="bg-gradient-to-t from-slate-900 via-slate-900 to-slate-950 border-t-8 border-blue-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-16 mb-16">
-                <!-- Brand -->
-                <div class="space-y-8 text-slate-200">
-                    <div class="flex items-center gap-6">
-                        <img src="{{ asset('image/diskominfobjb.jpg') }}" 
-                             class="h-24 w-24 rounded-2xl border-4 border-blue-500/50 p-3 bg-white shadow-2xl object-cover" 
-                             alt="Logo Diskominfo" loading="lazy">
-                    </div>
-                    <h4 class="text-3xl font-bold text-white leading-tight">Diskominfo Banjarbaru</h4>
-                    <p class="text-blue-300 text-xl italic leading-relaxed font-medium">
-                        Melayani dengan Teknologi,<br>Membangun Negeri
+                <div class="relative z-10 flex flex-col items-center gap-8">
+                    <h2 class="text-3xl md:text-5xl font-bold tracking-tight leading-tight">Siap Mengajukan Cuti?</h2>
+                    <p class="text-blue-100 text-lg md:text-xl max-w-[600px] leading-relaxed">
+                        Pastikan Anda telah berkoordinasi dengan tim kerja Anda sebelum mengajukan permohonan cuti.
                     </p>
-                    <div class="flex items-start gap-4 p-8 bg-slate-800/60 backdrop-blur-sm rounded-3xl border border-slate-700/50 hover:bg-slate-800/80 transition-all group">
-                        <i class="ph-fill ph-map-pin text-blue-400 text-3xl mt-1 flex-shrink-0 group-hover:scale-110 transition-transform"></i>
-                        <p class="text-lg leading-relaxed">Jl. Pangeran Suriansyah No. 5<br>Kel. Komet, Kec. Banjarbaru Utara<br>Kota Banjarbaru 70711</p>
-                    </div>
-                </div>
-
-                <!-- Links -->
-                <div class="space-y-8">
-                    <h4 class="text-2xl font-bold text-white mb-10 border-l-6 border-blue-500 pl-6 pb-4 tracking-tight">
-                        Tautan Penting
-                    </h4>
-                    <ul class="space-y-6">
-                        <li>
-                            <a href="https://banjarbarukota.go.id" target="_blank" class="group flex items-center gap-4 p-6 bg-slate-800/50 rounded-2xl hover:bg-blue-500/20 hover:text-blue-300 border border-slate-700/50 hover:border-blue-500/50 backdrop-blur-sm transition-all duration-300 font-semibold text-xl">
-                                <i class="ph ph-external-link text-blue-400 group-hover:translate-x-2 transition-transform text-2xl w-9 h-9 flex-shrink-0"></i>
-                                Pemerintah Kota Banjarbaru
-                            </a>
-                        </li>
-                        <li>
-                            <a href="https://diskominfo.banjarbarukota.go.id" target="_blank" class="group flex items-center gap-4 p-6 bg-slate-800/50 rounded-2xl hover:bg-blue-500/20 hover:text-blue-300 border border-slate-700/50 hover:border-blue-500/50 backdrop-blur-sm transition-all duration-300 font-semibold text-xl">
-                                <i class="ph ph-external-link text-blue-400 group-hover:translate-x-2 transition-transform text-2xl w-9 h-9 flex-shrink-0"></i>
-                                Portal Resmi Dinas Komunikasi dan Informatika
-                            </a>
-                        </li>
-                        <li>
-                            <a href="https://lapor.go.id" target="_blank" class="group flex items-center gap-4 p-6 bg-slate-800/50 rounded-2xl hover:bg-blue-500/20 hover:text-blue-300 border border-slate-700/50 hover:border-blue-500/50 backdrop-blur-sm transition-all duration-300 font-semibold text-xl">
-                                <i class="ph ph-external-link text-blue-400 group-hover:translate-x-2 transition-transform text-2xl w-9 h-9 flex-shrink-0"></i>
-                                LAPOR! Aspirasi Masyarakat
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Contact -->
-                <div class="space-y-8">
-                    <h4 class="text-2xl font-bold text-white mb-10 border-l-6 border-blue-500 pl-6 pb-4 tracking-tight">
-                        Kontak Resmi
-                    </h4>
-                    <div class="space-y-8">
-                        <a href="tel:+625114772022" class="group flex items-center gap-6 p-8 bg-slate-800/60 rounded-3xl hover:bg-blue-500/20 hover:text-blue-300 border border-slate-700/50 hover:border-blue-500/50 backdrop-blur-sm transition-all duration-400">
-                            <div class="w-20 h-20 bg-blue-500/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:bg-blue-500/50 transition-all">
-                                <i class="ph-fill ph-phone text-blue-400 text-3xl group-hover:text-blue-300 transition-colors"></i>
-                            </div>
-                            <div>
-                                <p class="text-lg text-slate-400 font-semibold uppercase tracking-wide mb-2">Telepon Kantor</p>
-                                <div class="font-black text-3xl text-white group-hover:text-blue-300 transition-colors">(0511) 4772022</div>
-                            </div>
-                        </a>
-                        <a href="mailto:diskominfo@banjarbarukota.go.id" class="group flex items-center gap-6 p-8 bg-slate-800/60 rounded-3xl hover:bg-blue-500/20 hover:text-blue-300 border border-slate-700/50 hover:border-blue-500/50 backdrop-blur-sm transition-all duration-400">
-                            <div class="w-20 h-20 bg-blue-500/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:bg-blue-500/50 transition-all">
-                                <i class="ph-fill ph-envelope text-blue-400 text-3xl group-hover:text-blue-300 transition-colors"></i>
-                            </div>
-                            <div class="break-words">
-                                <p class="text-lg text-slate-400 font-semibold uppercase tracking-wide mb-2">Email Resmi</p>
-                                <div class="font-black text-2xl text-white group-hover:text-blue-300 transition-colors break-all">diskominfo@banjarbarukota.go.id</div>
-                            </div>
+                    <div class="flex flex-col sm:flex-row gap-4 mt-4 w-full justify-center">
+                         <a href="{{ route('login') }}" class="flex items-center justify-center gap-3 h-14 px-10 rounded-xl bg-white text-[#003366] text-lg font-bold hover:bg-slate-100 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-1">
+                            <span>Masuk ke Sistem</span>
+                            <span class="material-symbols-outlined">login</span>
                         </a>
                     </div>
+                    <p class="text-sm text-blue-200/80 mt-4">Butuh bantuan login? <a class="underline hover:text-white transition-colors" href="#">Hubungi Admin</a></p>
                 </div>
             </div>
-            
-            <div class="border-t border-slate-800/50 pt-12 mt-12 text-center">
-                <p class="text-2xl md:text-3xl text-slate-100 font-bold tracking-wide">
-                    © {{ date('Y') }} Dinas Komunikasi dan Informatika Kota Banjarbaru
-                </p>
-                <p class="text-lg text-slate-500 mt-4 font-medium">Semua Hak Dilindungi Undang-Undang</p>
+        </section>
+
+        <!-- Footer -->
+        <footer class="w-full bg-[#0d141b] text-slate-400 py-16 border-t border-slate-800" id="kontak">
+            <div class="max-w-[1280px] mx-auto px-4 lg:px-10">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-12 lg:gap-16 mb-16">
+                    <div class="col-span-1 md:col-span-2 flex flex-col gap-6">
+                        <div class="flex items-center gap-4 text-white">
+                            <div class="size-10 bg-white rounded flex items-center justify-center">
+                                <img src="{{ asset('image/diskominfobjb.jpg') }}" class="w-full h-full object-cover rounded" alt="Logo">
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="font-bold text-xl tracking-tight leading-none">SIAP CUTI</span>
+                                <span class="text-xs text-slate-500 uppercase tracking-wider mt-1">Diskominfo Banjarbaru</span>
+                            </div>
+                        </div>
+                        <p class="text-base leading-relaxed max-w-[400px]">
+                            Sistem Informasi Manajemen Kepegawaian (SIMPEG) Sub-modul Cuti untuk lingkungan Dinas Komunikasi dan Informatika Kota Banjarbaru.
+                        </p>
+                    </div>
+                    <div class="flex flex-col gap-6">
+                        <h4 class="text-white font-bold text-lg">Tautan Cepat</h4>
+                        <ul class="flex flex-col gap-3 text-sm">
+                            <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#beranda"><span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span> Beranda</a></li>
+                            <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#panduan"><span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span> Panduan Pengguna</a></li>
+                            <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="https://banjarbarukota.go.id" target="_blank"><span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span> Pemko Banjarbaru</a></li>
+                            <li><a class="hover:text-primary transition-colors flex items-center gap-2" href="https://diskominfo.banjarbarukota.go.id" target="_blank"><span class="w-1.5 h-1.5 rounded-full bg-slate-600"></span> Portal Diskominfo</a></li>
+                        </ul>
+                    </div>
+                    <div class="flex flex-col gap-6">
+                        <h4 class="text-white font-bold text-lg">Kontak</h4>
+                        <ul class="flex flex-col gap-4 text-sm">
+                            <li class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-xl pt-0.5 text-primary">location_on</span>
+                                <span>Jl. Pangeran Suriansyah No. 5, Kel. Komet, Kec. Banjarbaru Utara, Kota Banjarbaru 70711</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-xl text-primary">call</span>
+                                <span>(0511) 4772022</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-xl text-primary">mail</span>
+                                <span>diskominfo@banjarbarukota.go.id</span>
+                            </li>
+                        </ul>
+                        <!-- Google Maps Embed -->
+                        <div class="rounded-xl overflow-hidden shadow-lg border border-slate-700/50 h-48 w-full">
+                            <iframe 
+                                title="Lokasi Diskominfo Banjarbaru"
+                                width="100%" 
+                                height="100%" 
+                                style="border:0;" 
+                                loading="lazy" 
+                                allowfullscreen
+                                src="https://maps.google.com/maps?q=-3.4403273915116355,114.83246726484806&z=15&output=embed">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+                    <p>© {{ date('Y') }} Dinas Komunikasi dan Informatika Kota Banjarbaru.</p>
+                    <p class="opacity-60">Hak Cipta Dilindungi Undang-Undang</p>
+                </div>
             </div>
-        </div>
-    </footer>
-
-    <script>
-        // Smooth scroll dengan offset yang tepat
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', e => {
-                e.preventDefault();
-                const target = document.querySelector(anchor.getAttribute('href'));
-                if (target) {
-                    const headerOffset = 140; // Tinggi header + navbar
-                    const elementPosition = target.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                    window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-                }
-            });
-        });
-
-        // Navbar active state dengan IntersectionObserver
-        const observerOptions = {
-            threshold: 0.3,
-            rootMargin: '-140px 0px -60% 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    document.querySelectorAll('.nav-item').forEach(nav => {
-                        nav.classList.remove('text-blue-600', 'bg-white', 'border-blue-500', 'shadow-md');
-                    });
-                    const activeLink = document.querySelector(`a[href="#${entry.target.id}"]`);
-                    if (activeLink) {
-                        activeLink.classList.add('text-blue-600', 'bg-white', 'border-blue-500', 'shadow-md');
-                    }
-                }
-            });
-        }, observerOptions);
-
-        // Observe semua section
-        document.querySelectorAll('section[id]').forEach(section => observer.observe(section));
-
-        // Navbar scroll enhancement
-        window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.classList.add('shadow-2xl', 'bg-white/100');
-            } else {
-                header.classList.remove('shadow-2xl', 'bg-white/100');
-            }
-        });
-    </script>
-
+        </footer>
+    </div>
 </body>
 </html>
