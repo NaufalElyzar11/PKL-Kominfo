@@ -9,11 +9,16 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+    public function up()
     {
         Schema::table('pegawai', function (Blueprint $table) {
-            $table->string('atasan')->nullable()->after('unit_kerja');
-            $table->string('pemberi_cuti')->nullable()->after('atasan');
+            // Mengubah kolom nip agar boleh kosong (null)
+            $table->string('nip', 18)->nullable()->change(); 
+        });
+
+        Schema::table('users', function (Blueprint $table) {
+            // Lakukan hal yang sama pada tabel users
+            $table->string('nip', 18)->nullable()->change(); 
         });
     }
 
@@ -22,7 +27,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pegawai', function (Blueprint $table) {
+        Schema::table('multiple_tables', function (Blueprint $table) {
             //
         });
     }

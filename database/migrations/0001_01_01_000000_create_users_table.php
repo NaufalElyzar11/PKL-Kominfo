@@ -12,13 +12,21 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable(); // Standar Laravel
             $table->string('password');
-            $table->enum('role', ['user','admin','super_admin','pegawai','kepala_dinas'])->default('user');
+            
+            // 1. Ubah enum menjadi string agar sinkron dengan RoleSeeder (Spatie)
+            $table->string('role')->nullable(); 
+            
+            // 2. Tambahkan kolom yang dibutuhkan UserSeeder Anda
+            $table->string('nip')->nullable();
+            $table->string('telepon')->nullable();
+            $table->string('jabatan')->nullable();
+            $table->string('unit_kerja')->nullable();
+            
             $table->foreignId('id_pegawai')->nullable(); 
             $table->rememberToken();
             $table->timestamps();
-        
-
         });
     }
 

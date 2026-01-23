@@ -1,0 +1,74 @@
+@extends('layouts.pegawai')
+
+@section('title', 'Edit Profil')
+
+@section('content')
+<div class="py-8 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+        {{-- 1. LOGIKA NOTIFIKASI INTERAKTIF (Alpine.js) --}}
+        {{-- Mengecek session 'success' (dari update profil) atau 'status' (dari update password) --}}
+        @if (session('success') || session('status') === 'password-updated')
+            <div 
+                x-data="{ show: true }" 
+                x-show="show" 
+                x-init="setTimeout(() => show = false, 5000)" {{-- Menghilang otomatis setelah 5 detik --}}
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                x-transition:leave="transition ease-in duration-300"
+                x-transition:leave-start="opacity-100 transform translate-y-0"
+                x-transition:leave-end="opacity-0 transform -translate-y-2"
+                class="flex items-center p-4 mb-6 bg-white border-l-4 border-green-500 rounded-r-xl shadow-md"
+            >
+                <div class="flex-shrink-0">
+                    <i class="fa-solid fa-circle-check text-green-500 text-2xl"></i>
+                </div>
+                <div class="ml-4 flex-1">
+                    <p class="text-sm font-bold text-gray-800">Berhasil!</p>
+                    <p class="text-xs text-gray-600">
+                        {{ session('success') ?? 'Kata sandi Anda telah berhasil diperbarui.' }}
+                    </p>
+                </div>
+                <button @click="show = false" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        @endif
+
+        {{-- 2. Card Container untuk Form Profil --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transform transition hover:shadow-md">
+            <div class="p-6 sm:p-8">
+                @include('profile.partials.update-profile-information-form')
+            </div>
+        </div>
+
+        {{-- 3. Card Container untuk Form Password --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transform transition hover:shadow-md">
+            <div class="p-6 sm:p-8">
+                @include('profile.partials.update-password-form')
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{{-- 4. LOGIKA TAMBAHAN: SweetAlert2 (Opsional untuk kesan lebih mewah) --}}
+@if (session('success'))
+    <script>
+        window.addEventListener('load', () => {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Profil Diperbarui',
+                    text: "{{ session('success') }}",
+                    timer: 3000,
+                    showConfirmButton: false,
+                    customClass: { popup: 'rounded-2xl' }
+                });
+            }
+        });
+    </script>
+@endif
+
+@endsection

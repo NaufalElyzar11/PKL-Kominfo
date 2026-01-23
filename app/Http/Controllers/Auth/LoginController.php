@@ -19,20 +19,28 @@ class LoginController extends Controller
     // Proses login
     public function login(Request $request)
     {
-        // 1. Ubah validasi dari 'email' menjadi 'name'
+        // 1. Ubah validasi: 'name' diubah menjadi 'login_identifier' agar lebih umum
         $request->validate([
-            'name'     => ['required', 'string'],
-            'password' => ['required'],
+            'login_identifier' => ['required', 'string'],
+            'password'         => ['required'],
         ]);
 
-        // 2. Cari user berdasarkan kolom 'name' (Nama Lengkap)
-        $user = User::where('name', $request->name)->first();
+        $identifier = $request->login_identifier;
 
-        // 3. Penyesuaian pesan error
+        // 2. Cari user berdasarkan Nama Lengkap (tabel users) 
+        // ATAU berdasarkan NIP (tabel pegawai) melalui relasi
+        $user = User::where('name', $identifier)
+            ->orWhereHas('pegawai', function ($query) use ($identifier) {
+                $query->where('nip', $identifier);
+            })
+            ->first();
+
+        // 3. Penyesuaian pesan error jika akun tidak ditemukan
         if (!$user) {
-            return back()->withInput()->with('error', 'Nama Lengkap tidak terdaftar!');
+            return back()->withInput()->with('error', 'Nama Lengkap atau NIP tidak terdaftar!');
         }
 
+        // Cek password
         if (!Hash::check($request->password, $user->password)) {
             return back()->withInput()->with('error', 'Kata sandi salah!');
         }
@@ -41,19 +49,17 @@ class LoginController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        // Ambil role dan pastikan formatnya kecil (lowercase)
         $role = strtolower($user->role);
 
-        // 4. Update daftar role agar sinkron dengan PegawaiController Anda
-        // Menambahkan 'kepala_dinas' dan 'pemberi_cuti' ke dalam daftar izin
+        // Pastikan role diizinkan
         $allowedRoles = ['super_admin', 'admin', 'kepala_dinas', 'pegawai', 'pemberi_cuti'];
 
         if (!in_array($role, $allowedRoles)) {
             Auth::logout();
-            return redirect()->route('login')->with('error', 'Hak akses (role) tidak dikenali.');
+            return redirect()->route('login')->with('error', 'Hak akses tidak dikenali.');
         }
 
-        // Sinkronisasi dengan Spatie Roles jika belum ada
+        // Sinkronisasi Spatie Roles (tetap sama)
         if (!$user->hasRole($role)) {
             $user->syncRoles([$role]);
         }
@@ -61,17 +67,18 @@ class LoginController extends Controller
         return $this->redirectByRole($role);
     }
 
-    // Redirect berdasarkan role
+    // Perbaikan Mapping Route (Pastikan kunci array sama dengan isi kolom role di DB)
     protected function redirectByRole($role)
     {
         $routeMap = [
-            'super_admin' => 'super.dashboard',
-            'admin'       => 'admin.dashboard',
-            'kadis'       => 'kepaladinas.dashboard',
-            'pegawai'     => 'pegawai.dashboard',
+            'super_admin'  => 'super.dashboard',
+            'admin'        => 'admin.dashboard',
+            'kepala_dinas' => 'kepaladinas.dashboard',
+            'pegawai'      => 'pegawai.dashboard',
+            'pemberi_cuti' => 'pegawai.dashboard',
         ];
 
-        return redirect()->route($routeMap[$role]);
+        return redirect()->route($routeMap[$role] ?? 'login');
     }
 
     // Logout user
