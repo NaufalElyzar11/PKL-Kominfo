@@ -3,29 +3,30 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('users')->insert([
+        // Hapus data admin lama agar tidak duplikat
+        User::where('email', 'admin@gmail.com')->delete();
+
+        // Buat User Administrator baru
+        $admin = User::create([
             'name'       => 'Administrator',
             'email'      => 'admin@gmail.com',
             'password'   => Hash::make('Admin*1234'),
-            'role'       => 'Admin',
-            
-            // --- Tambahan Wajib (Sesuai Tabel Database Kamu) ---
-            'nip'        => '11223344',    // Wajib diisi sembarang angka
-            'telepon'    => '0812345678', // Wajib diisi
+            'role'       => 'admin', // Kolom tambahan di tabel users
+            'nip'        => '11223344',
+            'telepon'    => '0812345678', 
             'jabatan'    => 'Super Admin',
             'unit_kerja' => 'IT Pusat',
-            // ---------------------------------------------------
-
             'id_pegawai' => null,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
+
+        // Tempelkan role Spatie (Pastikan namanya ada di RoleSeeder)
+        $admin->assignRole('admin');
     }
 }

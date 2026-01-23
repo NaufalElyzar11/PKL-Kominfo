@@ -6,71 +6,104 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use App\Models\Pegawai;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
+    /**
+     * Menampilkan halaman form edit profil.
+     * INI ADALAH FUNGSI YANG HILANG (Mengatasi error Undefined Method edit)
+     */
+    public function edit(Request $request)
+    {
+        $user = $request->user();
+        // Mengambil relasi pegawai dari user yang sedang login
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai) {
+            return redirect()->route('pegawai.dashboard')
+                ->with('error', 'Data profil pegawai tidak ditemukan.');
+        }
+
+        // Ubah 'profile' menjadi 'edit' agar mengarah ke halaman formulir
+        return view('pegawai.profile.edit', [
+            'user' => $user,
+            'pegawai' => $pegawai,
+        ]);
+    }
+
+    /**
+     * Opsional: Jika Anda masih butuh halaman preview (tampilan saja)
+     */
     public function show()
     {
         $user = Auth::user();
         $pegawai = $user->pegawai;
 
         if (!$pegawai) {
-            return redirect()->route('pegawai.dashboard')
-                ->with('error', 'Data pegawai tidak ditemukan.');
+            return redirect()->route('pegawai.dashboard')->with('error', 'Data tidak ditemukan.');
         }
-
-        $email = $pegawai->email ?? $user->email;
-        $privateEmail = preg_replace('/(.).+(@.+)/', '$1****$2', $email);
 
         return view('pegawai.profile.profile', [
             'user' => $user,
             'pegawai' => $pegawai,
-            'privateEmail' => $privateEmail
         ]);
     }
 
-    public function edit(Request $request)
-    {
-        return view('admin.profile.edit', [ 
-            'user' => $request->user(),
-            'pegawai' => $request->user()->pegawai
-        ]);
-    }
-
+    /**
+     * Menyimpan pembaruan data dari pegawai ke database
+     */
     public function update(Request $request)
     {
+        $user = $request->user();
+
+        // 1. Validasi Input
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
+            'nama' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'telepon' => ['required', 'string', 'max:15', 'regex:/^[0-9]+$/'],
         ]);
 
         DB::beginTransaction();
         try {
-            $user = $request->user();
-            
-            // 1. Update Tabel Users (untuk login)
-            $user->fill($validated);
-            if ($user->isDirty('email')) {
-                $user->email_verified_at = null;
-            }
-            $user->save();
+            // 2. Update Tabel Users (agar login & email sistem berubah)
+            $user->update([
+                'name' => $validated['nama'],
+                'email' => $validated['email'],
+            ]);
 
-            // 2. Sinkronisasi ke Tabel Pegawai (PENTING)
+            // 3. Update Tabel Pegawai (agar muncul di data Admin)
             if ($user->pegawai) {
                 $user->pegawai->update([
-                    'nama' => $validated['name'],
-                    'email' => $validated['email']
+                    'nama' => $validated['nama'],
+                    'email' => $validated['email'],
+                    'telepon' => $validated['telepon'],
                 ]);
             }
 
             DB::commit();
-            return Redirect::route('pegawai.profile.show')->with('success', 'Profil berhasil diperbarui.');
+            // Kembali ke halaman edit dengan pesan sukses
+            return Redirect::route('pegawai.profile.edit')->with('success', 'Profil berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal memperbarui profil: ' . $e->getMessage());
         }
     }
+
+    public function updatePassword(Request $request)
+{
+    $validated = $request->validate([
+        'current_password' => ['required', 'current_password'],
+        'password' => ['required', Password::defaults(), 'confirmed'],
+    ]);
+
+    $request->user()->update([
+        'password' => Hash::make($validated['password']),
+    ]);
+
+    return back()->with('status', 'password-updated');
+}
 }

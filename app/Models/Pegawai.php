@@ -86,7 +86,7 @@ class Pegawai extends Model
     /**
      * Relasi: Atasan langsung (pegawai juga)
      */
-    public function atasan()
+    public function atasanLangsung()
     {
         return $this->belongsTo(Pegawai::class, 'atasan_id');
     }

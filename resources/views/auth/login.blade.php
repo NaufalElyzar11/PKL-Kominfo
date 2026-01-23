@@ -46,7 +46,7 @@
         @endif
 
         <p class="text-slate-700 font-medium text-sm">
-            {{ session('email_error') ?? session('password_error') ?? session('error') ?? session('success') }}
+            {{ session('error') ?? $errors->first() ?? session('success') }}
         </p>
 
         <button 
@@ -85,15 +85,15 @@
         {{-- Nama Pegawai --}}
         <div>
             <label class="block text-sm font-semibold text-slate-700 mb-1">
-                Nama Lengkap Pegawai
+                Nama Lengkap / NIP
             </label>
             <div class="relative">
                 <input type="text"
-                    name="name" {{-- Nama field diubah menjadi 'name' --}}
-                    value="{{ old('name') }}"
+                    name="login_identifier" {{-- Ubah dari 'name' menjadi 'login_identifier' --}}
+                    value="{{ old('login_identifier') }}" {{-- Ubah dari old('name') --}}
                     required
                     autofocus
-                    placeholder="Masukkan Nama Lengkap"
+                    placeholder="Masukkan Nama Lengkap atau NIP"
                     class="w-full px-4 py-3 pl-11 rounded-lg border border-slate-300
                             focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
 

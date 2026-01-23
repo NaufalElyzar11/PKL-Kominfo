@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Pegawai;
 
 class User extends Authenticatable
 {
@@ -15,17 +16,16 @@ class User extends Authenticatable
 
     protected $guard_name = 'web';
 
-    // SAYA SESUAIKAN DENGAN TABEL DATABASE KAMU (HEIDISQL)
     protected $fillable = [
-        'name',         // Database kamu pakai 'name', bukan 'nama'
-        'nip',
+        'name',
         'email',
         'password',
         'role',
+        'nip',
         'telepon',
         'jabatan',
         'unit_kerja',
-        'id_pegawai',   // WAJIB ADA: Ini kunci penghubung ke tabel pegawai
+        'id_pegawai',
     ];
 
     protected $hidden = [

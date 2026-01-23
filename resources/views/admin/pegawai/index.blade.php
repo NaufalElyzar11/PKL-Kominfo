@@ -115,12 +115,12 @@
                     <th class="px-2 py-1 border">Nama</th>
                     <th class="px-2 py-1 border">NIP</th>
                     <th class="px-2 py-1 border">Email</th>
+                    <th class="px-2 py-1 border">Telepon</th>                    
                     <th class="px-2 py-1 border">Role</th>
                     <th class="px-2 py-1 border">Jabatan</th>
                     <th class="px-2 py-1 border">Unit</th>
                     <th class="px-2 py-1 border">Atasan</th>
                     <th class="px-2 py-1 border">Pemberi Cuti</th>
-                    <th class="px-2 py-1 border">Telepon</th>
                     <th class="px-2 py-1 border">Status</th>
                     <th class="px-2 py-1 border text-center">Aksi</th>
                 </tr>
@@ -143,15 +143,11 @@
                             'status' => $p->status
                         ];
 
-                        $nip = $p->nip ? substr($p->nip, 0, 4) . str_repeat('*', max(strlen($p->nip) - 8, 0)) . substr($p->nip, -4) : '-';
+                        $nip = $p->nip ?? '-';
 
-                        $email = optional($p->user)->email ?? '-';
-                        if ($email !== '-') {
-                            $parts = explode('@', $email);
-                            $email = substr($parts[0], 0, 3) . str_repeat('*', max(strlen($parts[0]) - 3, 0)) . '@' . $parts[1];
-                        }
+                        $email = optional($p->user)->email ?? ''; 
 
-                        $telepon = $p->telepon ? substr($p->telepon, 0, 3) . str_repeat('*', max(strlen($p->telepon) - 3, 0)) : '-';
+                       $telepon = $p->telepon ?? '-';
                     @endphp
 
                     <tr class="border hover:bg-gray-50" data-pegawai='@json($pegawaiData)'>
@@ -159,12 +155,12 @@
                         <td class="px-2 py-1 border">{{ $p->nama }}</td>
                         <td class="px-2 py-1 border font-mono">{{ $nip }}</td>
                         <td class="px-2 py-1 border">{{ $email }}</td>
+                        <td class="px-2 py-1 border">{{ $p->telepon }}</td>
                         <td class="px-2 py-1 border capitalize">{{ optional($p->user)->role ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $p->jabatan ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $p->unit_kerja ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $p->atasan ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $p->pemberi_cuti ?? '-' }}</td>
-                        <td class="px-2 py-1 border">{{ $telepon }}</td>
                         <td class="px-2 py-1 border text-center">{{ $p->status ?? '-' }}</td>
 
                         <td class="px-2 py-1 border text-center">
@@ -320,14 +316,15 @@
 
             {{-- NIP --}}
             <div>
-                <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
+            <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
                 <input type="text" name="nip"
+                    minlength="13"
                     maxlength="18"
                     inputmode="numeric"
                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    class="block w-full border rounded-lg p-1"
+                    class="block w-full border rounded-lg p-1 focus:ring-sky-500 focus:border-sky-500"
                     placeholder="Masukkan 18 digit NIP"
-                    required>
+                    title="NIP harus berisi minimal 13 digit angka">
             </div>
 
             {{-- JABATAN (KINI BERDAMPINGAN DENGAN UNIT KERJA) --}}
@@ -381,13 +378,6 @@
                     </select>
                 </div>
 
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Email <span class="text-red-500">*</span></label>
-                    <input type="email" name="email" required
-                           class="block w-full border rounded-lg p-1"
-                           placeholder="email@mail.com">
-                </div>
-
                 {{-- PASSWORD DENGAN VALIDASI KOMBINASI --}}
                 <div x-data="{ 
                     show: false, 
@@ -439,27 +429,6 @@
                     </div>
                 </div>
 
-            </div>
-
-            {{-- TELEPON --}}
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">Telepon <span class="text-red-500">*</span></label>
-                <input type="text" 
-                    name="telepon" 
-                    {{-- Membatasi maksimal 13 digit --}}
-                    maxlength="13" 
-                    {{-- Mengaktifkan keyboard angka pada perangkat mobile --}}
-                    inputmode="numeric"
-                    {{-- Menghapus huruf, simbol, dan spasi secara otomatis --}}
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    class="block w-full border rounded-lg p-1"
-                    placeholder="Contoh: 081234567890"
-                    required>
-                
-                {{-- Menampilkan pesan error dari server --}}
-                @error('telepon')
-                    <p class="text-xs text-red-500 mt-1 italic">{{ $message }}</p>
-                @enderror
             </div>
 
             {{-- BUTTON --}}
@@ -621,14 +590,6 @@
                 class="w-full border rounded px-2 py-1 text-sm">
         </div>
 
-        {{-- Email --}}
-        <div>
-            <label class="font-medium text-xs">Email</label>
-            <input type="email" name="email"
-                x-model="selectedPegawai.email"
-                class="w-full border rounded px-2 py-1 text-sm">
-        </div>
-
         {{-- Role --}}
         <div>
             <label class="font-medium text-xs">Role</label>
@@ -683,16 +644,6 @@
                 value="Kanafi, S.IP, MM" 
                 readonly
                 class="w-full border border-gray-200 bg-gray-100 rounded px-2 py-1 text-sm cursor-not-allowed">
-        </div>
-
-        {{-- Telepon --}}
-        <div>
-            <label class="font-medium text-xs">Telepon</label>
-            <input type="text" name="telepon"
-                x-model="selectedPegawai.telepon"
-                maxlength="13"
-                @input="selectedPegawai.telepon = selectedPegawai.telepon.replace(/[^0-9]/g, '').slice(0,13)"
-                class="w-full border rounded px-2 py-1 text-sm">
         </div>
 
         {{-- Status --}}

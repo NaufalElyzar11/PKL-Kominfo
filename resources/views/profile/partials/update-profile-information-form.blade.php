@@ -1,42 +1,59 @@
 <section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {{ __('Profile Information') }}
+    <header class="mb-8 border-b border-gray-100 pb-4">
+        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-3">
+            <i class="fa-solid fa-user-pen text-sky-600"></i>
+            {{ __('Informasi Profil') }}
         </h2>
-
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __("Update your account's profile information and email address.") }}
+        <p class="mt-1 text-sm text-gray-500">
+            {{ __("Pastikan data nama, email, dan nomor telepon Anda selalu dalam kondisi terbaru.") }}
         </p>
     </header>
 
-    <form method="post" action="{{ route('pegawai.profile.update') }}" class="mt-6 space-y-6">
+    <form method="post" action="{{ route('pegawai.profile.update') }}" class="space-y-6">
         @csrf
         @method('patch')
 
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+        {{-- Grid Layout agar rapi (2 Kolom di Desktop) --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            
+            {{-- Nama Lengkap --}}
+            <div class="space-y-2">
+                <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-user text-sky-500 w-4"></i> Nama Lengkap
+                </label>
+                <input type="text" name="nama" value="{{ old('nama', $user->name) }}" 
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none" required>
+                <x-input-error :messages="$errors->get('nama')" />
+            </div>
+
+            {{-- Email --}}
+            <div class="space-y-2">
+                <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-envelope text-sky-500 w-4"></i> Alamat Email
+                </label>
+                <input type="email" name="email" value="{{ old('email', $user->email) }}" 
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none" required>
+                <x-input-error :messages="$errors->get('email')" />
+            </div>
+
+            {{-- Telepon --}}
+            <div class="space-y-2 md:col-span-2 lg:col-span-1">
+                <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-phone text-sky-500 w-4"></i> Nomor Telepon / WhatsApp
+                </label>
+                <input type="text" name="telepon" value="{{ old('telepon', $pegawai->telepon ?? '') }}" 
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none" placeholder="08xxxxxxxxxx">
+                <x-input-error :messages="$errors->get('telepon')" />
+            </div>
         </div>
 
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
-        </div>
-
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600 dark:text-gray-400"
-                >{{ __('Saved.') }}</p>
-            @endif
+        {{-- Tombol Simpan --}}
+        <div class="flex items-center justify-end pt-6">
+            <button type="submit" 
+                class="flex items-center gap-2 px-8 py-3 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 shadow-lg hover:shadow-sky-200 transition-all active:scale-95">
+                <i class="fa-solid fa-floppy-disk"></i>
+                {{ __('SIMPAN PERUBAHAN') }}
+            </button>
         </div>
     </form>
 </section>
