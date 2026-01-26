@@ -32,17 +32,19 @@ class RoleMiddleware
 
     private function redirectByRole($role)
     {
-        // Nama route: {role}.dashboard
-        $route = $role . '.dashboard';
+        $map = [
+            'admin'  => 'admin.dashboard',
+            'atasan' => 'atasan.dashboard',
+            'pegawai' => 'pegawai.dashboard.index',
+        ];
+
+        $route = $map[$role] ?? 'login';
 
         if (Route::has($route)) {
             return redirect()->route($route);
         }
 
-        // Role tidak valid → logout
         Auth::logout();
-
-        return redirect()->route('login')
-            ->with('error', 'Role tidak memiliki akses.');
+        return redirect()->route('login')->with('error', 'Role tidak memiliki akses.');
     }
 }

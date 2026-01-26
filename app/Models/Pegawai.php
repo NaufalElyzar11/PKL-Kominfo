@@ -12,90 +12,79 @@ class Pegawai extends Model
     protected $table = 'pegawai';
 
     protected $fillable = [
-        'nama',
-        'nip',
-        'jabatan',
-        'unit_kerja',
-        'atasan',
+        'nama', 
+        'nip', 
+        'jabatan', 
+        'unit_kerja', 
+        'status', 
+        'atasan', 
         'pemberi_cuti',
-        'status',
-        'jatah_cuti',
-        'kuota_cuti',
-        'atasan_id',
-        'email',
         'telepon',
+        'email',
+        'kuota_cuti'
     ];
 
     protected $appends = ['sisa_cuti'];
 
     protected $casts = [
-        'jatah_cuti' => 'integer',
         'kuota_cuti' => 'integer',
     ];
 
     /**
-     * PERBAIKAN PENTING:
-     * Pegawai -> User adalah hasOne (1 Pegawai punya 1 Akun User)
-     * Kuncinya ada di tabel users (namanya 'id_pegawai')
+     * Relasi ke Akun User (Login)
+     * 1 Pegawai memiliki 1 User
      */
     public function user()
     {
-        // Ubah dari belongsTo menjadi hasOne
         return $this->hasOne(User::class, 'id_pegawai', 'id');
     }
 
     /**
-     * PERBAIKAN RELASI CUTI:
-     * Karena tabel Cuti tidak punya 'pegawai_id' (tapi punyanya 'user_id'),
-     * kita harus tembus lewat tabel User.
+     * Relasi ke Tabel Cuti (Melalui User)
+     * Karena tabel Cuti menggunakan 'user_id' bukan 'pegawai_id'
      */
     public function cuti()
     {
-        // Cara bacanya: Pegawai -> User -> Cuti
         return $this->hasManyThrough(
             Cuti::class, 
             User::class, 
-            'id_pegawai', // FK di tabel users
-            'user_id',    // FK di tabel cuti
-            'id',         // PK di tabel pegawai
-            'id'          // PK di tabel users
+            'id_pegawai', // Foreign Key di tabel users
+            'user_id',    // Foreign Key di tabel cuti
+            'id',         // Local Key di tabel pegawai
+            'id'          // Local Key di tabel users
         );
     }
 
     /**
-     * Pegawai → Catatan Cuti (hasMany)
+     * Relasi ke Master Atasan Langsung
      */
-    public function catatanCuti()
+    public function atasanLangsung()
     {
-        return $this->hasMany(CatatanCuti::class, 'pegawai_id');
+        return $this->belongsTo(AtasanLangsung::class, 'id_atasan_langsung');
     }
 
     /**
-     * Hitung sisa cuti otomatis
+     * Relasi ke Master Pejabat Pemberi Cuti
+     */
+    public function pejabatPemberiCuti()
+    {
+        return $this->belongsTo(PejabatPemberiCuti::class, 'id_pejabat_pemberi_cuti');
+    }
+
+    /**
+     * Accessor untuk hitung sisa cuti secara Real-time
+     * Menghitung total cuti yang 'Disetujui' dan 'Menunggu' tahun ini
      */
     public function getSisaCutiAttribute(): int
     {
         $tahun = date('Y');
+        
+        // Ambil jumlah hari dari relasi cuti yang statusnya bukan ditolak
+        $terpakai = $this->cuti()
+            ->where('tahun', $tahun)
+            ->whereIn('status', ['Menunggu', 'Disetujui Atasan', 'Disetujui'])
+            ->sum('jumlah_hari');
 
-        $catatan = $this->catatanCuti()->where('tahun', $tahun)->first();
-        $terpakai = $catatan?->terpakai ?? 0;
-
-        return max(0, ($this->kuota_cuti ?? 0) - $terpakai);
-    }
-
-    /**
-     * Relasi: Atasan langsung (pegawai juga)
-     */
-    public function atasanLangsung()
-    {
-        return $this->belongsTo(Pegawai::class, 'atasan_id');
-    }
-
-    /**
-     * Relasi: Daftar bawahan pegawai
-     */
-    public function bawahan()
-    {
-        return $this->hasMany(Pegawai::class, 'atasan_id');
+        return max(0, ($this->kuota_cuti ?? 12) - $terpakai);
     }
 }

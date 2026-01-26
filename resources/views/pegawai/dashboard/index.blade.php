@@ -20,6 +20,24 @@
         </div>
     </div>
 
+    {{-- 🔔 TAMBAHKAN INI DI BAWAH KARTU --}}
+    @if(isset($notif) && $notif->count() > 0)
+        <div class="mt-4 space-y-3">
+            @foreach($notif as $n)
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl shadow-sm flex justify-between items-center">
+                <div>
+                    <h4 class="font-bold text-blue-800 text-sm">{{ $n->title }}</h4>
+                    <p class="text-xs text-blue-700">{{ $n->message }}</p>
+                </div>
+                <form action="{{ route('pegawai.notif.read', $n->id) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="text-blue-400 hover:text-blue-600"><i class="fa-solid fa-xmark"></i></button>
+                </form>
+            </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- 🧩 GRID STATISTIK (RESPONSIVE) --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
 
@@ -30,7 +48,7 @@
             </h2>
 
             <div class="h-auto lg:h-[362px] min-h-[220px]">
-                <div class="space-y-4 sm:space-y-6">
+                <canvas id="sisaCutiChart"></canvas>
 
                     <!-- Angka Utama -->
                     <div class="text-center">

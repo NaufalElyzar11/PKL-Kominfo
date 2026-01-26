@@ -75,14 +75,10 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @forelse ($pegawaiTerbaru as $index => $p)
-                            @php
-                                $nip = $p->nip ? substr($p->nip, 0, 4).'•••'.substr($p->nip, -2) : '-';
-                                $email = $p->user?->email ?? '-';
-                                if ($email !== '-') {
-                                    [$name, $domain] = explode('@', $email);
-                                    $email = substr($name, 0, 3) . '***@' . $domain;
-                                }
-                            @endphp
+                        @php
+                            $nip = $p->nip ?? '-';
+                            $email = $p->user?->email ?? '-';
+                        @endphp
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-2 py-1 border text-center">{{ $index + 1 }}</td>
                                 <td class="px-2 py-1 border font-medium text-gray-800">{{ $p->nama }}</td>
@@ -123,12 +119,11 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @forelse ($cutiTerbaru as $i => $c)
-                            @php
-                                // FIX: Gunakan ?-> agar tidak error jika pegawai tidak ditemukan
-                                $pegawaiNama = $c->pegawai?->nama ?? 'Pegawai Terhapus';
-                                $pegawaiNip = $c->pegawai?->nip;
-                                $nipPrivasi = $pegawaiNip ? substr($pegawaiNip, 0, 5) . '****' . substr($pegawaiNip, -4) : '-';
-                            @endphp
+                        @php
+                            $pegawaiNama = $c->pegawai?->nama ?? 'Pegawai Terhapus';
+                            $pegawaiNip = $c->pegawai?->nip;
+                            $nipPrivasi = $pegawaiNip ?? '-';
+                        @endphp
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-2 py-1 border text-center">{{ $i + 1 }}</td>
                                 <td class="px-2 py-1 border leading-tight">

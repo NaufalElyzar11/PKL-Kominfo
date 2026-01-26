@@ -180,7 +180,7 @@
                             <tr class="hover:bg-gray-50 text-gray-700">
                                 <td class="px-1 py-2 text-center">{{ $no }}</td>
                                 <td class="px-1 py-2">{{ $c->pegawai->nama ?? '-' }}</td>
-                                <td class="px-1 py-2">{{ $nipMasked }}</td>
+                                <td class="px-1 py-2">{{ $c->pegawai->nip ?? '-' }}</td>
                                 <td class="px-1 py-2">{{ $c->jenis_cuti }}</td>
                                 <td class="px-1 py-2 leading-tight">
                                     {{ $c->tanggal_mulai->translatedFormat('d M Y') }} <br>
@@ -190,7 +190,15 @@
                                 <td class="px-1 py-2">{{ Str::limit($c->alasan_cuti, 20) }}</td>
                                 <td class="px-1 py-2">{{ $c->alamat ?? '-' }}</td>
                                 <td class="px-1 py-2 text-center">
-                                    <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
+                                    @if($c->status == 'Menunggu')
+                                        <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
+                                    @elseif($c->status == 'Disetujui Atasan')
+                                        <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">
+                                            <i class="fa-solid fa-user-check mr-1"></i> Disetujui Atasan
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px]">{{ $c->status }}</span>
+                                    @endif
                                 </td>
                                 <td class="px-1 py-2 text-center flex justify-center gap-1">
                                 {{-- Tambahkan baris alasan_cuti di dalam parameter showPendingDetail --}}
@@ -198,6 +206,8 @@
                                     nama: '{{ $c->pegawai->nama }}', 
                                     nip: '{{ $c->pegawai->nip }}', 
                                     jabatan: '{{ $c->pegawai->jabatan }}',
+                                    atasan: '{{ $c->pegawai->atasan }}',
+                                    pejabat: '{{ $c->pegawai->pemberi_cuti }}',
                                     jenis_cuti: '{{ $c->jenis_cuti }}', 
                                     tanggal_mulai: '{{ $c->tanggal_mulai->translatedFormat('d M Y') }}',
                                     tanggal_selesai: '{{ $c->tanggal_selesai->translatedFormat('d M Y') }}', 
@@ -318,11 +328,13 @@
                         <td class="px-1 py-2">{{ Str::limit($r->alasan_cuti, 20) }}</td>
                         <td class="px-1 py-2 text-center">
                             @if($status == 'disetujui')
-                                <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Disetujui</span>
+                                <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Disetujui Kadis</span>
+                            @elseif($status == 'disetujui atasan')
+                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">Disetujui Atasan</span>
                             @elseif($status == 'ditolak')
                                 <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-bold">Ditolak</span>
                             @else
-                                <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-[10px]">{{ $r->status }}</span>
+                                <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold">Menunggu</span>
                             @endif
                         </td>
                         <td class="px-1 py-2 text-center flex justify-center gap-1">
@@ -462,6 +474,14 @@
                     </div>
                     <div><span class="font-bold">NIP:</span> {{ $pegawai->nip ?? '-' }}</div>
                     <div><span class="font-bold">Jabatan:</span> {{ $pegawai->jabatan ?? '-' }}</div>
+
+                    {{-- TAMBAHKAN DUA BARIS INI --}}
+                    <div><span class="font-bold">Atasan:</span> {{ $pegawai->atasan ?? '-' }}</div>
+                    <div><span class="font-bold">Pejabat:</span> {{ $pegawai->pemberi_cuti ?? '-' }}</div>
+
+                    {{-- INPUT HIDDEN AGAR MASUK KE DATABASE SAAT STORE --}}
+                    <input type="hidden" name="atasan" value="{{ $pegawai->atasan }}">
+                    <input type="hidden" name="pemberi_cuti" value="{{ $pegawai->pemberi_cuti }}">
                 </div>
 
                 <fieldset :disabled="hasPendingCuti" class="space-y-2">
@@ -591,6 +611,16 @@
                 <span class="font-semibold text-gray-500">Jabatan:</span> 
                 <span x-text="detailPending.jabatan || '-'"></span>
             </p>
+
+            <p class="flex justify-between border-b border-gray-100 pb-1">
+                <span class="font-semibold text-gray-500">Atasan:</span> 
+                <span x-text="detailPending.atasan || '-'"></span>
+            </p>
+            <p class="flex justify-between border-b border-gray-100 pb-1">
+                <span class="font-semibold text-gray-500">Pejabat:</span> 
+                <span x-text="detailPending.pejabat || '-'"></span>
+            </p>
+
             <p class="flex justify-between border-b border-gray-100 pb-1">
                 <span class="font-semibold text-gray-500">Jenis Cuti:</span> 
                 <span class="font-bold text-sky-700" x-text="detailPending.jenis_cuti || '-'"></span>

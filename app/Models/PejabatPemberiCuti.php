@@ -9,21 +9,19 @@ class PejabatPemberiCuti extends Model
 {
     use HasFactory;
 
-    // Nama tabel sesuai database
-    protected $table = 'pejabat_pemberi_cuti';
+    protected $table = 'pejabat_pemberi_cuti'; // Pastikan nama tabel sesuai migration
 
-    // Kolom yang bisa diisi massal
     protected $fillable = [
         'nama_pejabat',
-        'nip_pejabat',
-        'jabatan_pejabat',
+        'nip',
+        'jabatan',
     ];
 
     /**
-     * Relasi ke cuti yang disetujui oleh pejabat ini
+     * Relasi ke Pegawai (Satu pejabat bisa menyetujui cuti banyak pegawai)
      */
-    public function cuti()
+    public function pegawai()
     {
-        return $this->hasMany(Cuti::class, 'id_pejabat_pemberi_cuti');
+        return $this->hasMany(Pegawai::class, 'id_pejabat_pemberi_cuti');
     }
 }

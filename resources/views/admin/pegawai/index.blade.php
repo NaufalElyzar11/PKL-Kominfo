@@ -11,6 +11,13 @@
     showDetailModal: false,
     showDelete: false,
 
+    isUnchanged() {
+    if (!this.selectedPegawai || !this.originalPegawai) return true;
+    return JSON.stringify(this.selectedPegawai) === JSON.stringify(this.originalPegawai);
+},
+
+    nip: '',
+
     // Modal jenis lain (Atasan / Pemberi Cuti)
     activeModal: null,
 
@@ -314,17 +321,17 @@
                     title="Nama hanya boleh berisi huruf, spasi, titik, dan koma">
             </div>
 
-            {{-- NIP --}}
-            <div>
-            <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
+            {{-- Bagian NIP pada Modal Tambah --}}
+            <div> 
+                <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
                 <input type="text" name="nip"
-                    minlength="13"
+                    x-model="nip" {{-- Sekarang terhubung ke root nip --}}
+                    minlength="13" {{-- Validasi HTML Bawaan --}}
                     maxlength="18"
                     inputmode="numeric"
                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                     class="block w-full border rounded-lg p-1 focus:ring-sky-500 focus:border-sky-500"
-                    placeholder="Masukkan 18 digit NIP"
-                    title="NIP harus berisi minimal 13 digit angka">
+                    placeholder="Masukkan 18 digit NIP">
             </div>
 
             {{-- JABATAN (KINI BERDAMPINGAN DENGAN UNIT KERJA) --}}
@@ -438,10 +445,13 @@
                     Batal
                 </button>
                 
-                <button type="submit"
-                        class="px-3 py-1 text-sm font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700">
-                    Simpan Data
-                </button>
+            <button type="submit"
+                :disabled="nip.length > 0 && nip.length < 13"
+                :class="nip.length > 0 && nip.length < 13 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-sky-700'"
+                class="px-3 py-1 text-sm font-medium rounded-lg text-white bg-sky-600 transition-all">
+                Simpan Data
+            </button>
+
             </div>
 
         </form>
@@ -666,14 +676,17 @@
             Batal
         </button>
 
+        {{-- Tombol Update pada Modal Edit --}}
         <button type="submit"
-            {{-- Button mati jika data sekarang sama persis dengan data awal --}}
-            :disabled="JSON.stringify(selectedPegawai) === JSON.stringify(originalPegawai)"
+            {{-- Tombol mati jika NIP tidak valid ATAU data tidak ada yang berubah --}}
+            :disabled="(selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()"
             
-            {{-- Tambahkan styling agar terlihat transparan saat mati --}}
-            :class="JSON.stringify(selectedPegawai) === JSON.stringify(originalPegawai) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-700'"
+            {{-- Styling abu-abu jika disabled (nip tidak valid atau data tidak berubah) --}}
+            :class="((selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()) 
+                    ? 'opacity-50 cursor-not-allowed bg-gray-400' 
+                    : 'bg-yellow-600 hover:bg-yellow-700'"
             
-            class="px-3 py-1.5 bg-yellow-600 text-white rounded text-sm transition-all duration-200">
+            class="px-3 py-1.5 text-white rounded text-sm transition-all duration-200">
             Update
         </button>
         

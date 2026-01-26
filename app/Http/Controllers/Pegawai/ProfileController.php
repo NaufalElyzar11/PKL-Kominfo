@@ -57,39 +57,46 @@ class ProfileController extends Controller
      */
     public function update(Request $request)
     {
-        $user = $request->user();
+        $user = Auth::user(); // Lebih aman menggunakan Auth::user()
 
         // 1. Validasi Input
         $validated = $request->validate([
-            'nama' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'telepon' => ['required', 'string', 'max:15', 'regex:/^[0-9]+$/'],
+            'nama'    => ['required', 'string', 'max:255'],
+            'email'   => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'telepon' => [
+                'required', 
+                'string', 
+                'min:10', // Biasanya minimal 10 digit
+                'max:13', // Memberi ruang untuk format +62
+                'regex:/^[0-9]+$/'
+            ],
         ]);
 
         DB::beginTransaction();
         try {
-            // 2. Update Tabel Users (agar login & email sistem berubah)
+            // 2. Update Tabel Users (Data untuk Login)
             $user->update([
-                'name' => $validated['nama'],
+                'name'  => $validated['nama'],
                 'email' => $validated['email'],
             ]);
 
-            // 3. Update Tabel Pegawai (agar muncul di data Admin)
+            // 3. Update Tabel Pegawai (Data untuk Administrasi/Admin)
+            // Kita gunakan relasi 'pegawai' yang ada di model User
             if ($user->pegawai) {
                 $user->pegawai->update([
-                    'nama' => $validated['nama'],
-                    'email' => $validated['email'],
+                    'nama'    => $validated['nama'],
+                    'email'   => $validated['email'], // Simpan juga di tabel pegawai agar tidak NULL
                     'telepon' => $validated['telepon'],
                 ]);
             }
 
             DB::commit();
-            // Kembali ke halaman edit dengan pesan sukses
-            return Redirect::route('pegawai.profile.edit')->with('success', 'Profil berhasil diperbarui.');
+            return back()->with('success', 'Profil Anda berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal memperbarui profil: ' . $e->getMessage());
+            // Membantu debugging jika ada error database
+            return redirect()->back()->with('error', 'Gagal update: ' . $e->getMessage());
         }
     }
 

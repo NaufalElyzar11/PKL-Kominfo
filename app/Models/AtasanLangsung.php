@@ -9,19 +9,19 @@ class AtasanLangsung extends Model
 {
     use HasFactory;
 
-    protected $table = 'atasan_langsung';
+    protected $table = 'atasan_langsung'; // Pastikan nama tabel sesuai migration
 
     protected $fillable = [
         'nama_atasan',
-        'nip_atasan',
-        'jabatan_atasan',
+        'nip',
+        'jabatan',
     ];
 
     /**
-     * Relasi ke cuti yang diajukan pegawai di bawah atasan ini
+     * Relasi ke Pegawai (Satu atasan bisa membawahi banyak pegawai)
      */
-    public function cuti()
+    public function pegawai()
     {
-        return $this->hasMany(Cuti::class, 'id_atasan_langsung');
+        return $this->hasMany(Pegawai::class, 'id_atasan_langsung');
     }
 }

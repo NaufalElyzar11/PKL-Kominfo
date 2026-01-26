@@ -21,18 +21,14 @@ class PegawaiController extends Controller
         $search          = $request->search;
         $searchUnitKerja = $request->unit_kerja;
 
-        $query = Pegawai::with('user')
-            ->whereHas('user', function ($q) {
-                $q->whereIn('role', ['pegawai', 'admin', 'atasan', 'pemberi_cuti']);
-            });
+        // PERBAIKAN: Jangan gunakan whereHas jika ingin menampilkan SEMUA pegawai
+        // Terlepas dari apakah mereka punya akun user atau tidak
+        $query = Pegawai::with('user'); 
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nip', 'like', "%{$search}%")
-                  ->orWhereHas('user', function ($q) use ($search) {
-                      $q->where('email', 'like', "%{$search}%");
-                  });
+                ->orWhere('nip', 'like', "%{$search}%");
             });
         }
 
@@ -40,7 +36,7 @@ class PegawaiController extends Controller
             $query->where('unit_kerja', 'like', "%{$searchUnitKerja}%");
         }
 
-        $pegawai = $query->orderBy('nama')->paginate(6)->withQueryString();
+        $pegawai = $query->orderBy('nama')->paginate(10)->withQueryString();
 
         return view('admin.pegawai.index', [
             'pegawai'         => $pegawai,
@@ -57,54 +53,53 @@ class PegawaiController extends Controller
     /**
      * Simpan pegawai baru
      */
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'nama'         => 'required|string|max:255',
-        'nip'          => ['nullable', 'string', 'min:13', 'max:18', 'unique:pegawai,nip'],
-        'jabatan'      => 'required|string|max:100',
-        'unit_kerja'   => 'required|string|max:100',
-        'role'         => 'required|in:pegawai,admin,pemberi_cuti,atasan',
-        'status'       => 'required|string',
-        'atasan'       => 'nullable|string|max:255',       // Pastikan divalidasi
-        'pemberi_cuti' => 'nullable|string|max:255',       // Pastikan divalidasi
-        'password'     => ['required', 'string', Password::min(8)],
-    ]);
-
-    $roleForDatabase = $validated['role'] === 'atasan' ? 'kepala_dinas' : $validated['role'];
-
-    DB::beginTransaction();
-    try {
-        // 1. Simpan Pegawai (Sertakan Atasan dan Pemberi Cuti)
-        $pegawai = Pegawai::create([
-            'nama'         => $validated['nama'],
-            'nip'          => $validated['nip'],
-            'jabatan'      => $validated['jabatan'],
-            'unit_kerja'   => $validated['unit_kerja'],
-            'status'       => $validated['status'],
-            'atasan'       => $validated['atasan'],       // TAMBAHKAN INI
-            'pemberi_cuti' => $validated['pemberi_cuti'], // TAMBAHKAN INI
-            'email'        => null, 
-            'telepon'      => null,
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama'         => 'required|string|max:255',
+            'nip'          => ['required', 'string', 'min:13', 'max:18', 'unique:pegawai,nip'],
+            'jabatan'      => 'required|string|max:100',
+            'unit_kerja'   => 'required|string|max:100',
+            'role'         => 'required|in:pegawai,admin,pemberi_cuti,atasan',
+            'status'       => 'required|string',
+            'atasan'       => 'nullable|string|max:255',       // Validasi sebagai teks
+            'pemberi_cuti' => 'nullable|string|max:255',       // Validasi sebagai teks
+            'password'     => ['required', 'string', Password::min(8)],
         ]);
 
-        // 2. Simpan User
-        User::create([
-            'name'       => $validated['nama'],
-            'password'   => Hash::make($validated['password']),
-            'email'      => null,
-            'role'       => $roleForDatabase,
-            'nip'        => $request->nip,
-            'id_pegawai' => $pegawai->id,
-        ]);
+        $roleForDatabase = $validated['role']; // Langsung gunakan nilai 'atasan'
 
-        DB::commit();
-        return redirect()->back()->with('success', 'Pegawai berhasil ditambah.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return redirect()->back()->with('error', 'Gagal: ' . $e->getMessage());
+        DB::beginTransaction();
+        try {
+            // 1. Simpan Pegawai
+            $pegawai = Pegawai::create([
+                'nama'         => $validated['nama'],
+                'nip'          => $validated['nip'],
+                'jabatan'      => $validated['jabatan'],
+                'unit_kerja'   => $validated['unit_kerja'],
+                'status'       => $validated['status'],
+                'atasan'       => $request->atasan,
+                'pemberi_cuti' => $request->pemberi_cuti,
+                'kuota_cuti'   => 12,
+            ]);
+
+            // 2. Simpan User (Gunakan NIP sebagai email buatan agar tidak bentrok)
+            User::create([
+                'name'       => $validated['nama'],
+                'password'   => Hash::make($validated['password']),
+                'email'      => null,
+                'role'       => $roleForDatabase,
+                'nip'        => $validated['nip'],
+                'id_pegawai' => $pegawai->id,
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Pegawai berhasil ditambah.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal: ' . $e->getMessage());
+        }
     }
-}
 
     /**
      * Update data pegawai
@@ -129,17 +124,21 @@ public function update(Request $request, $id)
         // Update Akun (Hanya Nama dan Role)
         $pegawai->user->update([
             'name' => $validated['nama'],
-            'role' => $validated['role'] === 'atasan' ? 'kepala_dinas' : $validated['role'],
+            'role' => $validated['role'],
         ]);
 
         // Update Data Pegawai
         $pegawai->update([
-            'nama'       => $validated['nama'],
-            'nip'        => $validated['nip'],
-            'jabatan'    => $validated['jabatan'],
-            'unit_kerja' => $validated['unit_kerja'],
-            'status'     => $validated['status'],
-            'atasan'     => $validated['atasan'],
+            'nama'                    => $validated['nama'],
+            'nip'                     => $validated['nip'],
+            'jabatan'                 => $validated['jabatan'],
+            'unit_kerja'              => $validated['unit_kerja'],
+            'status'                  => $validated['status'],
+            'atasan'                  => $validated['atasan'], 
+            'pemberi_cuti'            => $request->pemberi_cuti,
+            // Gunakan kolom ID relasi agar sinkron dengan store
+            'id_atasan_langsung'      => $request->id_atasan_langsung, 
+            'id_pejabat_pemberi_cuti' => $request->id_pejabat_pemberi_cuti,
         ]);
 
         DB::commit();

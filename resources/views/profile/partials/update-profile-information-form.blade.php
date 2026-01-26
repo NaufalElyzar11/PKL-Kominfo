@@ -41,8 +41,22 @@
                 <label class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                     <i class="fa-solid fa-phone text-sky-500 w-4"></i> Nomor Telepon / WhatsApp
                 </label>
-                <input type="text" name="telepon" value="{{ old('telepon', $pegawai->telepon ?? '') }}" 
-                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none" placeholder="08xxxxxxxxxx">
+                <input type="text" 
+                    name="telepon" 
+                    {{-- Mengambil data lama atau data dari database --}}
+                    value="{{ old('telepon', $pegawai->telepon ?? '') }}" 
+                    {{-- Memicu keyboard angka pada perangkat mobile --}}
+                    inputmode="numeric"
+                    {{-- Menghapus semua karakter yang bukan angka secara real-time --}}
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    {{-- Validasi panjang karakter --}}
+                    minlength="12"
+                    maxlength="13"
+                    {{-- Pesan bantuan saat hover atau validasi gagal --}}
+                    title="Nomor telepon harus berupa angka antara 12 hingga 13 digit"
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none" 
+                    placeholder="Contoh: 081234567890">
+                
                 <x-input-error :messages="$errors->get('telepon')" />
             </div>
         </div>

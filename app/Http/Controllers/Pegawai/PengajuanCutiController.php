@@ -21,111 +21,46 @@ class PengajuanCutiController extends Controller
 public function index()
 {
     $user = Auth::user();
-    if (!$user) {
-        return redirect()->route('login')->with('error', 'Silakan login terlebih dahulu.');
-    }
-
     $pegawai = $user->pegawai;
+    $tahun = request('tahun', date('Y')); // Default tahun sekarang
 
-    /** 1. JALANKAN QUERY DATA TERLEBIH DAHULU **/
-    // Ambil data cuti dari database agar variabel tidak kosong
-    $cutiQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-        ->where('user_id', $user->id)
-        ->where('status', 'Menunggu');
-
-    $riwayatQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-        ->where('user_id', $user->id)
-        ->whereIn('status', ['Disetujui', 'Ditolak']);
-
-    // Tentukan pagination (sesuaikan dengan kode asli Anda)
-    $cuti = $cutiQuery->latest()->paginate(10, ['*'], 'menunggu_page');
-    $riwayat = $riwayatQuery->latest()->paginate(10, ['*'], 'riwayat_page');
-
-    /** 2. LOGIKA PENGECEKAN PROFIL **/
-    // Alih-alih langsung me-return view kosong, kita hanya menentukan pesan peringatan
+    // 1. Logika Pengecekan Profil
     $warningMessage = null;
-    
     if (!$pegawai) {
         $warningMessage = '⚠️ Data pegawai belum ditemukan. Silakan hubungi admin.';
     } elseif (!$this->isPegawaiLengkap($pegawai)) {
         $warningMessage = '⚠️ Lengkapi profil Anda terlebih dahulu sebelum mengajukan cuti.';
     }
 
-    /** 3. RETURN VIEW DENGAN DATA ASLI **/
-    return view('pegawai.pengajuancuti.index', [
-        'pegawai' => $pegawai,
-        'cuti' => $cuti,       // Sekarang variabel ini berisi data dari DB, bukan collect()
-        'riwayat' => $riwayat, // Sekarang variabel ini berisi data dari DB, bukan collect()
-        'tahun' => request('tahun', 'semua'),
-        'totalCuti' => $cuti->total() + $riwayat->total(),
-        'cutiPending' => $cuti->total(),
-        'cutiDisetujui' => $riwayatQuery->where('status', 'Disetujui')->count(),
-        'cutiDitolak' => $riwayatQuery->where('status', 'Ditolak')->count(),
-        'sisaCuti' => $this->hitungSisaCuti($user->id),
-        'warningMessage' => $warningMessage,
-        'hasPendingCuti' => $cuti->total() > 0,
-    ]);
+    // 2. Query Dasar
+    $baseQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
+                    ->where('user_id', $user->id);
 
-    /** ========================== FILTER TAHUN ============================= */
-    $tahun = request('tahun', 'semua');
-
-    /** ========================== QUERY CUTI MENUNGGU ===================== */
-    $cutiQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-        ->where('user_id', $user->id)
-        ->where('status', 'Menunggu');
-
-    /** ========================== QUERY RIWAYAT =========================== */
-    $riwayatQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-        ->where('user_id', $user->id)
-        ->whereIn('status', ['Disetujui', 'Ditolak']);
-
-    // Filter tahun jika dipilih
+    // 3. Filter Tahun (Hanya jika bukan 'semua')
     if ($tahun !== 'semua') {
-        $cutiQuery->whereYear('tanggal_mulai', $tahun);
-        $riwayatQuery->whereYear('tanggal_mulai', $tahun);
+        $baseQuery->where('tahun', $tahun);
     }
 
-    /** ========================== PAGINATION ============================= */
-    $cuti = $cutiQuery->latest()->paginate(10, ['*'], 'menunggu_page');
-    $riwayat = $riwayatQuery->latest()->paginate(10, ['*'], 'riwayat_page');
+    // 4. Pagination untuk Tabel
+    // Gunakan clone agar query dasar tidak "terkontaminasi" status tertentu saat menghitung statistik
+    $cuti = (clone $baseQuery)->where('status', 'Menunggu')->latest()->paginate(10, ['*'], 'menunggu_page');
+    $riwayat = (clone $baseQuery)->whereIn('status', ['Disetujui', 'Ditolak'])->latest()->paginate(10, ['*'], 'riwayat_page');
 
-    /** ========================== HITUNG NILAI =========================== */
-    // Hitungan total cuti yang SAMA dengan yang ada di view,
-    // yang memperhitungkan filter tahun, TIDAK IDEAL untuk statistik
-    // Global, tetapi akan mengikuti logika query yang Anda berikan.
-    $totalCuti = (clone $cutiQuery)->count() + (clone $riwayatQuery)->count();
-    $cutiPending = (clone $cutiQuery)->count();
-    $cutiDisetujui = (clone $riwayatQuery)->where('status', 'Disetujui')->count();
-    $cutiDitolak = (clone $riwayatQuery)->where('status', 'Ditolak')->count();
+    // 5. Statistik Dashboard (Biasanya statistik bersifat global, tidak terpengaruh filter tahun)
+    $globalStats = Cuti::where('user_id', $user->id);
 
-    /** ========================== LOCKING CUTI BARU ===================== */
-    // Logika untuk mencegah pengajuan baru jika ada yang Menunggu (Mengabaikan filter tahun)
-    $hasPendingCuti = Cuti::where('user_id', $user->id)
-                          ->where('status', 'Menunggu')
-                          ->exists(); // Check keberadaan data secara global
-
-
-    /** ========================== SISA CUTI ============================== */
-    $sisaCuti = $this->hitungSisaCuti($user->id);
-
-    /** ========================== RETURN FINAL =========================== */
     return view('pegawai.pengajuancuti.index', [
         'pegawai' => $pegawai,
         'cuti' => $cuti,
         'riwayat' => $riwayat,
         'tahun' => $tahun,
-
-        // Perhitungan fix
-        'totalCuti' => $totalCuti,
-        'cutiPending' => $cutiPending,
-        'cutiDisetujui' => $cutiDisetujui,
-        'cutiDitolak' => $cutiDitolak,
-
-        'sisaCuti' => $sisaCuti,
-        'warningMessage' => null,
-
-        // VARIABEL BARU UNTUK LOCKING MODAL
-        'hasPendingCuti' => $hasPendingCuti,
+        'totalCuti' => (clone $globalStats)->count(),
+        'cutiPending' => (clone $globalStats)->where('status', 'Menunggu')->count(),
+        'cutiDisetujui' => (clone $globalStats)->where('status', 'Disetujui')->count(),
+        'cutiDitolak' => (clone $globalStats)->where('status', 'Ditolak')->count(),
+        'sisaCuti' => $this->hitungSisaCuti($user->id),
+        'warningMessage' => $warningMessage,
+        'hasPendingCuti' => Cuti::where('user_id', $user->id)->where('status', 'Menunggu')->exists(),
     ]);
 }
 
@@ -136,70 +71,59 @@ public function store(Request $request)
     $pegawai = $user->pegawai;
 
     if (!$pegawai) {
-        return back()->with('error', 'Data pegawai tidak ditemukan.');
+        return back()->with('error', 'Data pegawai belum ditemukan.');
     }
 
-    $validated = $request->validate(
-        [
-            'jenis_cuti' => 'required|in:Tahunan',
+    // 1. PENGAMAN: Cek apakah ada pengajuan yang masih 'Menunggu'
+    $hasPending = Cuti::where('user_id', $user->id)
+                      ->where('status', 'Menunggu')
+                      ->exists();
+    
+    if ($hasPending) {
+        return back()->with('error', 'Anda masih memiliki pengajuan cuti yang menunggu persetujuan.');
+    }
 
-            'alamat' => [
-                'required',
-                'regex:/^[A-Za-z0-9\s]+$/'
-            ],
-
-            'keterangan' => [
-                'required',
-                'regex:/^[A-Za-z\s]+$/'
-            ],
-
-            'tanggal_mulai' => [
-                'required',
-                'date',
-                function ($attribute, $value, $fail) {
-                    $minDate = Carbon::today()->addDays(3);
-
-                    if (Carbon::parse($value)->lt($minDate)) {
-                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
-                    }
-                },
-            ],
-
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-            'jumlah_hari' => 'required|integer',
+    // 2. VALIDASI
+    $validated = $request->validate([
+        'jenis_cuti' => 'required|in:Tahunan',
+        'alamat'     => 'required|string|max:255',
+        'keterangan' => 'required|string|max:500', // Dibuat lebih fleksibel (tanpa regex huruf saja)
+        'tanggal_mulai' => [
+            'required', 'date',
+            function ($attribute, $value, $fail) {
+                if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
+                    $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                }
+            },
         ],
-        [
-            'alamat.regex' =>
-                'Alamat hanya boleh berisi huruf dan angka.',
+        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+    ]);
 
-            'keterangan.regex' =>
-                'Alasan cuti hanya boleh berisi huruf.',
-
-            'jenis_cuti.in' =>
-                'Jenis cuti tidak valid.',
-        ]
-    );
-
-    // ================= HITUNG JUMLAH HARI =================
-    $start = Carbon::parse($validated['tanggal_mulai']);
-    $end   = Carbon::parse($validated['tanggal_selesai']);
+    // 3. HITUNG JUMLAH HARI (Server-side calculation lebih aman)
+    $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
+    $end   = \Carbon\Carbon::parse($validated['tanggal_selesai']);
     $jumlah_hari = $start->diffInDays($end) + 1;
 
-    // ================= SIMPAN =================
+    // 4. SIMPAN DATA
     Cuti::create([
-        'user_id' => $user->id,
-        'nama' => $pegawai->nama,
-        'nip' => $pegawai->nip,
-        'jabatan' => $pegawai->jabatan,
-        'alamat' => $validated['alamat'],
-        'jenis_cuti' => $validated['jenis_cuti'],
-        'tanggal_mulai' => $validated['tanggal_mulai'],
+        'user_id'         => $user->id,
+        'nama'            => $pegawai->nama,
+        'nip'             => $pegawai->nip,
+        'jabatan'         => $pegawai->jabatan,
+        'alamat'          => $validated['alamat'],
+        'jenis_cuti'      => $validated['jenis_cuti'],
+        'tanggal_mulai'   => $validated['tanggal_mulai'],
         'tanggal_selesai' => $validated['tanggal_selesai'],
-        'jumlah_hari' => $jumlah_hari,
-        'tahun' => date('Y'),
-        'keterangan' => $validated['keterangan'],
-        'status' => 'Menunggu',
-        'id_atasan_langsung' => $pegawai->id_atasan_langsung,
+        'jumlah_hari'     => $jumlah_hari,
+        'tahun'           => date('Y'),
+        'keterangan'      => $validated['keterangan'],
+        'status'          => 'Menunggu',
+        
+        // Ambil nama dari relasi agar snapshot akurat
+        'atasan_nama'     => $pegawai->atasanLangsung->nama_atasan ?? '-', 
+        'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
+
+        'id_atasan_langsung'      => $pegawai->id_atasan_langsung,
         'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
     ]);
 
@@ -210,9 +134,16 @@ public function store(Request $request)
     /** ========================== ✏️ UPDATE CUTI ============================= */
 public function update(Request $request, $id)
 {
-    $cuti = Cuti::findOrFail($id);
+    // 1. PENGAMAN: Pastikan data milik user yang login & cegah ID guessing
+    $cuti = Cuti::where('user_id', Auth::id())->findOrFail($id);
 
-    // 1. VALIDASI (Gunakan 'keterangan' agar sinkron dengan Database/Model)
+    // 2. KUNCI DATA: Jika status sudah bukan 'Menunggu', blokir akses
+    if ($cuti->status !== 'Menunggu') {
+        return redirect()->route('pegawai.cuti.index')
+            ->with('error', 'Gagal! Pengajuan sudah diproses oleh atasan dan tidak dapat diubah lagi.');
+    }
+
+    // 3. VALIDASI (Tetap menggunakan aturan 3 hari lead time)
     $request->validate([
         'tanggal_mulai' => [
             'required',
@@ -225,25 +156,28 @@ public function update(Request $request, $id)
             },
         ],
         'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-        'keterangan'      => 'required|string|max:500', // Sesuai kolom database
+        'keterangan'      => 'required|string|max:500',
         'alamat'          => 'nullable|string|max:255',
     ]);
 
-    // 2. HITUNG DURASI
+    // 4. HITUNG DURASI
     $start = \Carbon\Carbon::parse($request->tanggal_mulai);
     $end   = \Carbon\Carbon::parse($request->tanggal_selesai);
+    
+    // Perhitungan matematis sederhana: $Total = (Akhir - Awal) + 1$
     $jumlahHari = $start->diffInDays($end) + 1;
 
-    // 3. EKSEKUSI UPDATE (Gunakan nama properti sesuai Model)
+    // 5. EKSEKUSI UPDATE
     $cuti->update([
         'tanggal_mulai'   => $request->tanggal_mulai,
         'tanggal_selesai' => $request->tanggal_selesai,
         'jumlah_hari'     => $jumlahHari,
-        'keterangan'      => $request->keterangan, // Update kolom keterangan
+        'keterangan'      => $request->keterangan,
         'alamat'          => $request->alamat,
     ]);
 
-    return redirect()->route('pegawai.cuti.index')->with('success', 'Data pengajuan cuti berhasil diperbarui.');
+    return redirect()->route('pegawai.cuti.index')
+        ->with('success', 'Data pengajuan cuti berhasil diperbarui.');
 }
 
     /** ========================== 🔍 DETAIL CUTI ============================ */
@@ -262,37 +196,48 @@ public function update(Request $request, $id)
         $statusBadgeHtml = "<span class='px-2 py-1 rounded text-xs {$class}'>{$cuti->status}</span>";
 
         return response()->json([
-            'nama'   => $cuti->pegawai->nama ?? '-',
-            'nip'    => $cuti->pegawai->nip ?? '-',
+            'nama'            => $cuti->pegawai->nama ?? '-',
+            'nip'             => $cuti->pegawai->nip ?? '-',
             'jenis_cuti'      => $cuti->jenis_cuti ?? '-',
             'tanggal_mulai'   => $cuti->tanggal_mulai ? $cuti->tanggal_mulai->format('d-m-Y') : '-',
             'tanggal_selesai' => $cuti->tanggal_selesai ? $cuti->tanggal_selesai->format('d-m-Y') : '-',
             'jumlah_hari'     => $cuti->jumlah_hari ?? 0,
             'alasan_cuti'     => $cuti->keterangan ?? '-',
             'status_badge'    => $statusBadgeHtml,
-            'atasan_nama'     => $cuti->atasanLangsung->nama ?? '-',
-            'pejabat_nama'    => $cuti->pejabatPemberiCuti->nama ?? '-',
+
+            // Perbaikan: Ambil dari kolom yang sudah kita simpan di tabel cuti
+            'atasan'          => $cuti->atasan_nama ?? '-', 
+            'pejabat'         => $cuti->pejabat_nama ?? '-',
         ]);
     }
 
 
     /** ========================== 🗑 DELETE CUTI ============================ */
-    public function destroy($id)
-    {
-        $user = Auth::user();
+public function destroy($id)
+{
+    $user = Auth::user();
 
-        $cuti = Cuti::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
+    // 1. Cari data sekaligus pastikan milik user yang sedang login
+    $cuti = Cuti::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
 
-        if (!$cuti) {
-            return redirect()->back()->with('error', 'Data cuti tidak ditemukan.');
-        }
-
-        $cuti->delete();
-
-        return redirect()->back()->with('success', 'Pengajuan cuti berhasil dihapus.');
+    // 2. Jika data tidak ditemukan (misal ID salah atau punya orang lain)
+    if (!$cuti) {
+        return redirect()->back()->with('error', 'Data cuti tidak ditemukan.');
     }
+
+    // 3. GEMBOK LOGIKA: Cek status sebelum hapus
+    // Jika status sudah 'Disetujui' atau 'Ditolak', jangan biarkan dihapus!
+    if ($cuti->status !== 'Menunggu') {
+        return redirect()->back()->with('error', 'Gagal! Pengajuan yang sudah diproses oleh atasan tidak dapat dihapus untuk alasan arsip.');
+    }
+
+    // 4. Eksekusi jika masih berstatus 'Menunggu'
+    $cuti->delete();
+
+    return redirect()->back()->with('success', 'Pengajuan cuti berhasil dibatalkan.');
+}
 
 
  /**

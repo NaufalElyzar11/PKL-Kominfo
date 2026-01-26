@@ -41,13 +41,13 @@
                 <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
                     <i class="fa-solid fa-id-card text-sky-600 text-xl mb-2 block"></i>
                     <p class="text-xs text-gray-500 mt-1">NIP</p>
-                    <p class="text-sm font-semibold text-gray-800 mt-1">{{ $pegawai->nip ? substr($pegawai->nip, 0, 4) . '****' : '-' }}</p>
+                    <p class="text-sm font-semibold text-gray-800 mt-1">{{ $pegawai->nip ?? '-' }}</p>
                 </div>
 
                 <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
                     <i class="fa-solid fa-phone text-sky-600 text-xl mb-2 block"></i>
                     <p class="text-xs text-gray-500 mt-1">Telepon</p>
-                    <p class="text-sm font-semibold text-gray-800 mt-1">{{ $pegawai->telepon ? substr($pegawai->telepon, 0, 4) . '****' : '-' }}</p>
+                    <p class="text-sm font-semibold text-gray-800 mt-1">{{ $pegawai->telepon ?? '-' }}</p>
                 </div>
             </div>
 
@@ -91,23 +91,7 @@
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100">
                         <span class="text-sm text-gray-600 font-medium">Email</span>
                         <span class="text-sm text-gray-800">
-                            @php
-                                $email = $pegawai->email ?? $user->email ?? '-';
-                                $emailMasked = $email;
-
-                                if ($email !== '-' && str_contains($email, '@')) {
-                                    [$namePart, $domain] = explode('@', $email);
-
-                                    if (strlen($namePart) <= 2) {
-                                        $maskedName = substr($namePart, 0, 1) . '*';
-                                    } else {
-                                        $maskedName = substr($namePart, 0, 2) . str_repeat('*', strlen($namePart) - 2);
-                                    }
-
-                                    $emailMasked = $maskedName . '@' . $domain;
-                                }
-                            @endphp
-                            {{ $emailMasked }}
+                    {{ $pegawai->email ?? $user->email ?? '-' }}
                         </span>
                     </div>
 
@@ -160,13 +144,13 @@
                     {{-- NIP --}}
                     <div class="flex justify-between items-center pb-3 border-b border-gray-100">
                         <span class="text-sm text-gray-600 font-medium">NIP</span>
-                        <span class="text-sm text-gray-800 font-mono">{{ $pegawai->nip ? substr($pegawai->nip, 0, 5) . '*****' : '-' }}</span>
+                        <span class="text-sm text-gray-800 font-mono">{{ $pegawai->nip ?? '-' }}</span>
                     </div>
 
                     {{-- No Telepon --}}
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-gray-600 font-medium">Telepon</span>
-                        <span class="text-sm text-gray-800">{{ $pegawai->telepon ? substr($pegawai->telepon, 0, 5) . '*****' : '-' }}</span>
+                        <span class="text-sm text-gray-800">{{ $pegawai->telepon ?? '-' }}</span>
                     </div>
                 </div>
             </div>

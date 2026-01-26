@@ -19,31 +19,100 @@ use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Pegawai\ProfileController as PegawaiProfileController;
 use App\Http\Controllers\KepalaDinas\ProfileController as KadisProfileController;
 
-// Auth Routes
+use App\Http\Controllers\Atasan\ApprovalController as AtasanApprovalController;
+
+// ------------------------------------------------------------------
+// 1. GUEST & AUTH CORE
+// ------------------------------------------------------------------
+Route::view('/', 'landingpage')->name('landingpage');
+
 Route::controller(LoginController::class)->group(function () {
     Route::get('/login', 'showLoginForm')->name('login');
     Route::post('/login', 'login')->name('login.post');
     Route::post('/logout', 'logout')->name('logout');
 });
 
-Route::view('/', 'landingpage')->name('landingpage');
-
-// Dashboard Redirect Logic
+// Logika Redirect Dashboard (Satu blok saja agar tidak bentrok)
 Route::get('/dashboard', function () {
     if (!Auth::check()) return redirect()->route('login');
     
     $user = Auth::user();
-    // Sesuaikan nama role dengan yang ada di database Anda
-    if ($user->role === 'super_admin') return redirect()->route('super.dashboard');
-    if ($user->role === 'admin') return redirect()->route('admin.dashboard');
-    if ($user->role === 'kepala_dinas') return redirect()->route('kepaladinas.dashboard');
-    if ($user->role === 'pegawai') return redirect()->route('pegawai.dashboard');
-
-    return redirect('/');
+    return match($user->role) {
+        'super_admin'   => redirect()->route('super.dashboard'),
+        'admin'         => redirect()->route('admin.dashboard'),
+        'atasan'        => redirect()->route('atasan.dashboard'), // Role tunggal untuk Atasan/Kadis
+        'pegawai'       => redirect()->route('pegawai.dashboard'),
+        default         => redirect('/'),
+    };
 })->name('dashboard');
 
-// Protected Routes
+// ------------------------------------------------------------------
+// 2. PROTECTED ROUTES (LOGGED IN)
+// ------------------------------------------------------------------
 Route::middleware(['auth'])->group(function () {
+
+    // --- ATASAN LANGSUNG (Approval Tahap 1) ---
+    Route::prefix('atasan')->as('atasan.')->middleware('role:atasan')->group(function () {
+    Route::get('/dashboard', [AtasanApprovalController::class, 'dashboard'])->name('dashboard');
+
+        Route::prefix('approval')->as('approval.')->group(function () {
+            Route::get('/', [AtasanApprovalController::class, 'index'])->name('index');
+            Route::post('/{id}/setuju', [AtasanApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{id}/tolak', [AtasanApprovalController::class, 'reject'])->name('reject');
+        });
+
+        Route::prefix('profile')->as('profile.')->group(function () {
+            Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
+            Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');
+        });
+    });
+
+    // --- ADMIN ---
+    Route::prefix('admin')->as('admin.')->middleware('role:admin')->group(function () {
+        Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
+        Route::resource('pegawai', AdminPegawaiController::class);
+        
+        // Cuti Admin + Route Approval (Jika Admin juga boleh menyetujui)
+        Route::resource('cuti', AdminCutiController::class);
+        Route::post('/cuti/{id}/setuju', [AdminCutiController::class, 'approve'])->name('cuti.approve');
+        Route::post('/cuti/{id}/tolak', [AdminCutiController::class, 'reject'])->name('cuti.reject');
+        
+        Route::prefix('profile')->as('profile.')->group(function () {
+            Route::get('/', [AdminProfileController::class, 'index'])->name('index');
+            Route::get('/edit', [AdminProfileController::class, 'edit'])->name('edit');
+            Route::put('/update', [AdminProfileController::class, 'update'])->name('update');
+        });
+    });
+
+    // --- KEPALA DINAS (Pejabat Pemberi Cuti / Approval Tahap 2) ---
+    Route::prefix('kepaladinas')->as('kepaladinas.')->middleware('role:atasan')->group(function () {
+        Route::get('/dashboard', [KadisDashboard::class, 'index'])->name('dashboard');
+        
+        // Tambahkan Route Approval untuk Kadis
+        Route::post('/approval/{id}/setuju', [KadisDashboard::class, 'approve'])->name('approval.approve');
+        Route::post('/approval/{id}/tolak', [KadisDashboard::class, 'reject'])->name('approval.reject');
+
+        Route::prefix('profile')->as('profile.')->group(function () {
+            Route::get('/', [KadisProfileController::class, 'show'])->name('show');
+            Route::get('/edit', [KadisProfileController::class, 'edit'])->name('edit');
+            Route::put('/update', [KadisProfileController::class, 'update'])->name('update');
+        });
+    });
+
+    // --- PEGAWAI ---
+    Route::prefix('pegawai')->as('pegawai.')->middleware('role:pegawai')->group(function () {
+        Route::get('/dashboard', [PegawaiDashboard::class, 'index'])->name('dashboard');
+        Route::get('/cuti/export-excel', [PegawaiCutiController::class, 'exportExcel'])->name('cuti.export-excel');
+        Route::resource('cuti', PegawaiCutiController::class)->except(['show']);
+        Route::post('/cuti/ajax-store', [PegawaiCutiController::class, 'ajaxStore'])->name('cuti.ajax-store');
+
+        Route::prefix('profile')->as('profile.')->group(function () {
+            Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
+            Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');
+            Route::patch('/update', [PegawaiProfileController::class, 'update'])->name('update');
+            Route::put('/password', [PegawaiProfileController::class, 'updatePassword'])->name('password.update');
+        });
+    });
 
     // --- SUPER ADMIN ---
     Route::prefix('super')->as('super.')->middleware('role:super_admin')->group(function () {
@@ -55,45 +124,9 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    // --- ADMIN ---
-    Route::prefix('admin')->as('admin.')->middleware('role:admin')->group(function () {
-        Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
-        Route::resource('pegawai', AdminPegawaiController::class);
-        Route::resource('cuti', AdminCutiController::class);
-        
-        Route::prefix('profile')->as('profile.')->group(function () {
-            Route::get('/', [AdminProfileController::class, 'index'])->name('index');
-            Route::get('/edit', [AdminProfileController::class, 'edit'])->name('edit');
-            Route::put('/update', [AdminProfileController::class, 'update'])->name('update');
-        });
-    });
+    Route::post('/notif/{id}/read', function($id) {
+    App\Models\Notification::where('id', $id)->where('user_id', Auth::id())->update(['is_read' => true]);
+    return back();
+})->name('pegawai.notif.read');
 
-    // --- KEPALA DINAS / ATASAN ---
-    // Pastikan middleware 'role:kepala_dinas' sesuai dengan isi kolom role di DB
-    Route::prefix('kepaladinas')->as('kepaladinas.')->middleware('role:kepala_dinas')->group(function () {
-        Route::get('/dashboard', [KadisDashboard::class, 'index'])->name('dashboard');
-        Route::prefix('profile')->as('profile.')->group(function () {
-            Route::get('/', [KadisProfileController::class, 'show'])->name('show');
-            Route::get('/edit', [KadisProfileController::class, 'edit'])->name('edit');
-            Route::put('/update', [KadisProfileController::class, 'update'])->name('update');
-        });
-    });
-
-    // --- PEGAWAI ---
-    Route::prefix('pegawai')->as('pegawai.')->middleware('role:pegawai')->group(function () {
-        Route::get('/dashboard', [PegawaiDashboard::class, 'index'])->name('dashboard');
-        
-        // Cuti
-        Route::get('/cuti/export-excel', [PegawaiCutiController::class, 'exportExcel'])->name('cuti.export-excel');
-        Route::resource('cuti', PegawaiCutiController::class)->except(['show']);
-        Route::post('/cuti/ajax-store', [PegawaiCutiController::class, 'ajaxStore'])->name('cuti.ajax-store');
-
-        // Profile (Fix untuk error Undefined Method edit)
-        Route::prefix('profile')->as('profile.')->group(function () {
-            Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
-            Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');
-            Route::patch('/update', [PegawaiProfileController::class, 'update'])->name('update');
-            Route::put('/password', [PegawaiProfileController::class, 'updatePassword'])->name('password.update');
-        });
-    });
 });

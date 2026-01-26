@@ -30,24 +30,7 @@
                 <tr>
                     <td class="px-3 py-2 font-medium w-1/3">Email</td>
                     <td class="px-3 py-2">
-                        @php
-                            $email = $user->email ?? '-';
-                            $emailMasked = $email;
-
-                            if ($email !== '-' && str_contains($email, '@')) {
-                                [$namePart, $domain] = explode('@', $email);
-
-                                // Jika username hanya 1–2 karakter, tetap aman
-                                if (strlen($namePart) <= 2) {
-                                    $maskedName = substr($namePart, 0, 1) . '*';
-                                } else {
-                                    $maskedName = substr($namePart, 0, 2) . str_repeat('*', strlen($namePart) - 2);
-                                }
-
-                                $emailMasked = $maskedName . '@' . $domain;
-                            }
-                        @endphp
-                        {{ $emailMasked }}
+                        {{ $user->email ?? '-' }}
                     </td>
                 </tr>
 
@@ -111,8 +94,7 @@
                     <tr class="bg-sky-50">
                         <td class="px-3 py-2 font-medium">NIP</td>
                         <td class="px-3 py-2">
-                            {{-- PERBAIKAN UTAMA: Tambah tanda tanya di sini --}}
-                            {{ $pegawai?->nip ? substr($pegawai->nip, 0, 5) . '*****' : '-' }}
+                            {{ $pegawai?->nip ?? '-' }}
                         </td>
                     </tr>
 
@@ -120,8 +102,7 @@
                     <tr>
                         <td class="px-3 py-2 font-medium">No Telepon</td>
                         <td class="px-3 py-2">
-                            {{-- Tambah tanda tanya di sini juga --}}
-                            {{ $pegawai?->telepon ? substr($pegawai->telepon, 0, 5) . '*****' : '-' }}
+                            {{ $pegawai?->telepon ?? '-' }}
                         </td>
                     </tr>
 

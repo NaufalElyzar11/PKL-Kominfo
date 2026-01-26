@@ -3,63 +3,61 @@
 namespace App\Http\Controllers\Pegawai;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Cuti;
 use App\Models\Pegawai;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class PegawaiController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        if (!$user) {
-            return redirect()->route('login')
-                ->with('error', 'Silakan login terlebih dahulu.');
-        }
+        // Ambil data pegawai yang berelasi dengan user
+        $pegawai = Pegawai::where('id', $user->id_pegawai)->first();
 
-        // Ambil data pegawai sesuai user yang login
-        $pegawai = $user->pegawai;
+        // 1. Ambil Notifikasi yang belum dibaca
+        $notif = Notification::where('user_id', $user->id)
+                            ->where('is_read', false)
+                            ->latest()
+                            ->get();
 
-        // Jika pegawai belum terdaftar, buat query kosong
-        if (!$pegawai) {
-            $cutiQuery = Cuti::query()->whereNull('id');
-        } else {
-            $cutiQuery = Cuti::where('user_id', $user->id);
-        }
+        // 2. Statistik Cuti (Tahun Berjalan)
+        $tahunSekarang = date('Y');
+        $queryCuti = Cuti::where('user_id', $user->id)->where('tahun', $tahunSekarang);
 
-        // Statistik cuti
-        $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending'];
-        $statusDisetujui = ['Disetujui', 'disetujui'];
-        $statusDitolak   = ['Ditolak', 'ditolak'];
+        $cutiPending   = (clone $queryCuti)->where('status', 'Menunggu')->count();
+        $cutiDisetujui = (clone $queryCuti)->where('status', 'Disetujui')->count();
+        $cutiDitolak   = (clone $queryCuti)->where('status', 'Ditolak')->count();
+        
+        // Menghitung cuti yang sudah terpakai (untuk progress bar)
+        $cutiTerpakai = (clone $queryCuti)->where('status', 'Disetujui')->sum('jumlah_hari');
+        
+        // 3. Ambil 5 riwayat cuti terakhir untuk tabel di dashboard
+        $latestCuti = Cuti::where('user_id', $user->id)
+                          ->latest()
+                          ->take(5)
+                          ->get();
 
-        $totalCuti     = (clone $cutiQuery)->count();
-        $cutiPending   = (clone $cutiQuery)->whereIn('status', $statusMenunggu)->count();
-        $cutiDisetujui = (clone $cutiQuery)->whereIn('status', $statusDisetujui)->count();
-        $cutiDitolak   = (clone $cutiQuery)->whereIn('status', $statusDitolak)->count();
+        // 4. Data Tambahan (Jika diperlukan di dashboard)
+        $totalPegawai = Pegawai::count(); // Opsional, jika ingin menampilkan total pegawai kantor
+        $pegawaiSedangCuti = Cuti::where('status', 'Disetujui')
+                                 ->whereDate('tanggal_mulai', '<=', now())
+                                 ->whereDate('tanggal_selesai', '>=', now())
+                                 ->count();
 
-        // 5 data cuti terbaru beserta relasi pegawai
-        $latestCuti = (clone $cutiQuery)
-            ->with('pegawai') // relasi untuk nama, nip, jabatan
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Riwayat lengkap cuti
-        $riwayatCuti = (clone $cutiQuery)
-            ->with('pegawai')
-            ->latest()
-            ->get();
-
-        return view('pegawai.dashboard.index', compact(
-            'user',
-            'pegawai',
-            'totalCuti',
-            'cutiPending',
-            'cutiDisetujui',
-            'cutiDitolak',
-            'latestCuti',
-            'riwayatCuti'
-        ));
+        return view('pegawai.dashboard.index', [
+            'notif'             => $notif,
+            'cutiPending'       => $cutiPending,
+            'cutiDisetujui'     => $cutiDisetujui,
+            'cutiDitolak'       => $cutiDitolak,
+            'cutiTerpakai'      => $cutiTerpakai,
+            'latestCuti'        => $latestCuti,
+            'totalCuti'         => 12,
+            'sisaCuti'          => $pegawai ? $pegawai->sisa_cuti : 12, // Menggunakan Accessor dari Model Pegawai
+            'totalPegawai'      => $totalPegawai,
+            'pegawaiSedangCuti' => $pegawaiSedangCuti,
+        ]);
     }
 }
