@@ -266,9 +266,9 @@
 
 {{-- ================= MODAL TAMBAH PEGAWAI (LEBIH KECIL) ================= --}}
 <div x-show="showCreateModal" x-cloak @click.self="closeModal()"
-     class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50">
+     class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-start justify-center z-50 pt-16">
 
-    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 text-sm">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 text-sm max-h-[85vh] overflow-y-auto">
         
        <h3 class="text-base font-bold text-sky-600 border-b pb-2 mb-2 flex items-center gap-2">
             <i class="fa-solid fa-user-plus text-sky-600"></i>
