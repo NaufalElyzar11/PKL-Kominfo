@@ -33,7 +33,7 @@
 @endpush
 
 @section('content')
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-6" x-data="{ showRejectModal: false, rejectId: null }">
 
     {{-- Page Heading --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -92,7 +92,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-[#e7edf3] overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-[#0d141b]">
-                    <thead class="text-xs text-[#4c739a] uppercase bg-[#f8f9fa] border-b border-[#e7edf3]">
+                    <thead class="bg-gradient-to-r from-[#0288D1] to-[#03A9F4] text-white text-xs uppercase border-b border-[#e7edf3]">
                         <tr>
                             <th class="px-6 py-4 font-semibold w-16 text-center">No</th>
                             <th class="px-6 py-4 font-semibold min-w-[200px]">Pegawai</th>
@@ -147,22 +147,17 @@
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     {{-- Approve Button --}}
-                                    {{-- Approve Button --}}
                                     <form id="form-approve-{{ $c->id }}" action="{{ route('atasan.approval.approve', $c->id) }}" method="POST">
                                         @csrf
-                                        <button type="button" onclick="confirmApprove('{{ $c->id }}')" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Setujui">
+                                        <button type="button" onclick="confirmApprove('{{ $c->id }}', '{{ $c->id }}')" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Setujui">
                                             <span class="material-symbols-outlined text-[18px]">check</span>
                                         </button>
                                     </form>
                                     
                                     {{-- Reject Button --}}
-                                    <form id="form-reject-{{ $c->id }}" action="{{ route('atasan.approval.reject', $c->id) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="catatan" value="Ditolak via Dashboard">
-                                        <button type="button" onclick="confirmReject('{{ $c->id }}')" class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Tolak">
-                                            <span class="material-symbols-outlined text-[18px]">close</span>
-                                        </button>
-                                    </form>
+                                    <button type="button" @click="rejectId = {{ $c->id }}; showRejectModal = true" class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Tolak">
+                                        <span class="material-symbols-outlined text-[18px]">close</span>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -180,17 +175,94 @@
                 </table>
             </div>
 
-            {{-- View All Link --}}
-            @if(isset($pengajuan) && $pengajuan->count() > 0)
-            <div class="flex items-center justify-center p-4 bg-white border-t border-[#e7edf3] rounded-b-xl border-x border-b">
-                <a href="{{ route('atasan.approval.index') }}" class="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors">
-                    Lihat Semua Pengajuan
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                </a>
-            </div>
-            @endif
         </div>
     </div>
+
+    {{-- Riwayat Section --}}
+    <div>
+        <h3 class="text-xl font-bold text-[#0d141b] mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">history</span>
+            Riwayat Pengajuan (Processed)
+        </h3>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-[#e7edf3] overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-[#0d141b]">
+                    <thead class="bg-gradient-to-r from-[#0288D1] to-[#03A9F4] text-white text-xs uppercase border-b border-[#e7edf3]">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold w-16 text-center">No</th>
+                            <th class="px-6 py-4 font-semibold">Pegawai</th>
+                            <th class="px-6 py-4 font-semibold">Jenis Cuti</th>
+                            <th class="px-6 py-4 font-semibold">Tanggal</th>
+                            <th class="px-6 py-4 font-semibold text-center">Status</th>
+                            <th class="px-6 py-4 font-semibold">Catatan / Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#e7edf3]">
+                        @forelse($riwayat as $index => $r)
+                        <tr class="bg-white hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 text-center font-medium text-[#9aaabb]">{{ $index + 1 }}</td>
+                            <td class="px-6 py-4 font-medium">{{ $r->pegawai->nama ?? '-' }}</td>
+                            <td class="px-6 py-4">{{ $r->jenis_cuti }}</td>
+                            <td class="px-6 py-4">
+                                {{ optional($r->tanggal_mulai)->format('d M Y') }} s.d. {{ optional($r->tanggal_selesai)->format('d M Y') }}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @if($r->status == 'Disetujui' || $r->status == 'Disetujui Atasan')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ $r->status }}
+                                    </span>
+                                @elseif($r->status == 'Ditolak')
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Ditolak
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ $r->status }}
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-gray-500 italic">
+                                @if($r->status == 'Ditolak')
+                                    <span class="text-red-500 font-semibold">Alasan:</span> {{ $r->catatan_atasan ?? $r->catatan_penolakan ?? '-' }}
+                                @else
+                                    -
+                                @endif
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                Belum ada riwayat pengajuan.
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Reject --}}
+    <div x-show="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
+        <div class="fixed inset-0 bg-black/50" @click="showRejectModal = false"></div>
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative z-10">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Alasan Penolakan</h3>
+            
+            <form :action="'{{ url('atasan/approval') }}/' + rejectId + '/tolak'" method="POST">
+                @csrf
+                <textarea name="catatan" rows="4" required
+                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 p-2 border"
+                    placeholder="Contoh: Pekerjaan sedang menumpuk, mohon tunda cuti..."></textarea>
+                
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" @click="showRejectModal = false" class="text-gray-600 px-4 py-2 text-sm">Batal</button>
+                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-700">Kirim Penolakan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -208,23 +280,6 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 document.getElementById('form-approve-' + id).submit();
-            }
-        })
-    }
-
-    function confirmReject(id) {
-        Swal.fire({
-            title: 'Tolak Pengajuan?',
-            text: "Pengajuan ini akan ditolak secara langsung.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#e11d48', // Rose 600
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Ya, Tolak!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('form-reject-' + id).submit();
             }
         })
     }
