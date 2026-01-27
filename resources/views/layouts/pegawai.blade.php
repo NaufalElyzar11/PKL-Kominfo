@@ -72,6 +72,12 @@
                         ['route' => 'atasan.dashboard', 'icon' => 'fa-chart-line icon-dashboard', 'label' => 'Dashboard'],
                         ['route' => 'atasan.profile.show', 'icon' => 'fa-user-circle icon-profile', 'label' => 'Profil Saya'],
                     ];
+                } elseif ($user->role === 'pejabat') {
+                    // Menu Khusus Pejabat
+                    $menus = [
+                        ['route' => 'pejabat.dashboard', 'icon' => 'fa-chart-line icon-dashboard', 'label' => 'Dashboard'],
+                        ['route' => 'pejabat.profile.show', 'icon' => 'fa-user-circle icon-profile', 'label' => 'Profil Saya'],
+                    ];
                 } else {
                     // Menu Default Pegawai
                     $menus = [
@@ -82,7 +88,11 @@
                 }
 
                 // Tentukan route profile untuk link di bagian bawah
-                $profileRoute = ($user->role === 'atasan') ? 'atasan.profile.show' : 'pegawai.profile.show';
+                $profileRoute = match($user->role) {
+                    'atasan' => 'atasan.profile.show',
+                    'pejabat' => 'pejabat.profile.show',
+                    default => 'pegawai.profile.show',
+                };
             @endphp
 
             <nav class="mt-3 space-y-1 text-[14px]">

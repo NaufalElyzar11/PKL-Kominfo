@@ -4,7 +4,7 @@
 <div class="container mx-auto px-4 py-6" x-data="{ showRejectModal: false, rejectId: null }">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Persetujuan Cuti Pegawai</h2>
-        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tahap: Pejabat</span>
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tahap: Pejabat (Final)</span>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
@@ -24,17 +24,17 @@
                     <td class="px-4 py-3 font-medium">{{ $c->pegawai->nama ?? 'N/A' }}</td>
                     <td class="px-4 py-3">{{ $c->jenis_cuti }}</td>
                     <td class="px-4 py-3">
-                        {{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d-m-Y') }} 
+                        {{ optional($c->tanggal_mulai)->format('d-m-Y') }} 
                         s/d 
-                        {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d-m-Y') }}
+                        {{ optional($c->tanggal_selesai)->format('d-m-Y') }}
                     </td>
                     <td class="px-4 py-3 italic text-gray-600">
                         {{ Str::limit($c->alasan_cuti, 30) ?? '-' }}
                     </td>
                     <td class="px-4 py-3 flex gap-2">
-                        <form action="{{ route('pejabat.approval.approve', $c->id) }}" method="POST">
+                        <form id="form-approve-{{ $c->id }}" action="{{ route('pejabat.approval.approve', $c->id) }}" method="POST">
                             @csrf
-                            <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Setuju</button>
+                            <button type="button" onclick="confirmApproveIndex('{{ $c->id }}', '{{ $c->pegawai->nama }}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Setuju</button>
                         </form>
                         
                         <button type="button" 
@@ -85,5 +85,22 @@
             timer: 2000
         });
     @endif
+
+    function confirmApproveIndex(id, nama) {
+        Swal.fire({
+            title: 'Setujui Pengajuan?',
+            text: "Anda akan MENYETUJUI (FINAL) cuti pegawai atas nama " + nama,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a', // green-600
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Setujui!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('form-approve-' + id).submit();
+            }
+        })
+    }
 </script>
 @endsection

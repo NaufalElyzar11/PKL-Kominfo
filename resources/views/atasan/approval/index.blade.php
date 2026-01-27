@@ -24,9 +24,9 @@
                     <td class="px-4 py-3 font-medium">{{ $c->pegawai->nama ?? 'N/A' }}</td>
                     <td class="px-4 py-3">{{ $c->jenis_cuti }}</td>
                     <td class="px-4 py-3">
-                        {{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d-m-Y') }} 
+                        {{ optional($c->tanggal_mulai)->format('d-m-Y') }} 
                         s/d 
-                        {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d-m-Y') }}
+                        {{ optional($c->tanggal_selesai)->format('d-m-Y') }}
                     </td>
                     <td class="px-4 py-3 italic text-gray-600">
                         {{ Str::limit($c->alasan_cuti, 30) ?? '-' }}

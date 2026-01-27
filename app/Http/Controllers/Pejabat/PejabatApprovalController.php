@@ -56,6 +56,19 @@ class PejabatApprovalController extends Controller
             'ditolak'   => \App\Models\Cuti::where('status', 'Ditolak')->count(),
         ];
 
-        return view('pejabat.dashboard', compact('stats'));
+        // Ambil daftar pengajuan cuti yang Menunggu (Disetujui Atasan) untuk ditampilkan di tabel dashboard
+        $pengajuan = Cuti::with('pegawai')
+            ->where('status', 'Disetujui Atasan')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Ambil riwayat pengajuan (Disetujui Final, Ditolak)
+        $riwayat = Cuti::with('pegawai')
+            ->whereIn('status', ['Disetujui', 'Ditolak'])
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('pejabat.dashboard', compact('stats', 'pengajuan', 'riwayat'));
     }
 }
