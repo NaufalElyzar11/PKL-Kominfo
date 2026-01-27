@@ -52,7 +52,7 @@ class LoginController extends Controller
         $role = strtolower($user->role);
 
         // Pastikan role diizinkan
-        $allowedRoles = ['super_admin', 'admin', 'atasan', 'pegawai', 'pemberi_cuti'];
+        $allowedRoles = ['super_admin', 'admin', 'atasan', 'pegawai', 'pejabat'];
 
         if (!in_array($role, $allowedRoles)) {
             Auth::logout();
@@ -75,7 +75,7 @@ class LoginController extends Controller
             'admin'        => 'admin.dashboard',
             'atasan'       => 'atasan.dashboard',
             'pegawai'      => 'pegawai.dashboard',
-            'pemberi_cuti' => 'pegawai.dashboard.index',
+            'pejabat'     => 'pejabat.dashboard',
         ];
 
         return redirect()->route($routeMap[$role] ?? 'login');

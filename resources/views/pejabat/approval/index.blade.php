@@ -4,7 +4,7 @@
 <div class="container mx-auto px-4 py-6" x-data="{ showRejectModal: false, rejectId: null }">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Persetujuan Cuti Pegawai</h2>
-        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tahap: Atasan Langsung</span>
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tahap: Pejabat</span>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
@@ -32,7 +32,7 @@
                         {{ Str::limit($c->alasan_cuti, 30) ?? '-' }}
                     </td>
                     <td class="px-4 py-3 flex gap-2">
-                        <form action="{{ route('atasan.approval.approve', $c->id) }}" method="POST">
+                        <form action="{{ route('pejabat.approval.approve', $c->id) }}" method="POST">
                             @csrf
                             <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Setuju</button>
                         </form>
@@ -58,7 +58,7 @@
         <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative z-10">
             <h3 class="text-lg font-bold text-gray-900 mb-4">Alasan Penolakan</h3>
             
-            <form :action="'{{ url('atasan/approval') }}/' + rejectId + '/tolak'" method="POST">
+            <form :action="'{{ url('pejabat/approval') }}/' + rejectId + '/tolak'" method="POST">
                 @csrf
                 <textarea name="catatan" rows="4" required
                     class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 p-2 border"

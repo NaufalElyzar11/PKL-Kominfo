@@ -36,6 +36,7 @@ class RoleMiddleware
             'admin'  => 'admin.dashboard',
             'atasan' => 'atasan.dashboard',
             'pegawai' => 'pegawai.dashboard.index',
+            'pejabat' => 'pejabat.dashboard',
         ];
 
         $route = $map[$role] ?? 'login';
