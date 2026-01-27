@@ -21,6 +21,8 @@ use App\Http\Controllers\KepalaDinas\ProfileController as KadisProfileController
 
 use App\Http\Controllers\Atasan\ApprovalController as AtasanApprovalController;
 
+use App\Http\Controllers\Pejabat\PejabatApprovalController;
+
 // ------------------------------------------------------------------
 // 1. GUEST & AUTH CORE
 // ------------------------------------------------------------------
@@ -40,8 +42,9 @@ Route::get('/dashboard', function () {
     return match($user->role) {
         'super_admin'   => redirect()->route('super.dashboard'),
         'admin'         => redirect()->route('admin.dashboard'),
-        'atasan'        => redirect()->route('atasan.dashboard'), // Role tunggal untuk Atasan/Kadis
+        'atasan'        => redirect()->route('atasan.dashboard'),
         'pegawai'       => redirect()->route('pegawai.dashboard'),
+        'pejabat'       => redirect()->route('pejabat.dashboard'),
         default         => redirect('/'),
     };
 })->name('dashboard');
@@ -128,5 +131,21 @@ Route::middleware(['auth'])->group(function () {
     App\Models\Notification::where('id', $id)->where('user_id', Auth::id())->update(['is_read' => true]);
     return back();
 })->name('pegawai.notif.read');
+
+// Di dalam grup //APPROVAL PEJABAT
+Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')->group(function () {
+    Route::get('/dashboard', [PejabatApprovalController::class, 'dashboard'])->name('dashboard');
+    Route::get('/approval', [PejabatApprovalController::class, 'index'])->name('approval.index');
+    Route::post('/approval/{id}/setuju', [PejabatApprovalController::class, 'approve'])->name('approval.approve');
+    Route::post('/approval/{id}/tolak', [PejabatApprovalController::class, 'reject'])->name('approval.reject');
+
+    // TAMBAHKAN RUTE PROFILE UNTUK PEJABAT
+    Route::prefix('profile')->as('profile.')->group(function () {
+        Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
+        Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');
+        Route::patch('/update', [PegawaiProfileController::class, 'update'])->name('update');
+    });
+});
+
 
 });

@@ -237,14 +237,14 @@
                                     </button>
 
 
-                                    <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
+                                    <form action="{{ route('pegawai.cuti.destroy', $r->id) }}"
                                         method="POST"
                                         class="form-delete inline">
                                         @csrf
                                         @method('DELETE')
 
                                         <button type="submit"
-                                                data-nama="{{ $c->pegawai->nama }}"
+                                                data-nama="{{ $r->pegawai->nama }}"
                                                 class="p-1 text-red-600 hover:bg-red-50 rounded">
                                             <i class="fa-solid fa-trash text-[12px]"></i>
                                         </button>
@@ -299,7 +299,7 @@
                          * sampai dengan baris ini (berdasarkan ID)
                          */
                         $kuotaDasar = 12;
-                        $pemakaianKumulatif = \App\Models\Cuti::where('pegawai_id', $r->pegawai_id)
+                        $pemakaianKumulatif = \App\Models\Cuti::where('user_id', $r->user_id)
                             ->where('tahun', $r->tahun)
                             ->where('status', 'disetujui')
                             ->where('id', '<=', $r->id)
@@ -371,14 +371,14 @@
                                 </button>
                             @endif
 
-                            <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
+                            <form action="{{ route('pegawai.cuti.destroy', $r->id) }}"
                                 method="POST"
                                 class="form-delete inline">
                                 @csrf
                                 @method('DELETE')
 
                                 <button type="submit"
-                                        data-nama="{{ $c->pegawai->nama }}"
+                                        data-nama="{{ $r->pegawai->nama }}"
                                         class="p-1 text-red-600 hover:bg-red-50 rounded">
                                     <i class="fa-solid fa-trash text-[12px]"></i>
                                 </button>

@@ -17,7 +17,7 @@ class DashboardController extends Controller
         $totalCuti = Cuti::count();
 
         // 3. Total cuti berdasarkan status
-        $cutiDisetujui = Cuti::where('status', 'disetujui')->count();
+        $cutiDisetujui = Cuti::whereIn('status', ['Disetujui Atasan', 'disetujui'])->count();
         $cutiDitolak   = Cuti::where('status', 'ditolak')->count();
         $cutiPending   = Cuti::where('status', 'menunggu')->count();
 

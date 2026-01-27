@@ -323,10 +323,13 @@
 
             {{-- Bagian NIP pada Modal Tambah --}}
             <div> 
-                <label class="block font-medium text-gray-700 mb-0.5">NIP</label>
+                <label class="block font-medium text-gray-700 mb-0.5">
+                    NIP <span class="text-red-500">*</span> {{-- Tambahkan tanda wajib isi --}}
+                </label>
                 <input type="text" name="nip"
-                    x-model="nip" {{-- Sekarang terhubung ke root nip --}}
-                    minlength="13" {{-- Validasi HTML Bawaan --}}
+                    x-model="nip"
+                    required {{-- Tambahkan atribut required --}}
+                    minlength="13" 
                     maxlength="18"
                     inputmode="numeric"
                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
@@ -445,12 +448,18 @@
                     Batal
                 </button>
                 
-            <button type="submit"
-                :disabled="nip.length > 0 && nip.length < 13"
-                :class="nip.length > 0 && nip.length < 13 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-sky-700'"
-                class="px-3 py-1 text-sm font-medium rounded-lg text-white bg-sky-600 transition-all">
-                Simpan Data
-            </button>
+                <button type="submit"
+                    {{-- Tombol mati jika NIP kosong ATAU NIP kurang dari 13 karakter --}}
+                    :disabled="!nip || nip.length < 13"
+                    
+                    {{-- Warna berubah menjadi abu-abu jika disabled, dan biru jika siap simpan --}}
+                    :class="(!nip || nip.length < 13) 
+                            ? 'opacity-50 cursor-not-allowed bg-gray-400' 
+                            : 'bg-sky-600 hover:bg-sky-700'"
+                    class="px-3 py-1 text-sm font-medium rounded-lg text-white transition-all">
+                    Simpan Data
+                </button>
+            </div>
 
             </div>
 
