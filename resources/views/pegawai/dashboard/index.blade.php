@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    {{-- 🔔 TAMBAHKAN INI DI BAWAH KARTU --}}
+    {{-- 🔔 PEMBERITAHUAN (BACKEND FIX) --}}
     @if(isset($notif) && $notif->count() > 0)
         <div class="mt-4 space-y-3">
             @foreach($notif as $n)
@@ -48,7 +48,7 @@
             </h2>
 
             <div class="h-auto lg:h-[362px] min-h-[220px]">
-                <canvas id="sisaCutiChart"></canvas>
+                <div class="space-y-4 sm:space-y-6">
 
                     <!-- Angka Utama -->
                     <div class="text-center">
@@ -298,26 +298,30 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-new Chart(document.getElementById('sisaCutiChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Total Hak', 'Terpakai', 'Sisa'],
-        datasets: [{
-            data: [
-                {{ $totalCuti ?? 0 }},
-                {{ $cutiTerpakai ?? 0 }},
-                {{ $sisaCuti ?? 0 }}
-            ],
-            backgroundColor: ['#94a3b8', '#facc15', '#0ea5e9'],
-            borderRadius: 6
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
-    }
-});
+// Check if chart element exists before initializing
+const chartElement = document.getElementById('sisaCutiChart');
+if (chartElement) {
+    new Chart(chartElement, {
+        type: 'bar',
+        data: {
+            labels: ['Total Hak', 'Terpakai', 'Sisa'],
+            datasets: [{
+                data: [
+                    {{ $totalCuti ?? 0 }},
+                    {{ $cutiTerpakai ?? 0 }},
+                    {{ $sisaCuti ?? 0 }}
+                ],
+                backgroundColor: ['#94a3b8', '#facc15', '#0ea5e9'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+}
 
 // ===================== KALENDER =====================
 let currentDate = new Date();
