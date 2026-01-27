@@ -59,15 +59,40 @@
         <div class="container mx-auto max-w-7xl relative z-10">
             <div class="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 text-center lg:text-left">
                 
-                {{-- Profile Picture --}}
-                <div class="relative group flex-shrink-0">
-                    <div class="absolute inset-0 bg-lime-green rounded-hub rotate-6 group-hover:rotate-12 transition-transform duration-500"></div>
-                    <div class="relative w-36 h-36 lg:w-44 lg:h-44 rounded-hub overflow-hidden border-4 border-white shadow-2xl bg-white flex items-center justify-center">
+            {{-- Profile Picture --}}
+            <div class="relative group flex-shrink-0 cursor-pointer"> {{-- Tambahkan cursor-pointer agar terlihat bisa diklik --}}
+                {{-- Latar belakang yang berputar --}}
+                <div class="absolute inset-0 bg-lime-green rounded-hub rotate-6 group-hover:rotate-12 transition-transform duration-500"></div>
+                
+                {{-- Container Foto Utama --}}
+                <div class="relative w-36 h-36 lg:w-44 lg:h-44 rounded-hub overflow-hidden border-4 border-white shadow-2xl bg-white flex items-center justify-center z-10">
+                    @if($pegawai && $pegawai->foto)
+                        <img src="{{ asset('storage/' . $pegawai->foto) }}" 
+                            alt="Foto Profil" 
+                            class="w-full h-full object-cover">
+                    @else
                         <span class="text-5xl lg:text-6xl font-extrabold text-electric-blue select-none">
                             {{ strtoupper(substr($pegawai->nama ?? $user->name, 0, 1)) }}
                         </span>
-                    </div>
+                    @endif
+
+                    {{-- Overlay Hover: Hanya muncul jika pegawai BELUM memiliki foto --}}
+                    @if(!($pegawai && $pegawai->foto))
+                        <div class="absolute inset-0 bg-electric-blue/20 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                            <div class="flex flex-col items-center gap-1">
+                                <span class="material-symbols-outlined text-white text-2xl">add_a_photo</span>
+                                <span class="text-white font-bold text-[10px] uppercase tracking-widest">Tambah Foto</span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
+
+                {{-- BARU: Tombol Edit Permanen di Pojok Kanan Bawah --}}
+                {{-- Kita gunakan tag <a> agar jika diklik langsung mengarah ke halaman edit --}}
+                <a href="{{ route('pegawai.profile.edit') }}" class="absolute -bottom-1 -right-1 lg:bottom-0 lg:right-0 z-20 bg-white text-electric-blue p-2 lg:p-2.5 rounded-full border-2 border-electric-blue shadow-[0_4px_10px_rgba(46,91,255,0.2)] flex items-center justify-center hover:bg-electric-blue hover:text-white transition-colors duration-300" title="Ubah Foto Profil">
+                    <span class="material-symbols-outlined text-[18px] lg:text-[20px]">edit</span>
+                </a>
+            </div>
 
                 {{-- User Info --}}
                 <div class="flex-1 min-w-0">
