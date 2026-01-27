@@ -6,6 +6,17 @@
 <div class="py-8 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
+        {{-- HEADER & BACK BUTTON --}}
+        <div class="flex items-center justify-between mb-2">
+            <div>
+                <a href="{{ route('pegawai.profile.show') }}" class="inline-flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors font-medium mb-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Kembali ke Profil
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800">Edit Profil & Keamanan</h1>
+            </div>
+        </div>
+
         {{-- 1. LOGIKA NOTIFIKASI INTERAKTIF (Alpine.js) --}}
         {{-- Mengecek session 'success' (dari update profil) atau 'status' (dari update password) --}}
         @if (session('success') || session('status') === 'password-updated')

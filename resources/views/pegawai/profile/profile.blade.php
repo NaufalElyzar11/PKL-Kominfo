@@ -1,205 +1,201 @@
 @extends('layouts.pegawai')
 
-@section('title', 'Profil Pegawai')
+@section('title', 'Profil Saya')
+
+@push('styles')
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&amp;family=Lato:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "electric-blue": "#2E5BFF",
+                    "lime-green": "#86EFAC",
+                    "soft-orange": "#FFB347",
+                    "hub-grey": "#F3F4F6",
+                },
+                fontFamily: {
+                    "display": ["Poppins", "sans-serif"],
+                    "body": ["Lato", "sans-serif"]
+                },
+                borderRadius: { 
+                    "hub": "2.5rem",
+                    "card": "1.75rem"
+                },
+            },
+        },
+    }
+</script>
+<style>
+    .font-display { font-family: 'Poppins', sans-serif; }
+    .font-body { font-family: 'Lato', sans-serif; }
+    .vibrant-gradient {
+        background: linear-gradient(135deg, #2E5BFF 0%, #137fec 100%);
+    }
+    .card-shadow {
+        box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
+    }
+    /* Scoped styles */
+    .profile-page-wrapper h1, 
+    .profile-page-wrapper h2, 
+    .profile-page-wrapper h3, 
+    .profile-page-wrapper h4 { font-family: 'Poppins', sans-serif; }
+</style>
+@endpush
 
 @section('content')
-@php
-    $namaPegawai = $pegawai->nama ?? $user->name ?? 'Pegawai';
-    $jabatan = $pegawai->jabatan ?? 'Pegawai';
-    // Gunakan unit kerja sebagai alamat domisili sementara jika data alamat tidak ada
-    $alamat = $pegawai->unit_kerja ?? '-'; 
-    $nip = $pegawai->nip ?? '-';
-    $telepon = $pegawai->telepon ?? '-';
-    $email = $pegawai->email ?? $user->email ?? '-';
-    $unitKerja = $pegawai->unit_kerja ?? '-';
-    
-    // Avatar Initials
-    $initials = strtoupper(substr($namaPegawai, 0, 1));
-@endphp
+{{-- WRAPPER UTAMA: Relative agar z-index bekerja dengan benar di dalam layout --}}
+<div class="profile-page-wrapper -m-6 relative isolate">
 
-<div class="space-y-8">
-    {{-- Header Section --}}
-    <div class="relative w-full rounded-hub overflow-hidden bg-gradient-to-br from-electric-blue to-primary-dark p-8 lg:p-12 text-white shadow-2xl">
-        <!-- Abstract Background Shapes -->
+    {{-- 1. HERO HEADER: (Z-Index 0) --}}
+    <div class="relative w-full vibrant-gradient px-6 py-12 overflow-hidden rounded-[2.5rem] z-0 mb-8">
+        {{-- Background Decorations --}}
         <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 w-96 h-96 bg-lime-green/20 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
-
-        <div class="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-12 text-center lg:text-left">
-            {{-- Profile Picture --}}
-            <div class="relative group">
-                <div class="absolute inset-0 bg-lime-green rounded-hub rotate-6 group-hover:rotate-12 transition-transform duration-500"></div>
-                <!-- Avatar Container -->
-                <div class="relative w-40 h-40 lg:w-48 lg:h-48 rounded-hub overflow-hidden border-4 border-white shadow-2xl bg-white flex items-center justify-center">
-                    <span class="text-6xl font-extrabold text-electric-blue select-none">{{ $initials }}</span>
-                </div>
-                {{-- Edit Trigger (Optional - Linking to Edit Page) --}}
-                <a href="{{ route('pegawai.profile.show') }}" class="absolute -bottom-2 -right-2 bg-soft-orange text-white p-3 rounded-2xl shadow-lg cursor-pointer hover:scale-110 transition-transform">
-                    <i class="fa-solid fa-pen-to-square text-lg"></i>
-                </a>
-            </div>
-
-            {{-- Text Info --}}
-            <div class="flex-1">
-                <div class="inline-block px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold uppercase tracking-widest mb-4 border border-white/30">
-                    NIP: {{ $nip }}
+        
+        <div class="container mx-auto max-w-7xl relative z-10">
+            <div class="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 text-center lg:text-left">
+                
+                {{-- Profile Picture --}}
+                <div class="relative group flex-shrink-0">
+                    <div class="absolute inset-0 bg-lime-green rounded-hub rotate-6 group-hover:rotate-12 transition-transform duration-500"></div>
+                    <div class="relative w-36 h-36 lg:w-44 lg:h-44 rounded-hub overflow-hidden border-4 border-white shadow-2xl bg-white flex items-center justify-center">
+                        <span class="text-5xl lg:text-6xl font-extrabold text-electric-blue select-none">
+                            {{ strtoupper(substr($pegawai->nama ?? $user->name, 0, 1)) }}
+                        </span>
+                    </div>
                 </div>
 
-                <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
-                    <i class="fa-solid fa-id-card text-sky-600 text-xl mb-2 block"></i>
-                    <p class="text-xs text-gray-500 mt-1">NIP</p>
-                    <p class="text-sm font-semibold text-gray-800 mt-1">{{ $pegawai->nip ?? '-' }}</p>
-                </div>
-
-                <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
-                    <i class="fa-solid fa-phone text-sky-600 text-xl mb-2 block"></i>
-                    <p class="text-xs text-gray-500 mt-1">Telepon</p>
-                    <p class="text-sm font-semibold text-gray-800 mt-1">{{ $pegawai->telepon ?? '-' }}</p>
+                {{-- User Info --}}
+                <div class="flex-1 min-w-0">
+                    <div class="inline-block px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold uppercase tracking-widest mb-4 border border-white/30">
+                        NIP: {{ $pegawai->nip ?? '-' }}
+                    </div>
+                    <h1 class="text-3xl lg:text-5xl font-extrabold text-white leading-tight break-words">
+                        {{ $pegawai->nama ?? $user->name }}
+                    </h1>
+                    <p class="text-white/80 text-lg mt-2 font-medium">
+                        {{ $pegawai->jabatan ?? 'Pegawai' }} • {{ $pegawai->unit_kerja ?? 'Kominfo' }}
+                    </p>
+                    
+                    <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
+                        <a href="{{ route('pegawai.profile.edit') }}" class="px-6 py-3 bg-white text-electric-blue rounded-2xl font-bold shadow-xl hover:bg-lime-green hover:text-slate-900 transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined">settings</span>
+                            Pengaturan Akun
+                        </a>
+                        <a href="{{ route('pegawai.profile.edit') }}" class="px-6 py-3 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-all">
+                            Ubah Password
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Main Grid --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 -mt-8 relative z-20 px-4">
-        
-        {{-- Resource Status Card --}}
-        <div class="lg:col-span-12">
-            <div class="bg-white rounded-hub p-8 lg:p-10 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-white flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative group">
-                <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-lime-green/5 skew-x-12 translate-x-12 -z-10"></div>
-                
-                <div class="flex-1 text-center md:text-left">
-                    <h3 class="text-2xl font-extrabold text-slate-800 mb-2">Status Cuti</h3>
-                    <p class="text-slate-500">Ketersediaan cuti tahunan Anda diperbarui secara real-time.</p>
-                    <div class="mt-6 flex flex-wrap justify-center md:justify-start gap-3">
-                        <span class="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-bold flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                            Status Aktif
-                        </span>
-                        <span class="px-4 py-2 bg-electric-blue/10 text-electric-blue rounded-full text-sm font-bold">Periode {{ date('Y') }}</span>
-                    </div>
-                </div>
-
-                <!-- Content -->
-                <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+    {{-- 2. MAIN CONTENT (Cards): (Z-Index 10) --}}
+    <main class="container mx-auto max-w-7xl px-4 relative z-10 mb-20 font-body">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             
-            {{-- DATA AKUN --}}
-            <div>
-                <h3 class="text-base font-semibold text-sky-700 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-lock"></i>
-                    Data Akun
-                </h3>
-
-                <div class="space-y-3">
-                    {{-- Email --}}
-                    <div class="flex justify-between items-center pb-3 border-b border-gray-100">
-                        <span class="text-sm text-gray-600 font-medium">Email</span>
-                        <span class="text-sm text-gray-800">
-                    {{ $pegawai->email ?? $user->email ?? '-' }}
-                        </span>
-                    </div>
-
-        {{-- Data Kolom Kiri: Kontak --}}
-        <div class="lg:col-span-6 flex flex-col gap-8">
-            <div class="bg-white rounded-card p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-white group h-full">
-                <div class="w-14 h-14 bg-soft-orange/10 text-soft-orange rounded-2xl flex items-center justify-center mb-6">
-                    <i class="fa-solid fa-at text-3xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-6">Informasi Kontak</h3>
-                <div class="space-y-6">
-                    <div class="flex flex-col">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Email</label>
-                        <p class="font-bold text-slate-800 break-all">{{ $email }}</p>
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Telepon</label>
-                        <p class="font-bold text-slate-800">{{ $telepon }}</p>
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Role</label>
-                        <div class="flex">
-                            <span class="px-3 py-1 bg-electric-blue/10 text-electric-blue rounded-lg text-sm font-bold border border-electric-blue/20">
-                                {{ ucfirst($user->role) }}
+            {{-- ROW 1: RESOURCE STATUS --}}
+            <div class="lg:col-span-12">
+                <div class="bg-white rounded-hub p-8 lg:p-10 card-shadow border border-white flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative group">
+                    {{-- Status Cuti --}}
+                    <div class="flex-1 text-center md:text-left z-10">
+                        <h3 class="text-2xl font-extrabold text-slate-800 mb-2">Resource Status</h3>
+                        <p class="text-slate-500 text-sm">Validasi cuti tahunan dan status kepegawaian Anda.</p>
+                        <div class="mt-6 flex flex-wrap justify-center md:justify-start gap-3">
+                            <span class="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-bold flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                {{ ucfirst($pegawai->status ?? 'Aktif') }}
+                            </span>
+                            <span class="px-4 py-2 bg-electric-blue/10 text-electric-blue rounded-full text-sm font-bold">
+                                {{ date('Y') }}
                             </span>
                         </div>
                     </div>
-                    {{-- Edit Trigger --}}
-                    <button class="w-full py-3 border-2 border-slate-100 rounded-xl font-bold text-slate-500 hover:border-soft-orange hover:text-soft-orange transition-all flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-pen text-sm"></i>
-                        <span>Edit Kontak</span>
-                    </button>
+
+                    {{-- Lingkaran Sisa Cuti --}}
+                    <div class="relative flex-shrink-0 z-10">
+                        <div class="w-40 h-40 lg:w-48 lg:h-48 rounded-full border-[12px] border-slate-100 flex items-center justify-center relative bg-white">
+                            <div class="absolute inset-0 rounded-full border-[12px] border-electric-blue border-t-transparent -rotate-45"></div>
+                            <div class="text-center">
+                                <span class="block text-4xl lg:text-5xl font-black text-electric-blue">{{ $pegawai->sisa_cuti ?? 0 }}</span>
+                                <span class="block text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-tighter">Sisa Cuti</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="flex flex-col gap-3 w-full md:w-auto z-10">
+                        <a href="{{ route('pegawai.cuti.create') }}" class="px-8 py-3 bg-electric-blue text-white rounded-2xl font-bold shadow-lg shadow-electric-blue/30 hover:scale-105 transition-transform text-center whitespace-nowrap">
+                            Ajukan Cuti
+                        </a>
+                        <a href="{{ route('pegawai.cuti.index') }}" class="px-8 py-3 bg-slate-50 text-slate-600 rounded-2xl font-bold hover:bg-slate-100 transition-colors text-center whitespace-nowrap">
+                            Riwayat
+                        </a>
+                    </div>
+
+                    {{-- Background decorative shape (behind content) --}}
+                    <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-lime-green/5 skew-x-12 translate-x-12 z-0 pointer-events-none"></div>
                 </div>
             </div>
+
+            {{-- ROW 2: DETAIL INFO --}}
+            
+            {{-- Kontak --}}
+            <div class="lg:col-span-6 flex flex-col h-full">
+                <div class="bg-white rounded-card p-8 card-shadow border border-white h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
+                    <div class="w-12 h-12 bg-soft-orange/10 text-soft-orange rounded-2xl flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-2xl">alternate_email</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-6 font-display">Kontak</h3>
+                    <div class="space-y-6 flex-1">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Email</label>
+                            <p class="font-bold text-slate-800 text-sm break-all">{{ $pegawai->email ?? $user->email }}</p>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Telepon</label>
+                            <p class="font-bold text-slate-800 text-sm">{{ $pegawai->telepon ?? '-' }}</p>
+                        </div>
+                    </div>
+                    <div class="pt-6 mt-auto">
+                        <a href="{{ route('pegawai.profile.edit') }}" class="w-full py-3 border-2 border-slate-100 rounded-xl font-bold text-slate-500 hover:border-soft-orange hover:text-soft-orange transition-all flex items-center justify-center gap-2 text-sm group">
+                            <span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">edit</span>
+                            Edit Kontak
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Jabatan --}}
+            <div class="lg:col-span-6 flex flex-col h-full">
+                <div class="bg-white rounded-card p-8 card-shadow border border-white h-full hover:shadow-lg transition-shadow duration-300">
+                    <div class="w-12 h-12 bg-electric-blue/10 text-electric-blue rounded-2xl flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-2xl">badge</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-6 font-display">Jabatan</h3>
+                    <div class="space-y-4">
+                        <div class="p-3 bg-slate-50 rounded-2xl">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Unit Kerja</label>
+                            <p class="text-sm font-bold text-slate-700 leading-tight">{{ $pegawai->unit_kerja ?? '-' }}</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-2xl">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Jabatan</label>
+                            <p class="text-sm font-bold text-slate-700">{{ $pegawai->jabatan ?? '-' }}</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-2xl">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">NIP</label>
+                            <p class="text-sm font-bold text-slate-700 font-mono">{{ $pegawai->nip ?? '-' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
-
-        {{-- Data Kolom Kanan: Jabatan --}}
-        <div class="lg:col-span-6 flex flex-col gap-8">
-            <div class="bg-white rounded-card p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-white h-full">
-                <div class="w-14 h-14 bg-electric-blue/10 text-electric-blue rounded-2xl flex items-center justify-center mb-6">
-                    <i class="fa-solid fa-id-badge text-3xl"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-6">Informasi Jabatan</h3>
-                <div class="space-y-6">
-                    <div class="p-4 bg-slate-50 rounded-2xl">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Unit Kerja</label>
-                        <p class="text-sm font-bold text-slate-700 leading-tight">{{ $unitKerja }}</p>
-                    </div>
-
-                    {{-- NIP --}}
-                    <div class="flex justify-between items-center pb-3 border-b border-gray-100">
-                        <span class="text-sm text-gray-600 font-medium">NIP</span>
-                        <span class="text-sm text-gray-800 font-mono">{{ $pegawai->nip ?? '-' }}</span>
-                    </div>
-
-                    {{-- No Telepon --}}
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-600 font-medium">Telepon</span>
-                        <span class="text-sm text-gray-800">{{ $pegawai->telepon ?? '-' }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Dokumen (Mockup Visual) --}}
-        <!-- <div class="lg:col-span-12">
-            <div class="bg-slate-900 rounded-card p-8 shadow-lg text-white relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
-                <div class="w-14 h-14 bg-white/10 text-lime-green rounded-2xl flex items-center justify-center mb-6">
-                    <i class="fa-solid fa-folder-open text-3xl"></i>
-                </div>
-                <h3 class="text-xl font-bold mb-6">Dokumen & Arsip</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {{-- File Item Mock --}}
-                    <a class="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" href="#">
-                        <div class="w-10 h-10 bg-red-500/20 text-red-400 rounded-xl flex items-center justify-center">
-                            <i class="fa-solid fa-file-pdf text-xl"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold truncate">SK Terakhir.pdf</p>
-                            <p class="text-[10px] text-white/40">1.2 MB • Updated May 2024</p>
-                        </div>
-                        <i class="fa-solid fa-download text-white/30 group-hover:text-white transition-colors"></i>
-                    </a>
-                    <a class="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors group" href="#">
-                        <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center">
-                            <i class="fa-solid fa-file-lines text-xl"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-bold truncate">Kartu Pegawai.pdf</p>
-                            <p class="text-[10px] text-white/40">850 KB • Permanent Doc</p>
-                        </div>
-                        <i class="fa-solid fa-download text-white/30 group-hover:text-white transition-colors"></i>
-                    </a>
-                    {{-- Add Button --}}
-                    <div class="flex items-center justify-center p-3">
-                        <button class="w-full py-3 bg-lime-green text-slate-900 rounded-xl font-bold hover:scale-105 transition-transform flex items-center justify-center gap-2">
-                             <i class="fa-solid fa-plus"></i>
-                            Tambah Dokumen
-                        </button>
-                    </div> 
-                </div>
-            </div>
-        </div> -->
-
-    </div>
+    </main>
 </div>
 @endsection
