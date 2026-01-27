@@ -56,7 +56,17 @@ class ApprovalController extends Controller
             })->where('status', 'Ditolak')->count(),
         ];
 
-        return view('atasan.dashboard', compact('stats'));
+        // Ambil daftar pengajuan cuti yang Menunggu untuk ditampilkan di tabel dashboard
+        $pengajuan = Cuti::with('pegawai')
+            ->whereHas('pegawai', function($query) use ($atasanName) {
+                $query->where('atasan', $atasanName);
+            })
+            ->where('status', 'Menunggu')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return view('atasan.dashboard', compact('stats', 'pengajuan'));
     }
 
     public function reject(Request $request, $id)

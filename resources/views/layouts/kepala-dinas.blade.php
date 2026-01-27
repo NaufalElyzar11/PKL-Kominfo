@@ -48,8 +48,6 @@
                 @php
                     $menus = [
                         ['route' => 'kepaladinas.dashboard', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Dashboard', 'color' => 'icon-color-dashboard'],
-                        ['route' => 'kepaladinas.datapegawai.index', 'icon' => 'fa-solid fa-users', 'label' => 'Data Pegawai', 'color' => 'icon-color-datapegawai'],
-                        ['route' => 'kepaladinas.datacuti.index', 'icon' => 'fa-solid fa-file-signature', 'label' => 'Pengajuan Cuti', 'color' => 'icon-color-cuti'],
                         ['route' => 'kepaladinas.profile.show', 'icon' => 'fa-solid fa-user-circle', 'label' => 'Profil Saya', 'color' => 'icon-color-profile'],
                     ];
                 @endphp

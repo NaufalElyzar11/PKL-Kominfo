@@ -63,11 +63,26 @@
 
             {{-- Menu --}}
             @php
-                $menus = [
-                    ['route' => 'pegawai.dashboard', 'icon' => 'fa-chart-line icon-dashboard', 'label' => 'Dashboard'],
-                    ['route' => 'pegawai.cuti.index', 'icon' => 'fa-file-signature icon-cuti', 'label' => 'Pengajuan Cuti'],
-                    ['route' => 'pegawai.profile.show', 'icon' => 'fa-user-circle icon-profile', 'label' => 'Profil Saya'],
-                ];
+                $user = Auth::user();
+                $menus = [];
+
+                if ($user->role === 'atasan') {
+                    // Menu Khusus Atasan
+                    $menus = [
+                        ['route' => 'atasan.dashboard', 'icon' => 'fa-chart-line icon-dashboard', 'label' => 'Dashboard'],
+                        ['route' => 'atasan.profile.show', 'icon' => 'fa-user-circle icon-profile', 'label' => 'Profil Saya'],
+                    ];
+                } else {
+                    // Menu Default Pegawai
+                    $menus = [
+                        ['route' => 'pegawai.dashboard', 'icon' => 'fa-chart-line icon-dashboard', 'label' => 'Dashboard'],
+                        ['route' => 'pegawai.cuti.index', 'icon' => 'fa-file-signature icon-cuti', 'label' => 'Pengajuan Cuti'],
+                        ['route' => 'pegawai.profile.show', 'icon' => 'fa-user-circle icon-profile', 'label' => 'Profil Saya'],
+                    ];
+                }
+
+                // Tentukan route profile untuk link di bagian bawah
+                $profileRoute = ($user->role === 'atasan') ? 'atasan.profile.show' : 'pegawai.profile.show';
             @endphp
 
             <nav class="mt-3 space-y-1 text-[14px]">
@@ -98,7 +113,7 @@
                 $namaPegawai = $pegawai->nama ?? 'Pegawai';
             @endphp
 
-            <a href="{{ route('pegawai.profile.show') }}"
+            <a href="{{ route($profileRoute) }}"
                class="flex items-center px-2 py-1 rounded-md hover:bg-[#e6f5fb] smooth-transition">
 
                 <div class="w-8 h-8 flex items-center justify-center rounded-full bg-[#008fd3] text-white text-sm font-semibold">
@@ -107,7 +122,7 @@
 
                 <div x-show="sidebarOpen" x-transition x-cloak class="ml-3">
                     <p class="text-[13px] font-semibold">{{ $namaPegawai }}</p>
-                    <p class="text-[11px] text-gray-500">Pegawai</p>
+                    <p class="text-[11px] text-gray-500">{{ ucfirst($user->role) }}</p>
                 </div>
             </a>
         </div>

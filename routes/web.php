@@ -18,6 +18,8 @@ use App\Http\Controllers\SuperAdmin\ProfileController as SuperProfileController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Pegawai\ProfileController as PegawaiProfileController;
 use App\Http\Controllers\KepalaDinas\ProfileController as KadisProfileController;
+use App\Http\Controllers\KepalaDinas\DataPegawaiController as KadisDataPegawai;
+use App\Http\Controllers\KepalaDinas\DataCutiController as KadisDataCuti;
 
 use App\Http\Controllers\Atasan\ApprovalController as AtasanApprovalController;
 
@@ -87,6 +89,10 @@ Route::middleware(['auth'])->group(function () {
     // --- KEPALA DINAS (Pejabat Pemberi Cuti / Approval Tahap 2) ---
     Route::prefix('kepaladinas')->as('kepaladinas.')->middleware('role:atasan')->group(function () {
         Route::get('/dashboard', [KadisDashboard::class, 'index'])->name('dashboard');
+        
+        // Resource Routes untuk Menu Samping
+        Route::resource('datapegawai', KadisDataPegawai::class);
+        Route::resource('datacuti', KadisDataCuti::class);
         
         // Tambahkan Route Approval untuk Kadis
         Route::post('/approval/{id}/setuju', [KadisDashboard::class, 'approve'])->name('approval.approve');
