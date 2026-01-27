@@ -237,14 +237,14 @@
                                     </button>
 
 
-                                    <form action="{{ route('pegawai.cuti.destroy', $r->id) }}"
+                                    <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
                                         method="POST"
                                         class="form-delete inline">
                                         @csrf
                                         @method('DELETE')
 
                                         <button type="submit"
-                                                data-nama="{{ $r->pegawai->nama }}"
+                                                data-nama="{{ $c->pegawai->nama }}"
                                                 class="p-1 text-red-600 hover:bg-red-50 rounded">
                                             <i class="fa-solid fa-trash text-[12px]"></i>
                                         </button>

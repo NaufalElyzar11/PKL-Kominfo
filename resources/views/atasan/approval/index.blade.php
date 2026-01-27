@@ -32,9 +32,9 @@
                         {{ Str::limit($c->alasan_cuti, 30) ?? '-' }}
                     </td>
                     <td class="px-4 py-3 flex gap-2">
-                        <form action="{{ route('atasan.approval.approve', $c->id) }}" method="POST">
+                        <form id="form-approve-{{ $c->id }}" action="{{ route('atasan.approval.approve', $c->id) }}" method="POST">
                             @csrf
-                            <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Setuju</button>
+                            <button type="button" onclick="confirmApproveIndex('{{ $c->id }}', '{{ $c->pegawai->nama }}')" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Setuju</button>
                         </form>
                         
                         <button type="button" 
@@ -85,5 +85,22 @@
             timer: 2000
         });
     @endif
+
+    function confirmApproveIndex(id, nama) {
+        Swal.fire({
+            title: 'Setujui Pengajuan?',
+            text: "Anda akan menyetujui cuti pegawai atas nama " + nama,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a', // green-600
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Setujui!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('form-approve-' + id).submit();
+            }
+        })
+    }
 </script>
 @endsection

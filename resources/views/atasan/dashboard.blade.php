@@ -147,18 +147,19 @@
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     {{-- Approve Button --}}
-                                    <form action="{{ route('atasan.approval.approve', $c->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin menyetujui pengajuan ini?');">
+                                    {{-- Approve Button --}}
+                                    <form id="form-approve-{{ $c->id }}" action="{{ route('atasan.approval.approve', $c->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Setujui">
+                                        <button type="button" onclick="confirmApprove('{{ $c->id }}')" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Setujui">
                                             <span class="material-symbols-outlined text-[18px]">check</span>
                                         </button>
                                     </form>
                                     
                                     {{-- Reject Button --}}
-                                    <form action="{{ route('atasan.approval.reject', $c->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin menolak pengajuan ini?');">
+                                    <form id="form-reject-{{ $c->id }}" action="{{ route('atasan.approval.reject', $c->id) }}" method="POST">
                                         @csrf
                                         <input type="hidden" name="catatan" value="Ditolak via Dashboard">
-                                        <button type="submit" class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Tolak">
+                                        <button type="button" onclick="confirmReject('{{ $c->id }}')" class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Tolak">
                                             <span class="material-symbols-outlined text-[18px]">close</span>
                                         </button>
                                     </form>
@@ -191,4 +192,42 @@
         </div>
     </div>
 </div>
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmApprove(id) {
+        Swal.fire({
+            title: 'Setujui Pengajuan?',
+            text: "Apakah Anda yakin ingin menyetujui pengajuan cuti ini?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981', // Emerald 500
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Setujui!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('form-approve-' + id).submit();
+            }
+        })
+    }
+
+    function confirmReject(id) {
+        Swal.fire({
+            title: 'Tolak Pengajuan?',
+            text: "Pengajuan ini akan ditolak secara langsung.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48', // Rose 600
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Tolak!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('form-reject-' + id).submit();
+            }
+        })
+    }
+</script>
+@endpush
 @endsection
