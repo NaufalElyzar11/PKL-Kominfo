@@ -81,11 +81,11 @@ class Pegawai extends Model
     {
         $tahun = date('Y');
         
-        // PERBAIKAN: Hanya hitung cuti yang statusnya SUDAH 'Disetujui' (Final)
-        // Abaikan status 'Menunggu' dan 'Disetujui Atasan' agar jatah tidak berkurang duluan
+        // Hitung cuti yang sudah disetujui
+        // Termasuk 'Disetujui', 'Disetujui Atasan', dan variasi besar kecil huruf
         $terpakai = $this->cuti()
             ->where('tahun', $tahun)
-            ->where('status', 'Disetujui') 
+            ->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Atasan', 'disetujui atasan']) 
             ->sum('jumlah_hari');
 
         // Menggunakan kuota_cuti dari database, default 12 jika kosong
