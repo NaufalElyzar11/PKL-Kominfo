@@ -23,12 +23,22 @@ class CutiController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('pegawai', function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%");
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Filter berdasarkan tanggal
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('tanggal_mulai', '>=', $request->tanggal_dari);
+        }
+
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('tanggal_selesai', '<=', $request->tanggal_sampai);
         }
 
         // PAGINATION < 1 2 >

@@ -23,11 +23,17 @@
                     <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>❌ Ditolak</option>
                 </select>
 
+                <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" placeholder="Tanggal Mulai"
+                    class="px-2 py-1 border border-gray-300 rounded w-36 text-[10px] focus:ring-1 focus:ring-blue-400 outline-none">
+
+                <input type="date" name="tanggal_sampai" value="{{ request('tanggal_sampai') }}" placeholder="Tanggal Selesai"
+                    class="px-2 py-1 border border-gray-300 rounded w-36 text-[10px] focus:ring-1 focus:ring-blue-400 outline-none">
+
                 <button type="submit" class="px-2 py-1 bg-sky-600 text-white rounded text-[10px] hover:bg-sky-700 transition shadow-sm">
                     Filter
                 </button>
 
-                @if(request('search') || request('status'))
+                @if(request('search') || request('status') || request('tanggal_dari') || request('tanggal_sampai'))
                     <a href="{{ route('admin.cuti.index') }}" class="px-2 py-1 bg-gray-500 text-white rounded text-[10px] hover:bg-gray-600 transition shadow-sm">
                         Reset
                     </a>
