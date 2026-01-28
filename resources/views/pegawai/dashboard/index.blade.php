@@ -60,8 +60,8 @@
                     @php
                         $hakCuti = 12;
                         $terpakai = $cutiTerpakai ?? 0;
-                        $sisa = $hakCuti - $terpakai;
-                        $persen = ($terpakai / $hakCuti) * 100;
+                        $sisa = max(0, $hakCuti - $terpakai); // Tidak boleh negatif
+                        $persen = min(100, ($terpakai / $hakCuti) * 100); // Maksimal 100%
                     @endphp
 
                     <div>
@@ -73,7 +73,7 @@
                         </div>
 
                         <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
-                            <div class="bg-yellow-400 h-5 rounded-full transition-all"
+                            <div class="h-5 rounded-full transition-all {{ $terpakai > $hakCuti ? 'bg-red-500' : 'bg-yellow-400' }}"
                                 style="width: {{ $persen }}%">
                             </div>
                         </div>
@@ -82,12 +82,21 @@
                     <!-- Sisa -->
                     <div class="flex justify-between items-center bg-sky-50 rounded-lg p-3 sm:p-4">
                         <span class="text-sm sm:text-base text-gray-700 font-medium">Sisa Cuti</span>
-                        <span class="text-2xl sm:text-3xl font-extrabold text-sky-700">
+                        <span class="text-2xl sm:text-3xl font-extrabold {{ $sisa > 0 ? 'text-sky-700' : 'text-red-600' }}">
                             {{ $sisa }} Hari
                         </span>
                     </div>
 
                     <!-- Catatan -->
+                    @if($terpakai > $hakCuti)
+                        <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                            <p class="text-xs text-red-700 font-semibold">
+                                ⚠️ Peringatan: Cuti terpakai ({{ $terpakai }} hari) melebihi jatah tahunan ({{ $hakCuti }} hari).
+                                Silakan hubungi admin untuk verifikasi data.
+                            </p>
+                        </div>
+                    @endif
+                    
                     <p class="text-xs text-gray-500 text-center">
                         * Perhitungan berdasarkan cuti yang sudah <b>disetujui</b>
                     </p>

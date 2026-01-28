@@ -35,39 +35,81 @@
     detailPending: {}, 
     detailRiwayat: {},
     hasPendingCuti: @json($hasPendingCuti ?? false),
+    sisaCutiTersedia: @json($sisaCuti ?? 12),
 
-    tanggalMulaiTambah: '',
-    tanggalSelesaiTambah: '',
-    jumlahHariTambah: 0,
-    hitungHariTambah() {
-        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) {
-            this.jumlahHariTambah = 0;
-            return;
-        }
-        const mulai = new Date(this.tanggalMulaiTambah);
-        const selesai = new Date(this.tanggalSelesaiTambah);
-        if (mulai > selesai) {
-            this.jumlahHariTambah = 0;
-            return;
-        }
-        this.jumlahHariTambah =
-            Math.floor((selesai - mulai) / (1000 * 60 * 60 * 24)) + 1;
-    },
-
-    selectedCuti: {}, // <-- Tambahkan ini
+    // Data libur nasional
+    holidays: [],
+    holidaysLoaded: false,
 
     // FORM TAMBAH
     tanggalMulaiTambah: '',
     tanggalSelesaiTambah: '',
     jumlahHariTambah: 0,
-    hitungHariTambah() {
-        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { this.jumlahHariTambah = 0; return; }
+    
+    async loadHolidays() {
+        if (this.holidaysLoaded) return;
+        try {
+            const year = new Date().getFullYear();
+            const response = await fetch(`https://dayoffapi.vercel.app/api?year=${year}`);
+            const data = await response.json();
+            this.holidays = data.map(h => h.tanggal);
+            this.holidaysLoaded = true;
+        } catch (error) {
+            console.error('Gagal load holidays:', error);
+            this.holidays = [];
+            this.holidaysLoaded = true;
+        }
+    },
+
+    isWeekend(date) {
+        const day = date.getDay();
+        return day === 0 || day === 6; // 0 = Minggu, 6 = Sabtu
+    },
+
+    isHoliday(date) {
+        const dateStr = date.toISOString().split('T')[0];
+        return this.holidays.includes(dateStr);
+    },
+
+    calculateWorkingDays(start, end) {
+        if (!start || !end) return 0;
+        let count = 0;
+        let current = new Date(start);
+        const endDate = new Date(end);
+        
+        while (current <= endDate) {
+            if (!this.isWeekend(current) && !this.isHoliday(current)) {
+                count++;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        return count;
+    },
+
+    async hitungHariTambah() {
+        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { 
+            this.jumlahHariTambah = 0; 
+            return; 
+        }
+        
         const mulai = new Date(this.tanggalMulaiTambah);
         const selesai = new Date(this.tanggalSelesaiTambah);
-        if (isNaN(mulai) || isNaN(selesai) || mulai > selesai) { this.jumlahHariTambah = 0; return; }
-        const diff = Math.floor((selesai - mulai) / (1000 * 60 * 60 * 24)) + 1;
-        this.jumlahHariTambah = diff > 0 ? diff : 0;
+        
+        if (isNaN(mulai) || isNaN(selesai) || mulai > selesai) { 
+            this.jumlahHariTambah = 0; 
+            return; 
+        }
+
+        // Pastikan holidays sudah di-load
+        if (!this.holidaysLoaded) {
+            await this.loadHolidays();
+        }
+
+        // Hitung hari kerja
+        this.jumlahHariTambah = this.calculateWorkingDays(mulai, selesai);
     },
+
+    selectedCuti: {},
 
     // FUNGSI EDIT
     openEditModal(data) {
@@ -87,45 +129,52 @@
             jumlah_hari: data.jumlah_hari,
             alamat: data.alamat
         };
-            this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
-            this.isChanged = false;
-
+        this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
+        this.isChanged = false;
         this.showEditModal = true;
     },
 
-    hitungHariEdit() {
+    async hitungHariEdit() {
         if (!this.selectedCuti.tanggal_mulai || !this.selectedCuti.tanggal_selesai) return;
+        
         const mulai = new Date(this.selectedCuti.tanggal_mulai);
         const selesai = new Date(this.selectedCuti.tanggal_selesai);
+        
         if (isNaN(mulai) || isNaN(selesai) || mulai > selesai) { 
             this.selectedCuti.jumlah_hari = 0; 
             return; 
         }
-        const diff = Math.floor((selesai - mulai) / (1000*60*60*24)) + 1;
-        this.selectedCuti.jumlah_hari = diff > 0 ? diff : 0;
-    },
-    checkChange() {
-    this.isChanged =
-        JSON.stringify(this.selectedCuti)
-        !== JSON.stringify(this.originalCuti);
-},
 
+        // Pastikan holidays sudah di-load
+        if (!this.holidaysLoaded) {
+            await this.loadHolidays();
+        }
+
+        this.selectedCuti.jumlah_hari = this.calculateWorkingDays(mulai, selesai);
+    },
+
+    checkChange() {
+        this.isChanged = JSON.stringify(this.selectedCuti) !== JSON.stringify(this.originalCuti);
+    },
 
     // FUNGSI DETAIL PENDING
     showPendingDetail(data) { 
-        this.detailPending = { ...data }; // Cara cepat meng-copy semua data
+        this.detailPending = { ...data };
         this.showDetailPending = true; 
     },
 
     // FUNGSI DETAIL RIWAYAT
     showRiwayatDetail(data) { 
-        this.detailRiwayat = { ...data }; // Cara cepat meng-copy semua data
+        this.detailRiwayat = { ...data };
         this.showDetailRiwayat = true; 
     },
 
-    showCatatanKadis(pesan) { this.catatanContent = pesan; this.openCatatanKadis = true; },
+    showCatatanKadis(pesan) { 
+        this.catatanContent = pesan; 
+        this.openCatatanKadis = true; 
+    },
 
-}" class="space-y-4 font-sans text-gray-800">
+}" x-init="loadHolidays()" class="space-y-4 font-sans text-gray-800">
     {{-- Alert --}}
 
     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
@@ -548,17 +597,38 @@
                                 pattern="^[a-zA-Z\s]+$"
                                 title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
                         </div>
-                    <!-- JUMLAH HARI -->
-                    <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100">
-                        <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">
-                            Jumlah Cuti
-                        </span>
-
-                        <div class="text-sky-800 font-black">
-                            <span x-text="jumlahHariTambah"></span> Hari
+                    <!-- JUMLAH HARI DAN SISA CUTI -->
+                    <div class="space-y-2">
+                        <!-- Jumlah Hari Cuti -->
+                        <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100">
+                            <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">
+                                Jumlah Cuti (Hari Kerja)
+                            </span>
+                            <div class="text-sky-800 font-black">
+                                <span x-text="jumlahHariTambah"></span> Hari
+                            </div>
+                            <input type="hidden" name="jumlah_hari" :value="jumlahHariTambah">
                         </div>
 
-                        <input type="hidden" name="jumlah_hari" :value="jumlahHariTambah">
+                        <!-- Sisa Cuti Setelah Pengajuan -->
+                        <div class="flex justify-between items-center p-1.5 rounded border"
+                             :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'">
+                            <span class="font-bold uppercase tracking-tighter text-[9px]"
+                                  :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-700' : 'text-green-700'">
+                                Sisa Cuti Setelah Pengajuan
+                            </span>
+                            <div class="font-black"
+                                 :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-800' : 'text-green-800'">
+                                <span x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)"></span> Hari
+                            </div>
+                        </div>
+
+                        <!-- Warning jika melebihi kuota -->
+                        <div x-show="jumlahHariTambah > sisaCutiTersedia" 
+                             class="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-[9px] leading-tight">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                            Pengajuan cuti (<span x-text="jumlahHariTambah"></span> hari) melebihi sisa kuota Anda (<span x-text="sisaCutiTersedia"></span> hari).
+                        </div>
                     </div>
 
                 </fieldset>
@@ -572,9 +642,9 @@
                     </button>
 
                     <button type="submit"
-                            :disabled="hasPendingCuti"
-                            class="px-3 py-1 text-white rounded-lg font-bold"
-                            :class="hasPendingCuti ? 'bg-gray-400' : 'bg-sky-600 hover:bg-sky-700'">
+                            :disabled="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0"
+                            class="px-3 py-1 text-white rounded-lg font-bold transition"
+                            :class="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700'">
                         Kirim
                     </button>
                 </div>

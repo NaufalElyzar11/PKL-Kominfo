@@ -99,10 +99,8 @@ public function index()
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
 
-        // 3. HITUNG JUMLAH HARI (Server-side calculation lebih aman)
-        $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
-        $end   = \Carbon\Carbon::parse($validated['tanggal_selesai']);
-        $jumlah_hari = $start->diffInDays($end) + 1;
+        // 3. HITUNG JUMLAH HARI KERJA (Exclude weekend dan libur nasional)
+        $jumlah_hari = $this->calculateWorkingDays($validated['tanggal_mulai'], $validated['tanggal_selesai']);
 
         // Tambahkan Validasi Kuota di sini
         if ($pegawai->sisa_cuti < $jumlah_hari) {
@@ -165,12 +163,8 @@ public function index()
             'alamat'          => 'nullable|string|max:255',
         ]);
 
-        // 4. HITUNG DURASI
-        $start = \Carbon\Carbon::parse($request->tanggal_mulai);
-        $end   = \Carbon\Carbon::parse($request->tanggal_selesai);
-        
-        // Perhitungan matematis sederhana: $Total = (Akhir - Awal) + 1$
-        $jumlahHari = $start->diffInDays($end) + 1;
+        // 4. HITUNG DURASI (Hari Kerja)
+        $jumlahHari = $this->calculateWorkingDays($request->tanggal_mulai, $request->tanggal_selesai);
 
         // 5. EKSEKUSI UPDATE
         $cuti->update([
@@ -316,4 +310,56 @@ private function isPegawaiLengkap($pegawai)
     }
 
     return true;
-}}
+}
+
+/**
+ * ========================== 📅 HITUNG HARI KERJA ============================
+ * Menghitung jumlah hari kerja (exclude weekend dan libur nasional)
+ * ============================================================================
+ */
+private function calculateWorkingDays($startDate, $endDate)
+{
+    $start = \Carbon\Carbon::parse($startDate);
+    $end = \Carbon\Carbon::parse($endDate);
+    
+    // Ambil data libur nasional dari API
+    $holidays = $this->getHolidays($start->year);
+    
+    $workingDays = 0;
+    $current = $start->copy();
+    
+    while ($current <= $end) {
+        // Skip weekend (Sabtu = 6, Minggu = 0)
+        if (!in_array($current->dayOfWeek, [0, 6])) {
+            // Skip libur nasional
+            if (!in_array($current->toDateString(), $holidays)) {
+                $workingDays++;
+            }
+        }
+        $current->addDay();
+    }
+    
+    return max(1, $workingDays); // Minimal 1 hari
+}
+
+/**
+ * ========================== 🎉 AMBIL DATA LIBUR NASIONAL ====================
+ * Mengambil data libur dari API dayoffapi.vercel.app
+ * ============================================================================
+ */
+private function getHolidays($year)
+{
+    try {
+        $url = "https://dayoffapi.vercel.app/api?year={$year}";
+        $response = file_get_contents($url);
+        $data = json_decode($response, true);
+        
+        // Return array of date strings
+        return array_column($data, 'tanggal');
+    } catch (\Exception $e) {
+        // Jika API error, return empty array
+        \Log::warning('Failed to fetch holidays: ' . $e->getMessage());
+        return [];
+    }
+}
+}
