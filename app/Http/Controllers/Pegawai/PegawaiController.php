@@ -27,12 +27,12 @@ class PegawaiController extends Controller
         $tahunSekarang = date('Y');
         $queryCuti = Cuti::where('user_id', $user->id)->where('tahun', $tahunSekarang);
 
-        $cutiPending   = (clone $queryCuti)->where('status', 'Menunggu')->count();
-        $cutiDisetujui = (clone $queryCuti)->where('status', 'Disetujui')->count();
+        $cutiPending   = (clone $queryCuti)->where('status', 'menunggu')->count();
+        $cutiDisetujui = (clone $queryCuti)->where('status', 'Disetujui Atasan')->count();
         $cutiDitolak   = (clone $queryCuti)->where('status', 'Ditolak')->count();
         
         // Menghitung cuti yang sudah terpakai (untuk progress bar)
-        $cutiTerpakai = (clone $queryCuti)->where('status', 'Disetujui')->sum('jumlah_hari');
+        $cutiTerpakai = (clone $queryCuti)->where('status', 'Disetujui Atasan')->sum('jumlah_hari');
         
         // 3. Ambil 5 riwayat cuti terakhir untuk tabel di dashboard
         $latestCuti = Cuti::where('user_id', $user->id)
@@ -42,7 +42,7 @@ class PegawaiController extends Controller
 
         // 4. Data Tambahan (Jika diperlukan di dashboard)
         $totalPegawai = Pegawai::count(); // Opsional, jika ingin menampilkan total pegawai kantor
-        $pegawaiSedangCuti = Cuti::where('status', 'Disetujui')
+        $pegawaiSedangCuti = Cuti::where('status', 'Disetujui Atasan')
                                  ->whereDate('tanggal_mulai', '<=', now())
                                  ->whereDate('tanggal_selesai', '>=', now())
                                  ->count();

@@ -17,10 +17,9 @@
 
                 <select name="status" class="px-2 py-1 border border-gray-300 rounded w-32 text-[10px] focus:ring-1 focus:ring-blue-400 outline-none">
                     <option value="">Semua Status</option>
-                    {{-- Ubah value="pending" menjadi value="Menunggu" --}}
-                    <option value="Menunggu" {{ request('status') == 'Menunggu' ? 'selected' : '' }}>⏳ Menunggu</option>
-                    <option value="Disetujui" {{ request('status') == 'Disetujui' ? 'selected' : '' }}>✅ Disetujui</option>
-                    <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>❌ Ditolak</option>
+                    <option value="menunggu" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
+                    <option value="Disetujui Atasan" {{ request('status') == 'Disetujui Atasan' ? 'selected' : '' }}>Disetujui</option>
+                    <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
                 </select>
 
                 <input type="date" name="tanggal_dari" value="{{ request('tanggal_dari') }}" placeholder="Tanggal Mulai"

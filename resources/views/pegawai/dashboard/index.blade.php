@@ -195,10 +195,15 @@
                             <td class="border px-1.5 sm:px-2 py-1 text-center whitespace-nowrap hidden lg:table-cell">{{ $c->tanggal_selesai?->format('d-m-Y') }}</td>
                             <td class="border px-1.5 sm:px-2 py-1 text-center">{{ $c->jumlah_hari }}</td>
                             <td class="border px-1.5 sm:px-2 py-1 text-center">
-                                <span class="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px]
-                                    {{ $c->status === 'disetujui' ? 'bg-green-100 text-green-700' :
-                                       ($c->status === 'ditolak' ? 'bg-red-100 text-red-700' :
-                                       'bg-yellow-100 text-yellow-700') }}">
+                                @php
+                                    $statusLower = strtolower($c->status);
+                                    $badgeClass = str_contains($statusLower, 'disetujui') 
+                                        ? 'bg-green-100 text-green-700' 
+                                        : (str_contains($statusLower, 'ditolak') 
+                                            ? 'bg-red-100 text-red-700' 
+                                            : 'bg-yellow-100 text-yellow-700');
+                                @endphp
+                                <span class="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] {{ $badgeClass }}">
                                     {{ ucfirst($c->status) }}
                                 </span>
                             </td>

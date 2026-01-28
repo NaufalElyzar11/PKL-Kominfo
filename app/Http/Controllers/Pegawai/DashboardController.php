@@ -30,7 +30,7 @@ class DashboardController extends Controller
         // Normalisasi status (karena di beberapa bagian aplikasi ada yang pakai "Menunggu"/"Disetujui"/"Ditolak"
         // dan ada juga yang pakai lowercase seperti "pending"/"disetujui"/"ditolak")
         $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending'];
-        $statusDisetujui = ['Disetujui', 'disetujui'];
+        $statusDisetujui = ['Disetujui', 'disetujui', 'Disetujui Atasan'];
         $statusDitolak   = ['Ditolak', 'ditolak'];
 
         $totalCuti     = (clone $cutiQuery)->count();
