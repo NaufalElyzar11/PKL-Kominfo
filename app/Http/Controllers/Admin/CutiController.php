@@ -22,7 +22,7 @@ class CutiController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('pegawai', function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%")
                   ->orWhere('nip', 'like', "%{$search}%");
             });
