@@ -284,15 +284,26 @@
             {{-- ATASAN & PEMBERI CUTI (PALING ATAS, FULL WIDTH) --}}
             <div class="col-span-2">
                 <div class="grid grid-cols-2 gap-2 bg-blue-50/50 p-2 rounded-lg border border-blue-100">
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Atasan Langsung</label>
-                    <input type="text" name="atasan"
-                        class="block w-full border rounded-lg p-1"
-                        placeholder="Nama Atasan"
-                        oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')"
-                        pattern="^[a-zA-Z\s.,]+$"
-                        title="Hanya diperbolehkan huruf, spasi, titik, dan koma">
-                </div>
+                    <div>
+                        <label class="block font-medium text-gray-700 mb-0.5">
+                            Atasan Langsung <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="atasan"
+                            {{-- Menggunakan old() agar input tidak hilang jika validasi lain gagal --}}
+                            value="{{ old('atasan') }}" 
+                            class="block w-full border rounded-lg p-1 @error('atasan') border-red-500 @enderror"
+                            placeholder="Nama Atasan"
+                            {{-- Tambahkan atribut required di bawah ini --}}
+                            required 
+                            oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')"
+                            pattern="^[a-zA-Z\s.,]+$"
+                            title="Hanya diperbolehkan huruf, spasi, titik, dan koma">
+                        
+                        {{-- Menampilkan pesan error dari Laravel --}}
+                        @error('atasan')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 <div>
                     <label class="block font-medium text-gray-700 mb-0.5">Pejabat Pemberi Cuti</label>
                     <input type="text" 

@@ -62,8 +62,8 @@ class PegawaiController extends Controller
             'unit_kerja'   => 'required|string|max:100',
             'role'         => 'required|in:pegawai,admin,pemberi_cuti,atasan',
             'status'       => 'required|string',
-            'atasan'       => 'nullable|string|max:255',       // Validasi sebagai teks
-            'pemberi_cuti' => 'nullable|string|max:255',       // Validasi sebagai teks
+            'atasan'       => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s.,]+$/'],
+            'pemberi_cuti' => 'nullable|string|max:255',
             'password'     => ['required', 'string', Password::min(8)],
         ]);
 
@@ -116,7 +116,7 @@ public function update(Request $request, $id)
         'status'     => 'required|string',
         'jabatan'    => 'nullable|string|max:255',
         'unit_kerja' => 'nullable|string|max:255',
-        'atasan'     => 'nullable|string|max:255',
+        'atasan' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s.,]+$/'],
     ]);
 
     DB::beginTransaction();
