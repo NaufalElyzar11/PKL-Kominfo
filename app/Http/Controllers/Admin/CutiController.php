@@ -9,6 +9,7 @@ use App\Models\AtasanLangsung;
 use App\Models\PejabatPemberiCuti;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CutiController extends Controller
 {
@@ -118,12 +119,6 @@ class CutiController extends Controller
         ));
     }
 
-    /**
-     * 🔹 Update cuti
-     */
-   /**
- * 🔹 Update cuti
- */
 public function update(Request $request, $id)
 {
     $validated = $request->validate([
@@ -166,4 +161,40 @@ public function update(Request $request, $id)
         $cuti = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])->findOrFail($id);
         return view('admin.cuti.show', compact('cuti'));
     }
+
+    public function exportPdf(Request $request)
+    {
+        // Gunakan relasi yang sama dengan index agar konsisten
+        $query = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti']);
+
+        // 1. Search (Gunakan kolom di tabel cuti agar sinkron dengan index)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
+        // 2. Filter Status (WAJIB TAMBAHKAN INI)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // 3. Filter Tanggal (WAJIB TAMBAHKAN INI)
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('tanggal_mulai', '>=', $request->tanggal_dari);
+        }
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('tanggal_selesai', '<=', $request->tanggal_sampai);
+        }
+
+        $cuti = $query->orderBy('created_at', 'desc')->get();
+
+        $pdf = Pdf::loadView('admin.cuti.export_pdf', compact('cuti'))
+                ->setPaper('a4', 'potrait');
+
+        return $pdf->download('Laporan_Cuti_Pegawai_' . now()->format('d-m-Y') . '.pdf');
+    }
+
 }

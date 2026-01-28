@@ -227,4 +227,34 @@
         </div>
     </main>
 </div>
+
+@if(session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: "{{ session('success') }}",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        customClass: {
+            popup: 'rounded-2xl', // Menyesuaikan dengan tema rounded Anda
+        }
+    });
+</script>
+@endif
+
+@if(session('error'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal!',
+        text: "{{ session('error') }}",
+        confirmButtonColor: '#ef4444',
+        customClass: {
+            popup: 'rounded-2xl',
+        }
+    });
+</script>
+@endif
 @endsection

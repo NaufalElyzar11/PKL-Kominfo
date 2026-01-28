@@ -39,6 +39,15 @@
                 @endif
             </form>
 
+            {{-- 🔹 LETAKKAN TOMBOL EXPORT PDF DI SINI 🔹 --}}
+            <div class="flex justify-start pt-2">
+                <a href="{{ route('admin.cuti.export-pdf', request()->query()) }}" 
+                class="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-sm text-[10px] font-bold">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    Export PDF
+                </a>
+            </div>
+
             {{-- Tabel cuti (compact) --}}
             <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                 <table class="w-full border-collapse bg-white text-xs">

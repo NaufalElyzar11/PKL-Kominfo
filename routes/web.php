@@ -77,7 +77,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
         Route::resource('pegawai', AdminPegawaiController::class);
         
-        // Cuti Admin + Route Approval (Jika Admin juga boleh menyetujui)
+        // 🔹 PINDAHKAN RUTE PDF KE SINI (DI ATAS RESOURCE) 🔹
+        Route::get('/cuti/export-pdf', [AdminCutiController::class, 'exportPdf'])->name('cuti.export-pdf');
+        
+        // Cuti Admin
         Route::resource('cuti', AdminCutiController::class);
         Route::post('/cuti/{id}/setuju', [AdminCutiController::class, 'approve'])->name('cuti.approve');
         Route::post('/cuti/{id}/tolak', [AdminCutiController::class, 'reject'])->name('cuti.reject');
@@ -85,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('profile')->as('profile.')->group(function () {
             Route::get('/', [AdminProfileController::class, 'index'])->name('index');
             Route::get('/edit', [AdminProfileController::class, 'edit'])->name('edit');
-            Route::put('/update', [AdminProfileController::class, 'update'])->name('update');
+            Route::patch('/update', [AdminProfileController::class, 'update'])->name('update');
         });
     });
 
