@@ -196,6 +196,7 @@
                             <th class="px-6 py-4 font-semibold">Tanggal</th>
                             <th class="px-6 py-4 font-semibold text-center">Status</th>
                             <th class="px-6 py-4 font-semibold">Catatan / Keterangan</th>
+                            <th class="px-6 py-4 font-semibold text-center w-24">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#e7edf3]">
@@ -227,6 +228,23 @@
                                     <span class="text-red-500 font-semibold">Alasan:</span> {{ $r->catatan_atasan ?? $r->catatan_penolakan ?? '-' }}
                                 @else
                                     -
+                                @endif
+                            </td>
+
+                            {{-- TAMBAHKAN KOLOM AKSI DI SINI --}}
+                            <td class="px-6 py-4 text-center">
+                                @if($r->status === 'Disetujui')
+                                    <form action="{{ route('pejabat.approval.cancel', $r->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit" 
+                                            onclick="return confirm('PENTING: Membatalkan persetujuan akan mengembalikan sisa cuti pegawai. Lanjutkan?')" 
+                                            class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm mx-auto" 
+                                            title="Batalkan Persetujuan & Kembalikan Jatah">
+                                            <span class="material-symbols-outlined text-[18px]">rotate_left</span>
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-gray-300">-</span>
                                 @endif
                             </td>
                         </tr>

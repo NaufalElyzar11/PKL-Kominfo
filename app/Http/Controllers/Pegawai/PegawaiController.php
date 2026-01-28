@@ -55,7 +55,7 @@ class PegawaiController extends Controller
             'cutiTerpakai'      => $cutiTerpakai,
             'latestCuti'        => $latestCuti,
             'totalCuti'         => 12,
-            'sisaCuti'          => $pegawai ? $pegawai->sisa_cuti : 12, // Menggunakan Accessor dari Model Pegawai
+            'sisaCuti'          => $pegawai ? $pegawai->sisa_cuti : 12,
             'totalPegawai'      => $totalPegawai,
             'pegawaiSedangCuti' => $pegawaiSedangCuti,
         ]);

@@ -21,7 +21,7 @@
             if ($email) {
                 $emailParts = explode('@', $email);
                 $email = substr($emailParts[0], 0, 3) . str_repeat('*', max(strlen($emailParts[0]) - 3, 0)) . '@' . ($emailParts[1] ?? '');
-            } else {
+            } else {pilih atasan
                 $email = '-';
             }
 

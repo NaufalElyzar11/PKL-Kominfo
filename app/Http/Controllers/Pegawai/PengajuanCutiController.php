@@ -65,120 +65,125 @@ public function index()
 }
 
     /** ========================== 📝 STORE CUTI ============================= */
-public function store(Request $request)
-{
-    $user = Auth::user();
-    $pegawai = $user->pegawai;
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
 
-    if (!$pegawai) {
-        return back()->with('error', 'Data pegawai belum ditemukan.');
-    }
+        if (!$pegawai) {
+            return back()->with('error', 'Data pegawai belum ditemukan.');
+        }
 
-    // 1. PENGAMAN: Cek apakah ada pengajuan yang masih 'Menunggu'
-    $hasPending = Cuti::where('user_id', $user->id)
-                      ->where('status', 'Menunggu')
-                      ->exists();
-    
-    if ($hasPending) {
-        return back()->with('error', 'Anda masih memiliki pengajuan cuti yang menunggu persetujuan.');
-    }
-
-    // 2. VALIDASI
-    $validated = $request->validate([
-        'jenis_cuti' => 'required|in:Tahunan',
-        'alamat'     => 'required|string|max:255',
-        'keterangan' => 'required|string|max:500', // Dibuat lebih fleksibel (tanpa regex huruf saja)
-        'tanggal_mulai' => [
-            'required', 'date',
-            function ($attribute, $value, $fail) {
-                if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
-                    $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
-                }
-            },
-        ],
-        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-    ]);
-
-    // 3. HITUNG JUMLAH HARI (Server-side calculation lebih aman)
-    $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
-    $end   = \Carbon\Carbon::parse($validated['tanggal_selesai']);
-    $jumlah_hari = $start->diffInDays($end) + 1;
-
-    // 4. SIMPAN DATA
-    Cuti::create([
-        'user_id'         => $user->id,
-        'nama'            => $pegawai->nama,
-        'nip'             => $pegawai->nip,
-        'jabatan'         => $pegawai->jabatan,
-        'alamat'          => $validated['alamat'],
-        'jenis_cuti'      => $validated['jenis_cuti'],
-        'tanggal_mulai'   => $validated['tanggal_mulai'],
-        'tanggal_selesai' => $validated['tanggal_selesai'],
-        'jumlah_hari'     => $jumlah_hari,
-        'tahun'           => date('Y'),
-        'keterangan'      => $validated['keterangan'],
-        'status'          => 'Menunggu',
+        // 1. PENGAMAN: Cek apakah ada pengajuan yang masih 'Menunggu'
+        $hasPending = Cuti::where('user_id', $user->id)
+                        ->where('status', 'Menunggu')
+                        ->exists();
         
-        // Ambil nama dari relasi agar snapshot akurat
-        'atasan_nama'     => $pegawai->atasanLangsung->nama_atasan ?? '-', 
-        'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
+        if ($hasPending) {
+            return back()->with('error', 'Anda masih memiliki pengajuan cuti yang menunggu persetujuan.');
+        }
 
-        'id_atasan_langsung'      => $pegawai->id_atasan_langsung,
-        'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
-    ]);
+        // 2. VALIDASI
+        $validated = $request->validate([
+            'jenis_cuti' => 'required|in:Tahunan',
+            'alamat'     => 'required|string|max:255',
+            'keterangan' => 'required|string|max:500', // Dibuat lebih fleksibel (tanpa regex huruf saja)
+            'tanggal_mulai' => [
+                'required', 'date',
+                function ($attribute, $value, $fail) {
+                    if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
+                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                    }
+                },
+            ],
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        ]);
 
-    return redirect()->route('pegawai.cuti.index')
-        ->with('success', 'Pengajuan cuti berhasil dikirim.');
-}
+        // 3. HITUNG JUMLAH HARI (Server-side calculation lebih aman)
+        $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
+        $end   = \Carbon\Carbon::parse($validated['tanggal_selesai']);
+        $jumlah_hari = $start->diffInDays($end) + 1;
+
+        // Tambahkan Validasi Kuota di sini
+        if ($pegawai->sisa_cuti < $jumlah_hari) {
+            return back()->with('error', 'Gagal! Sisa cuti Anda (' . $pegawai->sisa_cuti . ' hari) tidak mencukupi untuk pengajuan selama ' . $jumlah_hari . ' hari.');
+        }
+
+        // 4. SIMPAN DATA
+        Cuti::create([
+            'user_id'         => $user->id,
+            'nama'            => $pegawai->nama,
+            'nip'             => $pegawai->nip,
+            'jabatan'         => $pegawai->jabatan,
+            'alamat'          => $validated['alamat'],
+            'jenis_cuti'      => $validated['jenis_cuti'],
+            'tanggal_mulai'   => $validated['tanggal_mulai'],
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+            'jumlah_hari'     => $jumlah_hari,
+            'tahun'           => date('Y'),
+            'keterangan'      => $validated['keterangan'],
+            'status'          => 'Menunggu',
+            
+            // Ambil nama dari relasi agar snapshot akurat
+            'atasan_nama'     => $pegawai->atasanLangsung->nama_atasan ?? '-', 
+            'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
+
+            'id_atasan_langsung'      => $pegawai->id_atasan_langsung,
+            'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
+        ]);
+
+        return redirect()->route('pegawai.cuti.index')
+            ->with('success', 'Pengajuan cuti berhasil dikirim.');
+    }
 
     /** ========================== ✏️ UPDATE CUTI ============================= */
-public function update(Request $request, $id)
-{
-    // 1. PENGAMAN: Pastikan data milik user yang login & cegah ID guessing
-    $cuti = Cuti::where('user_id', Auth::id())->findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        // 1. PENGAMAN: Pastikan data milik user yang login & cegah ID guessing
+        $cuti = Cuti::where('user_id', Auth::id())->findOrFail($id);
 
-    // 2. KUNCI DATA: Jika status sudah bukan 'Menunggu', blokir akses
-    if ($cuti->status !== 'Menunggu') {
+        // 2. KUNCI DATA: Jika status sudah bukan 'Menunggu', blokir akses
+        if ($cuti->status !== 'Menunggu') {
+            return redirect()->route('pegawai.cuti.index')
+                ->with('error', 'Gagal! Pengajuan sudah diproses oleh atasan dan tidak dapat diubah lagi.');
+        }
+
+        // 3. VALIDASI (Tetap menggunakan aturan 3 hari lead time)
+        $request->validate([
+            'tanggal_mulai' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    $minDate = \Carbon\Carbon::today()->addDays(3);
+                    if (\Carbon\Carbon::parse($value)->lt($minDate)) {
+                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                    }
+                },
+            ],
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'keterangan'      => 'required|string|max:500',
+            'alamat'          => 'nullable|string|max:255',
+        ]);
+
+        // 4. HITUNG DURASI
+        $start = \Carbon\Carbon::parse($request->tanggal_mulai);
+        $end   = \Carbon\Carbon::parse($request->tanggal_selesai);
+        
+        // Perhitungan matematis sederhana: $Total = (Akhir - Awal) + 1$
+        $jumlahHari = $start->diffInDays($end) + 1;
+
+        // 5. EKSEKUSI UPDATE
+        $cuti->update([
+            'tanggal_mulai'   => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'jumlah_hari'     => $jumlahHari,
+            'keterangan'      => $request->keterangan,
+            'alamat'          => $request->alamat,
+        ]);
+
         return redirect()->route('pegawai.cuti.index')
-            ->with('error', 'Gagal! Pengajuan sudah diproses oleh atasan dan tidak dapat diubah lagi.');
+            ->with('success', 'Data pengajuan cuti berhasil diperbarui.');
     }
-
-    // 3. VALIDASI (Tetap menggunakan aturan 3 hari lead time)
-    $request->validate([
-        'tanggal_mulai' => [
-            'required',
-            'date',
-            function ($attribute, $value, $fail) {
-                $minDate = \Carbon\Carbon::today()->addDays(3);
-                if (\Carbon\Carbon::parse($value)->lt($minDate)) {
-                    $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
-                }
-            },
-        ],
-        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-        'keterangan'      => 'required|string|max:500',
-        'alamat'          => 'nullable|string|max:255',
-    ]);
-
-    // 4. HITUNG DURASI
-    $start = \Carbon\Carbon::parse($request->tanggal_mulai);
-    $end   = \Carbon\Carbon::parse($request->tanggal_selesai);
-    
-    // Perhitungan matematis sederhana: $Total = (Akhir - Awal) + 1$
-    $jumlahHari = $start->diffInDays($end) + 1;
-
-    // 5. EKSEKUSI UPDATE
-    $cuti->update([
-        'tanggal_mulai'   => $request->tanggal_mulai,
-        'tanggal_selesai' => $request->tanggal_selesai,
-        'jumlah_hari'     => $jumlahHari,
-        'keterangan'      => $request->keterangan,
-        'alamat'          => $request->alamat,
-    ]);
-
-    return redirect()->route('pegawai.cuti.index')
-        ->with('success', 'Data pengajuan cuti berhasil diperbarui.');
-}
 
     /** ========================== 🔍 DETAIL CUTI ============================ */
     public function detail($id)
@@ -300,8 +305,8 @@ private function isPegawaiLengkap($pegawai)
         'jabatan',
         'unit_kerja',
         'telepon',
-        'id_atasan_langsung',      // Tambahkan ini agar sistem tidak error saat store
-        'id_pejabat_pemberi_cuti', // Tambahkan ini agar sistem tidak error saat store
+        'id_atasan_langsung',
+        'id_pejabat_pemberi_cuti',
     ];
 
     foreach ($dataWajib as $field) {

@@ -2,6 +2,8 @@
 
 @section('title', 'Edit Profil')
 
+{{-- resources\views\pegawai\profile\edit.blade.php --}}
+
 @section('content')
 <div class="py-8 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -13,7 +15,10 @@
                     <i class="fa-solid fa-arrow-left"></i>
                     Kembali ke Profil
                 </a>
-                <h1 class="text-2xl font-bold text-gray-800">Edit Profil & Keamanan</h1>
+                {{-- Judul Dinamis --}}
+                <h1 class="text-2xl font-bold text-gray-800">
+                    {{ request()->query('tab') === 'password' ? 'Ubah Kata Sandi' : 'Pengaturan Akun' }}
+                </h1>
             </div>
         </div>
 
@@ -47,19 +52,22 @@
             </div>
         @endif
 
-        {{-- 2. Card Container untuk Form Profil --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transform transition hover:shadow-md">
-            <div class="p-6 sm:p-8">
-                @include('profile.partials.update-profile-information-form')
+{{-- PERBAIKAN: HANYA SATU BLOK LOGIKA UNTUK SEMUA FORM --}}
+        @if(request()->query('tab') === 'password')
+            {{-- TAMPILKAN HANYA FORM PASSWORD --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transform transition hover:shadow-md">
+                <div class="p-6 sm:p-8">
+                    @include('profile.partials.update-password-form')
+                </div>
             </div>
-        </div>
-
-        {{-- 3. Card Container untuk Form Password --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transform transition hover:shadow-md">
-            <div class="p-6 sm:p-8">
-                @include('profile.partials.update-password-form')
+        @else
+            {{-- TAMPILKAN HANYA FORM PROFIL (Default) --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transform transition hover:shadow-md">
+                <div class="p-6 sm:p-8">
+                    @include('profile.partials.update-profile-information-form')
+                </div>
             </div>
-        </div>
+        @endif
 
     </div>
 </div>

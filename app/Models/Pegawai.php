@@ -81,12 +81,14 @@ class Pegawai extends Model
     {
         $tahun = date('Y');
         
-        // Ambil jumlah hari dari relasi cuti yang statusnya bukan ditolak
+        // PERBAIKAN: Hanya hitung cuti yang statusnya SUDAH 'Disetujui' (Final)
+        // Abaikan status 'Menunggu' dan 'Disetujui Atasan' agar jatah tidak berkurang duluan
         $terpakai = $this->cuti()
             ->where('tahun', $tahun)
-            ->whereIn('status', ['Menunggu', 'Disetujui Atasan', 'Disetujui'])
+            ->where('status', 'Disetujui') 
             ->sum('jumlah_hari');
 
+        // Menggunakan kuota_cuti dari database, default 12 jika kosong
         return max(0, ($this->kuota_cuti ?? 12) - $terpakai);
     }
 }

@@ -138,20 +138,23 @@ Route::middleware(['auth'])->group(function () {
     return back();
 })->name('pegawai.notif.read');
 
-// Di dalam grup //APPROVAL PEJABAT
+});
+
+// GRUP UTAMA PEJABAT (Hanya satu pembuka di sini)
 Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')->group(function () {
+    
+    // 1. Rute Dashboard & Approval
     Route::get('/dashboard', [PejabatApprovalController::class, 'dashboard'])->name('dashboard');
     Route::get('/approval', [PejabatApprovalController::class, 'index'])->name('approval.index');
     Route::post('/approval/{id}/setuju', [PejabatApprovalController::class, 'approve'])->name('approval.approve');
     Route::post('/approval/{id}/tolak', [PejabatApprovalController::class, 'reject'])->name('approval.reject');
+    Route::post('/approval/{id}/cancel', [PejabatApprovalController::class, 'cancel'])->name('approval.cancel');
 
-    // TAMBAHKAN RUTE PROFILE UNTUK PEJABAT
+    // 2. Rute Profile (Dimasukkan ke dalam grup Pejabat agar aman)
     Route::prefix('profile')->as('profile.')->group(function () {
         Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
         Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');
         Route::patch('/update', [PegawaiProfileController::class, 'update'])->name('update');
-    });
-});
+    }); // <--- Penutup Grup Profile
 
-
-});
+}); // <--- Penutup Grup Utama Pejabat (PASTIKAN TIDAK ADA LAGI }); DI BAWAH INI)
