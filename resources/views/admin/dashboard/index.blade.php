@@ -5,7 +5,7 @@
 @section('content')
 <div class="space-y-6">
 
-    {{-- 🌟 Kartu Selamat Datang --}}
+    {{-- 🌟 Kartu Selamat Datang --}}    
     <div class="bg-gradient-to-r from-sky-500 to-sky-700 text-white p-6 rounded-2xl shadow-xl flex justify-between items-center">
         <div>
             <h1 class="text-2xl font-extrabold tracking-tight">Selamat Datang, {{ Auth::user()->name }}</h1>
