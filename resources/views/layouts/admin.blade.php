@@ -22,6 +22,7 @@
         .icon-color-cuti { color: #e17055; }
         .icon-color-profile { color: #6c63ff; }
     </style>
+    @stack('styles')
 </head>
 
 <body class="bg-[#e6f5fb] text-gray-800 font-sans text-[14px]">
@@ -129,5 +130,6 @@
         </main>
     </div>
 </div>
+    @stack('scripts')
 </body>
 </html>
