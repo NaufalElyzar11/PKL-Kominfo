@@ -61,6 +61,8 @@ public function index()
         'sisaCuti' => $this->hitungSisaCuti($user->id),
         'warningMessage' => $warningMessage,
         'hasPendingCuti' => Cuti::where('user_id', $user->id)->where('status', 'Menunggu')->exists(),
+        'cutiIsPaginator' => $cuti instanceof \Illuminate\Pagination\LengthAwarePaginator,
+        'riwayatIsPaginator' => $riwayat instanceof \Illuminate\Pagination\LengthAwarePaginator,
     ]);
 }
 

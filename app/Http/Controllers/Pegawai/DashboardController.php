@@ -30,13 +30,21 @@ class DashboardController extends Controller
         // Normalisasi status (karena di beberapa bagian aplikasi ada yang pakai "Menunggu"/"Disetujui"/"Ditolak"
         // dan ada juga yang pakai lowercase seperti "pending"/"disetujui"/"ditolak")
         $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending'];
-        $statusDisetujui = ['Disetujui', 'disetujui', 'Disetujui Atasan'];
+        // Update statusDisetujui untuk mencakup semua variasi
+        $statusDisetujui = ['Disetujui', 'disetujui', 'Disetujui Atasan', 'disetujui atasan'];
         $statusDitolak   = ['Ditolak', 'ditolak'];
 
         $totalCuti     = (clone $cutiQuery)->count();
         $cutiPending   = (clone $cutiQuery)->whereIn('status', $statusMenunggu)->count();
         $cutiDisetujui = (clone $cutiQuery)->whereIn('status', $statusDisetujui)->count();
         $cutiDitolak   = (clone $cutiQuery)->whereIn('status', $statusDitolak)->count();
+        
+        // HITUNG CUTI TERPAKAI TAHUN INI
+        $cutiTerpakai = (clone $cutiQuery)
+            ->where('tahun', date('Y'))
+            ->whereIn('status', $statusDisetujui)
+            ->sum('jumlah_hari');
+
         // Ambil 5 cuti terbaru lengkap dengan relasi
         $latestCuti = $cutiQuery
             ->with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
@@ -60,6 +68,7 @@ class DashboardController extends Controller
             'cutiPending',
             'cutiDisetujui',
             'cutiDitolak',
+            'cutiTerpakai', // <--- Tambahkan ini
             'latestCuti',
             'atasanLangsung',
             'pejabatPemberiCuti'
