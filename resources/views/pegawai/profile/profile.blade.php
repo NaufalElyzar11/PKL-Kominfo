@@ -62,10 +62,10 @@
             {{-- Profile Picture --}}
             <div class="relative group flex-shrink-0 cursor-pointer"> {{-- Tambahkan cursor-pointer agar terlihat bisa diklik --}}
                 {{-- Latar belakang yang berputar --}}
-                <div class="absolute inset-0 bg-lime-green rounded-hub rotate-6 group-hover:rotate-12 transition-transform duration-500"></div>
+                <div class="absolute inset-0 bg-lime-green rounded-hub rotate-6 group-hover:rotate-45 group-hover:scale-110 transition-transform duration-500 ease-out"></div>
                 
                 {{-- Container Foto Utama --}}
-                <div class="relative w-36 h-36 lg:w-44 lg:h-44 rounded-hub overflow-hidden border-4 border-white shadow-2xl bg-white flex items-center justify-center z-10">
+                <div class="relative w-36 h-36 lg:w-44 lg:h-44 rounded-hub overflow-hidden border-4 border-white shadow-2xl bg-white flex items-center justify-center z-10 transition-transform duration-500 group-hover:scale-105 group-hover:-rotate-3 group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
                     @if($pegawai && $pegawai->foto)
                         <img src="{{ asset('storage/' . $pegawai->foto) }}" 
                             alt="Foto Profil" 

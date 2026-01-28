@@ -85,7 +85,7 @@
                             </div>
                             <!-- Status Items -->
                             <div class="space-y-4">
-                                <div class="p-4 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center gap-4">
+                                <div class="p-4 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center gap-4 transition-all duration-300 hover:scale-105 hover:bg-green-500/30 hover:border-green-400 hover:shadow-[0_8px_20px_rgba(34,197,94,0.25)] cursor-default">
                                     <div class="size-10 rounded-full bg-green-500/20 flex items-center justify-center">
                                         <span class="material-symbols-outlined text-green-400">check_circle</span>
                                     </div>
@@ -94,7 +94,7 @@
                                         <div class="text-xs text-white/60">Bapak Kepala Dinas • Baru saja</div>
                                     </div>
                                 </div>
-                                <div class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center gap-4 opacity-80">
+                                <div class="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-center gap-4 opacity-80 transition-all duration-300 hover:scale-105 hover:opacity-100 hover:bg-yellow-500/20 hover:border-yellow-400 hover:shadow-[0_8px_20px_rgba(234,179,8,0.25)] cursor-default">
                                     <div class="size-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
                                         <span class="material-symbols-outlined text-yellow-400">schedule</span>
                                     </div>
@@ -103,7 +103,7 @@
                                         <div class="text-xs text-white/60">Sedang diproses Kasubag</div>
                                     </div>
                                 </div>
-                                <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center gap-4 opacity-70">
+                                <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center gap-4 opacity-70 transition-all duration-300 hover:scale-105 hover:opacity-100 hover:bg-blue-500/20 hover:border-blue-400 hover:shadow-[0_8px_20px_rgba(59,130,246,0.25)] cursor-default">
                                     <div class="size-10 rounded-full bg-blue-500/20 flex items-center justify-center">
                                         <span class="material-symbols-outlined text-blue-400">notifications</span>
                                     </div>
