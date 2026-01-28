@@ -87,9 +87,10 @@
                     @endif
                 </div>
 
-                {{-- BARU: Tombol Edit Permanen di Pojok Kanan Bawah --}}
-                {{-- Kita gunakan tag <a> agar jika diklik langsung mengarah ke halaman edit --}}
-                <a href="{{ route('pegawai.profile.edit') }}" class="absolute -bottom-1 -right-1 lg:bottom-0 lg:right-0 z-20 bg-white text-electric-blue p-2 lg:p-2.5 rounded-full border-2 border-electric-blue shadow-[0_4px_10px_rgba(46,91,255,0.2)] flex items-center justify-center hover:bg-electric-blue hover:text-white transition-colors duration-300" title="Ubah Foto Profil">
+                {{-- Gunakan tag <a> agar jika diklik langsung mengarah ke halaman edit --}}
+                <a href="{{ route('pegawai.profile.edit', ['tab' => 'profile']) }}" 
+                class="absolute -bottom-1 -right-1 lg:bottom-0 lg:right-0 z-20 bg-white text-electric-blue p-2 lg:p-2.5 rounded-full border-2 border-electric-blue shadow-[0_4px_10px_rgba(46,91,255,0.2)] flex items-center justify-center hover:bg-electric-blue hover:text-white transition-colors duration-300" 
+                title="Ubah Foto Profil">
                     <span class="material-symbols-outlined text-[18px] lg:text-[20px]">edit</span>
                 </a>
             </div>
@@ -106,12 +107,18 @@
                         {{ $pegawai->jabatan ?? 'Pegawai' }} • {{ $pegawai->unit_kerja ?? 'Kominfo' }}
                     </p>
                     
+                    {{-- resources\views\pegawai\profile\profile.blade.php --}}
                     <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
-                        <a href="{{ route('pegawai.profile.edit') }}" class="px-6 py-3 bg-white text-electric-blue rounded-2xl font-bold shadow-xl hover:bg-lime-green hover:text-slate-900 transition-all flex items-center gap-2">
+                        {{-- Tambahkan parameter ?tab=profile --}}
+                        <a href="{{ route('pegawai.profile.edit', ['tab' => 'profile']) }}" 
+                        class="px-6 py-3 bg-white text-electric-blue rounded-2xl font-bold shadow-xl hover:bg-lime-green hover:text-slate-900 transition-all flex items-center gap-2">
                             <span class="material-symbols-outlined">settings</span>
                             Pengaturan Akun
                         </a>
-                        <a href="{{ route('pegawai.profile.edit') }}" class="px-6 py-3 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-all">
+
+                        {{-- Tambahkan parameter ?tab=password --}}
+                        <a href="{{ route('pegawai.profile.edit', ['tab' => 'password']) }}" 
+                        class="px-6 py-3 bg-white/10 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold hover:bg-white/20 transition-all">
                             Ubah Password
                         </a>
                     </div>
@@ -142,14 +149,34 @@
                         </div>
                     </div>
 
-                    {{-- Lingkaran Sisa Cuti --}}
+                    @php
+                        $jatahTahunan = 12;
+                        $sisa = $pegawai->sisa_cuti ?? 0;
+                        
+                        // Hitung persentase (Maksimal 100% agar lingkaran tidak berlebih)
+                        $persen = ($sisa > 0) ? min(($sisa / $jatahTahunan) * 100, 100) : 0;
+                    @endphp
+
                     <div class="relative flex-shrink-0 z-10">
-                        <div class="w-40 h-40 lg:w-48 lg:h-48 rounded-full border-[12px] border-slate-100 flex items-center justify-center relative bg-white">
-                            <div class="absolute inset-0 rounded-full border-[12px] border-electric-blue border-t-transparent -rotate-45"></div>
-                            <div class="text-center">
-                                <span class="block text-4xl lg:text-5xl font-black text-electric-blue">{{ $pegawai->sisa_cuti ?? 0 }}</span>
-                                <span class="block text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-tighter">Sisa Cuti</span>
+                        {{-- Container Utama (Background Progress) --}}
+                        <div class="w-40 h-40 lg:w-48 lg:h-48 rounded-full flex items-center justify-center relative shadow-lg"
+                            style="background: conic-gradient({{ $sisa <= 3 ? '#ef4444' : '#2E5BFF' }} {{ $persen }}%, #f1f5f9 0);">
+                            
+                            {{-- Lingkaran Dalam (Untuk membuat efek Ring/Cincin) --}}
+                            {{-- Ketebalan ring diatur oleh calc (100% - 24px) sesuai border 12px Anda --}}
+                            <div class="w-[calc(100%-24px)] h-[calc(100%-24px)] bg-white rounded-full flex flex-col items-center justify-center">
+                                <div class="text-center">
+                                    <span class="block text-4xl lg:text-5xl font-black text-electric-blue transition-all duration-500">
+                                        {{ $sisa }}
+                                    </span>
+                                    <span class="block text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                                        Sisa Cuti
+                                    </span>
+                                </div>
                             </div>
+                            
+                            {{-- Aksesoris: Bayangan Halus (Opsional) --}}
+                            <div class="absolute inset-0 rounded-full border-[1px] border-black/5 pointer-events-none"></div>
                         </div>
                     </div>
 

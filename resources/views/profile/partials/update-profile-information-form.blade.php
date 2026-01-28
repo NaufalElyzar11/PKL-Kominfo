@@ -39,9 +39,9 @@
         @method('patch')
 
     {{-- Pastikan container utama form memiliki x-data --}}
-    <div x-data="{ photoPreview: null, isDeleted: false }">
-        <div class="mb-8">
-            <label class="block text-sm font-bold text-slate-700 mb-3">Foto Profil</label>
+    <div class="space-y-6">
+    <div class="mb-8">
+        <label class="block text-sm font-bold text-slate-700 mb-3">Foto Profil</label>
             
             <div class="flex items-center gap-6">
                 {{-- 1. Preview Area --}}
