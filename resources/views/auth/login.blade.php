@@ -1,153 +1,187 @@
-{{-- resources/views/auth/login.blade.php --}}
 <!DOCTYPE html>
-<html lang="id">
+<html class="light" lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | SIAP CUTI Diskominfo Banjarbaru</title>
-
-    @vite('resources/css/app.css')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-    body {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        background-image:
-            radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0);
-        background-size: 24px 24px;
-    }
-</style>
-
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Login Siap Cuti</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
 </head>
-
-<body class="min-h-screen bg-gradient-to-br from-slate-200 via-slate-100 to-sky-200 flex items-center justify-center px-4 text-slate-800">
-
-{{-- ========================================================= --}}
-{{-- MODAL NOTIFIKASI --}}
-{{-- ========================================================= --}}
-@if(session('email_error') || session('password_error') || session('error') || session('success'))
-<div 
-    x-data="{ open: true }"
-    x-show="open"
-    x-init="setTimeout(() => open = false, 3000)"
-    class="fixed inset-0 flex items-center justify-center bg-black/40 z-50"
-    x-transition.opacity>
-
-    <div class="bg-white p-6 rounded-xl shadow-xl w-80 text-center"
-         x-transition.scale>
-
-        @if(session('success'))
-            <i class="ph-fill ph-check-circle text-green-600 text-5xl mb-3"></i>
-        @else
-            <i class="ph-fill ph-warning-circle text-red-600 text-5xl mb-3"></i>
-        @endif
-
-        <p class="text-slate-700 font-medium text-sm">
-            {{ session('error') ?? $errors->first() ?? session('success') }}
-        </p>
-
-        <button 
-            class="mt-4 px-5 py-2 bg-sky-600 text-white rounded-lg text-sm font-semibold hover:bg-sky-700"
-            @click="open = false">
-            OK
-        </button>
-    </div>
-</div>
-@endif
-
-{{-- ========================================================= --}}
-{{-- LOGIN CARD --}}
-{{-- ========================================================= --}}
-<div class="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-xl p-8">
-
-    {{-- Header --}}
-    <div class="text-center mb-8">
-        <img src="{{ asset('image/diskominfobjb.jpg') }}"
-             class="h-16 mx-auto mb-4"
-             alt="Diskominfo Banjarbaru">
-
-        <h1 class="text-2xl font-extrabold text-slate-900 uppercase tracking-tight">
-            SIAP CUTI
-        </h1>
-        <p class="text-sm text-slate-500 mt-1">
-            Sistem Informasi Pengajuan Cuti Pegawai<br>
-            <span class="font-semibold text-sky-600">Diskominfo Kota Banjarbaru</span>
-        </p>
-    </div>
-
-    {{-- Form --}}
-    <form method="POST" action="{{ route('login.post') }}" class="space-y-6">
-        @csrf
-
-        {{-- Nama Pegawai --}}
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1">
-                Nama Lengkap / NIP
-            </label>
-            <div class="relative">
-                <input type="text"
-                    name="login_identifier" {{-- Ubah dari 'name' menjadi 'login_identifier' --}}
-                    value="{{ old('login_identifier') }}" {{-- Ubah dari old('name') --}}
-                    required
-                    autofocus
-                    placeholder="Masukkan Nama Lengkap atau NIP"
-                    class="w-full px-4 py-3 pl-11 rounded-lg border border-slate-300
-                            focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-
-                <span class="absolute inset-y-0 left-3 flex items-center text-sky-500">
-                    <i class="ph ph-user text-lg"></i>
-                </span>
-            </div>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#0d141b] antialiased">
+<div class="flex min-h-screen w-full flex-row overflow-hidden">
+    <!-- Left Side: Image & Branding -->
+    <div class="hidden w-1/2 relative lg:flex flex-col items-center justify-center p-12 text-center text-white">
+        <!-- Background Image -->
+        <div class="absolute inset-0 z-0 h-full w-full bg-cover bg-center" data-alt="Modern government office building exterior with glass facade" style="background-image: url('{{ asset('image/diskominfo.jpg') }}');">
         </div>
+        <!-- Blue Overlay -->
+        <div class="absolute inset-0 z-10 bg-primary/50 mix-blend-multiply"></div>
+        <!-- Content -->
+        <div class="relative z-20 flex flex-col items-center justify-center max-w-lg">
+            <div class="mb-8 flex h-20 w-50 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20">
+                {{-- Menggunakan logo dari sistem jika ada, atau ikon default --}}
+                <img src="{{ asset('image/diskominfobjb.jpg') }}" alt="Logo" class="h-16 w-25 object-contain rounded-full">
+            </div>
+            <h1 class="mb-4 text-5xl font-black tracking-tight text-white">
+                Siap Cuti
+            </h1>
+            <p class="text-lg font-medium text-blue-100 leading-relaxed">
+                Sistem Informasi Pengajuan Cuti Pegawai<br/>
+                Diskominfo Kota Banjarbaru
+            </p>
+        </div>
+        <div class="absolute bottom-10 z-20 text-sm text-blue-200">
+            © {{ date('Y') }} Pemerintah Kota Banjarbaru
+        </div>
+    </div>
+    
+    <!-- Right Side: Login Form -->
+    <div class="flex w-full flex-col justify-center bg-white dark:bg-background-dark px-4 py-12 sm:px-6 lg:w-1/2 lg:px-20 xl:px-24">
+        <div class="mx-auto w-full max-w-[480px]">
+            <!-- Mobile Branding (Visible only on small screens) -->
+            <div class="mb-10 lg:hidden text-center">
+                <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary text-white">
+                     <img src="{{ asset('image/diskominfobjb.jpg') }}" alt="Logo" class="h-12 w-12 object-contain rounded-full">
+                </div>
+                <h2 class="text-2xl font-black text-[#0d141b] dark:text-white">Siap Cuti</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Diskominfo Kota Banjarbaru</p>
+            </div>
+            
+            <!-- Form Header -->
+            <div class="mb-10">
+                <h2 class="text-[28px] font-bold leading-tight tracking-tight text-[#0d141b] dark:text-white mb-2">
+                    Selamat Datang Kembali
+                </h2>
+                <p class="text-base text-slate-500 dark:text-slate-400">
+                    Silakan masuk ke akun Anda untuk melanjutkan.
+                </p>
+            </div>
+            
+            <!-- Alerts / Notifications -->
+            @if(session('error') || $errors->any())
+                <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3">
+                    <span class="material-symbols-outlined text-red-600 mt-0.5">error</span>
+                    <div class="text-sm text-red-700">
+                        <p class="font-bold">Login Gagal</p>
+                        <p>{{ session('error') ?? $errors->first() }}</p>
+                    </div>
+                </div>
+            @endif
 
-        {{-- Password --}}
-        <div x-data="{ show: false }">
-            <label class="block text-sm font-semibold text-slate-700 mb-1">
-                Kata Sandi
-            </label>
+            @if(session('success'))
+                <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-100 flex items-start gap-3">
+                    <span class="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
+                    <div class="text-sm text-green-700">
+                        <p class="font-bold">Berhasil</p>
+                        <p>{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
 
-            <div class="relative">
-                <input :type="show ? 'text' : 'password'"
-                       name="password"
-                       required
-                       placeholder="••••••••"
-                       class="w-full px-4 py-3 pl-11 pr-12 rounded-lg border border-slate-300
-                              focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-
-                <span class="absolute inset-y-0 left-3 flex items-center text-sky-500">
-                    <i class="ph ph-lock-key text-lg"></i>
-                </span>
-
-                <button type="button"
-                        @click="show = !show"
-                        class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-sky-600">
-                    <i x-show="!show" class="ph ph-eye text-xl"></i>
-                    <i x-show="show" class="ph ph-eye-slash text-xl"></i>
+            <!-- Form -->
+            <form action="{{ route('login.post') }}" class="flex flex-col gap-6" method="POST">
+                @csrf
+                
+                <!-- Login Identifier Input -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium leading-6 text-[#0d141b] dark:text-white" for="login_identifier">
+                        Nama Lengkap / NIP
+                    </label>
+                    <div class="relative rounded-xl shadow-sm">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <span class="material-symbols-outlined text-slate-400 text-[20px]">
+                                person
+                            </span>
+                        </div>
+                        <input class="block w-full rounded-xl border-0 py-4 pl-11 pr-4 text-[#0d141b] ring-1 ring-inset ring-[#cfdbe7] placeholder:text-[#4c739a] focus:ring-2 focus:ring-inset focus:ring-primary sm:text-base sm:leading-6 dark:bg-slate-800 dark:ring-slate-700 dark:text-white dark:placeholder:text-slate-500" 
+                            id="login_identifier" 
+                            name="login_identifier" 
+                            value="{{ old('login_identifier') }}"
+                            placeholder="Masukkan Nama Lengkap atau NIP" 
+                            type="text" 
+                            required 
+                            autofocus>
+                    </div>
+                </div>
+                
+                <!-- Password Input -->
+                <div class="space-y-2" x-data="{ show: false }">
+                    <label class="block text-sm font-medium leading-6 text-[#0d141b] dark:text-white" for="password">
+                        Kata Sandi
+                    </label>
+                    <div class="relative rounded-xl shadow-sm">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <span class="material-symbols-outlined text-slate-400 text-[20px]">
+                                lock
+                            </span>
+                        </div>
+                        <input class="block w-full rounded-xl border-0 py-4 pl-11 pr-12 text-[#0d141b] ring-1 ring-inset ring-[#cfdbe7] placeholder:text-[#4c739a] focus:ring-2 focus:ring-inset focus:ring-primary sm:text-base sm:leading-6 dark:bg-slate-800 dark:ring-slate-700 dark:text-white dark:placeholder:text-slate-500" 
+                            id="password" 
+                            name="password" 
+                            :type="show ? 'text' : 'password'"
+                            placeholder="Masukkan kata sandi" 
+                            required>
+                        
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                             @click="show = !show">
+                            <span class="material-symbols-outlined text-[20px]" x-text="show ? 'visibility_off' : 'visibility'">
+                                visibility
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        {{-- <a class="text-sm font-medium text-primary hover:text-blue-600" href="#">Lupa kata sandi?</a> --}}
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button class="mt-2 flex w-full items-center justify-center rounded-xl bg-primary px-8 py-4 text-base font-bold text-white shadow-sm hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors" type="submit">
+                    Masuk
                 </button>
+            </form>
+            
+            <!-- Footer / Secondary Action -->
+            <div class="mt-10 text-center">
+                <a class="group inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-primary dark:text-slate-400 dark:hover:text-primary" href="{{ url('/') }}">
+                    <span class="material-symbols-outlined text-[18px] transition-transform group-hover:-translate-x-1">
+                        arrow_back
+                    </span>
+                    Kembali ke Beranda
+                </a>
             </div>
         </div>
-
-        {{-- Submit --}}
-        <button type="submit"
-                class="w-full py-3 bg-sky-600 hover:bg-sky-700
-                       text-white font-bold rounded-lg shadow-md
-                       transition-all tracking-wide">
-            Masuk ke Sistem
-        </button>
-    </form>
-
-    {{-- Footer --}}
-    <div class="mt-6 text-center">
-        <a href="{{ url('/') }}"
-           class="text-sm text-slate-500 hover:text-sky-600 flex items-center justify-center gap-1">
-            <i class="ph ph-arrow-left"></i> Kembali ke Beranda
-        </a>
     </div>
-
 </div>
-
+<!-- Alpine.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
 </body>
 </html>
