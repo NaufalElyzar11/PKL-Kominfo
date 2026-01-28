@@ -120,19 +120,30 @@
         <div class="p-3 border-t border-gray-200">
             @php
                 $pegawai = Auth::user()->pegawai;
-                $namaPegawai = $pegawai->nama ?? 'Pegawai';
+                $namaPegawai = $pegawai->nama ?? Auth::user()->name;
+                $profileRoute = (Auth::user()->role === 'atasan') ? 'atasan.profile.show' : 'pegawai.profile.show';
             @endphp
 
             <a href="{{ route($profileRoute) }}"
-               class="flex items-center px-2 py-1 rounded-md hover:bg-[#e6f5fb] smooth-transition">
+            class="flex items-center px-2 py-1 rounded-md hover:bg-[#e6f5fb] smooth-transition">
 
-                <div class="w-8 h-8 flex items-center justify-center rounded-full bg-[#008fd3] text-white text-sm font-semibold">
-                    {{ strtoupper(substr($namaPegawai, 0, 1)) }}
+                {{-- AREA FOTO/INISIAL --}}
+                <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full overflow-hidden bg-[#008fd3] text-white text-sm font-semibold border border-gray-100">
+                    @if($pegawai && $pegawai->foto)
+                        {{-- Tampilkan Foto asli jika ada di database --}}
+                        <img src="{{ asset('storage/' . $pegawai->foto) }}" 
+                            alt="Foto Profil" 
+                            class="w-full h-full object-cover">
+                    @else
+                        {{-- Tampilan Inisial (Default) --}}
+                        {{ strtoupper(substr($namaPegawai, 0, 1)) }}
+                    @endif
                 </div>
 
-                <div x-show="sidebarOpen" x-transition x-cloak class="ml-3">
-                    <p class="text-[13px] font-semibold">{{ $namaPegawai }}</p>
-                    <p class="text-[11px] text-gray-500">{{ ucfirst($user->role) }}</p>
+                {{-- INFO TEKS (Nama & Role) --}}
+                <div x-show="sidebarOpen" x-transition x-cloak class="ml-3 min-w-0">
+                    <p class="text-[13px] font-semibold truncate">{{ $namaPegawai }}</p>
+                    <p class="text-[11px] text-gray-500">{{ ucfirst(Auth::user()->role) }}</p>
                 </div>
             </a>
         </div>
