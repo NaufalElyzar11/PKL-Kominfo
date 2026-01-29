@@ -80,36 +80,44 @@
     {{-- =============================================== --}}
     {{-- BAGIAN 1: DATA PEGAWAI (Daftar & Filter) --}}
     {{-- =============================================== --}}
-    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-5 border border-gray-200 space-y-4">
-        <h1 class="text-xl font-bold text-gray-800">Daftar Data Pegawai</h1>
+    <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md p-5 border border-gray-200">
+        
+        {{-- HEADER: JUDUL & TOMBOL TAMBAH --}}
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <h1 class="text-xl font-bold text-gray-800">
+                <i class="fa-solid fa-users text-sky-600 mr-2"></i>Daftar Data Pegawai
+            </h1>
+            
+            <button @click="openCreateModal()"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
+            </button>
+        </div>
 
-        {{-- 🔍 Filter + Tombol Aksi --}}
-        <div class="flex flex-wrap justify-between items-center gap-2">
-
-            {{-- 🔍 Filter --}}
-            <form method="GET" action="{{ route('admin.pegawai.index') }}" class="flex flex-wrap items-center gap-2 text-xs">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama/NIP/email"
-                       class="px-2 py-1 border border-gray-300 rounded-md w-40 focus:ring-1 focus:ring-blue-400 focus:outline-none">
+        {{-- 🔍 FILTER SECTION --}}
+        <div class="bg-sky-50 p-4 rounded-xl border border-sky-100 mb-4">
+            <form method="GET" action="{{ route('admin.pegawai.index') }}" class="flex flex-wrap items-center gap-3 text-sm">
+                
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                           placeholder="Cari Nama / NIP..."
+                           class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-400 outline-none w-full sm:w-64">
+                </div>
 
                 <button type="submit"
-                        class="px-3 py-1 bg-[#039BE5] text-white rounded-md hover:bg-[#0288D1] transition">
-                    <i class="fa-solid fa-filter mr-1"></i> Filter
+                        class="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition font-medium">
+                    Cari
                 </button>
 
                 @if(request('search') || request('unit_kerja'))
                     <a href="{{ route('admin.pegawai.index') }}"
-                       class="px-3 py-1 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition">
+                       class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
                         <i class="fa-solid fa-rotate-left mr-1"></i> Reset
                     </a>
                 @endif
             </form>
-
-            <div class="flex items-center">
-                <button @click="showCreateModal = true"
-                        class="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition flex items-center gap-1 shadow-sm">
-                    <i class="fa-solid fa-user-plus"></i> Tambah Pengguna
-                </button>
-            </div>
+        </div>
 
        {{-- 📑 Table Pegawai --}}
 <div>
@@ -118,18 +126,18 @@
         <table class="w-full border-collapse bg-white">
             <thead class="bg-gradient-to-r from-[#0288D1] to-[#03A9F4] text-white sticky top-0 z-10">
                 <tr>
-                    <th class="px-2 py-1 border">No</th>
-                    <th class="px-2 py-1 border">Nama</th>
-                    <th class="px-2 py-1 border">NIP</th>
-                    <th class="px-2 py-1 border">Email</th>
-                    <th class="px-2 py-1 border">Telepon</th>                    
-                    <th class="px-2 py-1 border">Role</th>
-                    <th class="px-2 py-1 border">Jabatan</th>
-                    <th class="px-2 py-1 border">Unit</th>
-                    <th class="px-2 py-1 border">Atasan</th>
-                    <th class="px-2 py-1 border">Pemberi Cuti</th>
-                    <th class="px-2 py-1 border">Status</th>
-                    <th class="px-2 py-1 border text-center">Aksi</th>
+                    <th class="px-2 py-1 border whitespace-nowrap">No</th>
+                    <th class="px-2 py-1 border whitespace-nowrap">Nama</th>
+                    <th class="px-2 py-1 border whitespace-nowrap">NIP</th>
+                    <th class="px-2 py-1 border whitespace-nowrap hidden md:table-cell">Email</th>
+                    <th class="px-2 py-1 border whitespace-nowrap hidden lg:table-cell">Telepon</th>                    
+                    <th class="px-2 py-1 border whitespace-nowrap hidden md:table-cell">Role</th>
+                    <th class="px-2 py-1 border whitespace-nowrap">Jabatan</th>
+                    <th class="px-2 py-1 border whitespace-nowrap hidden lg:table-cell">Unit</th>
+                    <th class="px-2 py-1 border whitespace-nowrap hidden lg:table-cell">Atasan</th>
+                    <th class="px-2 py-1 border whitespace-nowrap hidden lg:table-cell">Pemberi Cuti</th>
+                    <th class="px-2 py-1 border whitespace-nowrap">Status</th>
+                    <th class="px-2 py-1 border text-center whitespace-nowrap">Aksi</th>
                 </tr>
             </thead>
 
@@ -157,20 +165,20 @@
                        $telepon = $p->telepon ?? '-';
                     @endphp
 
-                    <tr class="border hover:bg-gray-50" data-pegawai='@json($pegawaiData)'>
+                    <tr class="border hover:bg-gray-50 bg-white" data-pegawai='@json($pegawaiData)'>
                         <td class="px-2 py-1 border text-center">{{ $i + $pegawai->firstItem() }}</td>
-                        <td class="px-2 py-1 border">{{ $p->nama }}</td>
+                        <td class="px-2 py-1 border font-medium">{{ $p->nama }}</td>
                         <td class="px-2 py-1 border font-mono">{{ $nip }}</td>
-                        <td class="px-2 py-1 border">{{ $email }}</td>
-                        <td class="px-2 py-1 border">{{ $p->telepon }}</td>
-                        <td class="px-2 py-1 border capitalize">{{ optional($p->user)->role ?? '-' }}</td>
+                        <td class="px-2 py-1 border hidden md:table-cell">{{ $email }}</td>
+                        <td class="px-2 py-1 border hidden lg:table-cell">{{ $p->telepon }}</td>
+                        <td class="px-2 py-1 border capitalize hidden md:table-cell">{{ optional($p->user)->role ?? '-' }}</td>
                         <td class="px-2 py-1 border">{{ $p->jabatan ?? '-' }}</td>
-                        <td class="px-2 py-1 border">{{ $p->unit_kerja ?? '-' }}</td>
-                        <td class="px-2 py-1 border">{{ $p->atasan ?? '-' }}</td>
-                        <td class="px-2 py-1 border">{{ $p->pemberi_cuti ?? '-' }}</td>
+                        <td class="px-2 py-1 border hidden lg:table-cell">{{ $p->unit_kerja ?? '-' }}</td>
+                        <td class="px-2 py-1 border hidden lg:table-cell">{{ $p->atasan ?? '-' }}</td>
+                        <td class="px-2 py-1 border hidden lg:table-cell">{{ $p->pemberi_cuti ?? '-' }}</td>
                         <td class="px-2 py-1 border text-center">{{ $p->status ?? '-' }}</td>
 
-                        <td class="px-2 py-1 border text-center">
+                        <td class="px-2 py-1 border text-center whitespace-nowrap">
                             <div class="flex justify-center items-center gap-2">
 
                                 {{-- Tombol Detail --}}
