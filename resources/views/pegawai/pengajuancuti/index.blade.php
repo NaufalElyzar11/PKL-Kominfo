@@ -20,7 +20,28 @@
 
 <style>
     [x-cloak] { display: none !important; }
+    
+    /* Flatpickr Custom Style */
+    .flatpickr-day.holiday {
+        background: #fee2e2;
+        color: #ef4444;
+        border-color: #fecaca;
+    }
+    .flatpickr-day.holiday:hover {
+        background: #fecaca;
+        color: #dc2626;
+    }
 </style>
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
+@endpush
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+@endpush
 
 <div x-data="{
     tab: 'menunggu',
@@ -52,7 +73,12 @@
             const year = new Date().getFullYear();
             const response = await fetch(`https://dayoffapi.vercel.app/api?year=${year}`);
             const data = await response.json();
-            this.holidays = data.map(h => h.tanggal);
+            // Simpan sebagai object agar bisa akses keterangan/deskripsi
+            this.holidays = data.map(h => ({
+                date: h.tanggal,
+                desc: h.keterangan,
+                is_cuti: h.is_cuti
+            }));
             this.holidaysLoaded = true;
         } catch (error) {
             console.error('Gagal load holidays:', error);
@@ -68,7 +94,7 @@
 
     isHoliday(date) {
         const dateStr = date.toISOString().split('T')[0];
-        return this.holidays.includes(dateStr);
+        return this.holidays.some(h => h.date === dateStr);
     },
 
     calculateWorkingDays(start, end) {
@@ -549,26 +575,95 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="font-bold text-gray-600">Mulai *</label>
-                            <input type="date"
-                                   name="tanggal_mulai"
-                                   x-model="tanggalMulaiTambah"
-                                   min="{{ \Carbon\Carbon::today()->addDays(3)->toDateString() }}"
-                                   @change="hitungHariTambah()"
-                                   class="w-full mt-0.5 p-1 rounded border border-gray-300"
-                                   required>
+                            <div class="relative">
+                                <input type="text"
+                                       name="tanggal_mulai"
+                                       x-model="tanggalMulaiTambah"
+                                       x-ref="tambahMulai"
+                                       placeholder="Pilih Tanggal"
+                                       class="flatpickr w-full mt-0.5 p-1 rounded border border-gray-300 bg-white"
+                                       required>
+                                <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
+                                    <i class="fa-regular fa-calendar"></i>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
                             <label class="font-bold text-gray-600">Selesai *</label>
-                            <input type="date"
-                                   name="tanggal_selesai"
-                                   x-model="tanggalSelesaiTambah"
-                                   :min="tanggalMulaiTambah"
-                                   @change="hitungHariTambah()"
-                                   class="w-full mt-0.5 p-1 rounded border border-gray-300"
-                                   required>
+                             <div class="relative">
+                                <input type="text"
+                                       name="tanggal_selesai"
+                                       x-model="tanggalSelesaiTambah"
+                                       x-ref="tambahSelesai"
+                                        placeholder="Pilih Tanggal"
+                                       class="flatpickr w-full mt-0.5 p-1 rounded border border-gray-300 bg-white"
+                                       required>
+                                <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
+                                    <i class="fa-regular fa-calendar"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Watcher untuk re-init atau update logic -->
+                    <div x-effect="
+                        if(holidaysLoaded) {
+                            // Re-init khusus start date dengan minDate
+                            if($refs.tambahMulai) {
+                                flatpickr($refs.tambahMulai, {
+                                    locale: 'id',
+                                    dateFormat: 'Y-m-d',
+                                    minDate: new Date().fp_incr(3), // Hari ini + 3 hari
+                                    disable: [
+                                        function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                        ...holidays.map(h => h.date)
+                                    ],
+                                    onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                        const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                        const holiday = holidays.find(h => h.date === dateStr);
+                                        if (holiday) {
+                                            dayElem.className += ' holiday';
+                                            dayElem.title = holiday.desc;
+                                        }
+                                    },
+                                    onChange: (selectedDates, dateStr) => {
+                                        tanggalMulaiTambah = dateStr;
+                                        hitungHariTambah();
+                                        // Update minDate untuk tanggal selesai
+                                        if ($refs.tambahSelesai._flatpickr) {
+                                            $refs.tambahSelesai._flatpickr.set('minDate', dateStr);
+                                        }
+                                    }
+                                });
+                            }
+                            
+                            // Re-init khusus end date
+                            if($refs.tambahSelesai) {
+                                flatpickr($refs.tambahSelesai, {
+                                    locale: 'id',
+                                    dateFormat: 'Y-m-d',
+                                    minDate: tanggalMulaiTambah || new Date().fp_incr(3),
+                                    disable: [
+                                        function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                        ...holidays.map(h => h.date)
+                                    ],
+                                    onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                        const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                        const holiday = holidays.find(h => h.date === dateStr);
+                                        if (holiday) {
+                                            dayElem.className += ' holiday';
+                                            dayElem.title = holiday.desc;
+                                        }
+                                    },
+                                    onChange: (selectedDates, dateStr) => {
+                                        tanggalSelesaiTambah = dateStr;
+                                        hitungHariTambah();
+                                    }
+                                });
+                            }
+                        }
+                    "></div>
 
                     <!-- ALAMAT -->
                     <div>
@@ -766,19 +861,98 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Mulai:</label>
-                        <input type="date" name="tanggal_mulai" 
-                               x-model="selectedCuti.tanggal_mulai" 
-                               @change="hitungHariEdit(); isChanged = true" 
-                               class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
+                        <div class="relative">
+                            <input type="text" name="tanggal_mulai" 
+                                   x-model="selectedCuti.tanggal_mulai" 
+                                   x-ref="editMulai"
+                                   class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
+                             <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
+                                <i class="fa-regular fa-calendar"></i>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="font-bold text-gray-500 block mb-0.5">Selesai:</label>
-                        <input type="date" name="tanggal_selesai" 
-                               x-model="selectedCuti.tanggal_selesai" 
-                               :min="selectedCuti.tanggal_mulai" 
-                               @change="hitungHariEdit(); isChanged = true" 
-                               class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
+                        <div class="relative">
+                            <input type="text" name="tanggal_selesai" 
+                                   x-model="selectedCuti.tanggal_selesai" 
+                                   x-ref="editSelesai"
+                                   class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
+                            <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
+                                <i class="fa-regular fa-calendar"></i>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- Watcher untuk Edit Modal -->
+                    <div x-effect="
+                        if(showEditModal && holidaysLoaded && selectedCuti) {
+                            // Init Edit Start
+                            if($refs.editMulai) {
+                                if ($refs.editMulai._flatpickr) {
+                                    $refs.editMulai._flatpickr.setDate(selectedCuti.tanggal_mulai);
+                                } else {
+                                    flatpickr($refs.editMulai, {
+                                        locale: 'id',
+                                        dateFormat: 'Y-m-d',
+                                        defaultDate: selectedCuti.tanggal_mulai,
+                                        disable: [
+                                            function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                            ...holidays.map(h => h.date)
+                                        ],
+                                        onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                            const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                            const holiday = holidays.find(h => h.date === dateStr);
+                                            if (holiday) {
+                                                dayElem.className += ' holiday';
+                                                dayElem.title = holiday.desc;
+                                            }
+                                        },
+                                        onChange: (selectedDates, dateStr) => {
+                                            selectedCuti.tanggal_mulai = dateStr;
+                                            hitungHariEdit();
+                                            isChanged = true;
+                                            if ($refs.editSelesai._flatpickr) {
+                                                $refs.editSelesai._flatpickr.set('minDate', dateStr);
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+
+                            // Init Edit End
+                            if($refs.editSelesai) {
+                                if ($refs.editSelesai._flatpickr) {
+                                    $refs.editSelesai._flatpickr.setDate(selectedCuti.tanggal_selesai);
+                                    $refs.editSelesai._flatpickr.set('minDate', selectedCuti.tanggal_mulai);
+                                } else {
+                                    flatpickr($refs.editSelesai, {
+                                        locale: 'id',
+                                        dateFormat: 'Y-m-d',
+                                        defaultDate: selectedCuti.tanggal_selesai,
+                                        minDate: selectedCuti.tanggal_mulai,
+                                        disable: [
+                                            function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                            ...holidays.map(h => h.date)
+                                        ],
+                                        onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                            const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                            const holiday = holidays.find(h => h.date === dateStr);
+                                            if (holiday) {
+                                                dayElem.className += ' holiday';
+                                                dayElem.title = holiday.desc;
+                                            }
+                                        },
+                                        onChange: (selectedDates, dateStr) => {
+                                            selectedCuti.tanggal_selesai = dateStr;
+                                            hitungHariEdit();
+                                            isChanged = true;
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    "></div>
                 </div>
 
                 <div>
