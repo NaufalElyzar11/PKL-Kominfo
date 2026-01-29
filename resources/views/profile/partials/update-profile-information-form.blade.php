@@ -33,10 +33,18 @@
         </p>
     </header>
 
+    @php
+        // Tentukan rute secara dinamis berdasarkan role user yang login
+        $routeAction = Auth::user()->role === 'admin' ? route('admin.profile.update') : route('pegawai.profile.update');
+    @endphp
     {{-- 1. TAMBAHKAN enctype="multipart/form-data" (WAJIB UNTUK UPLOAD FILE) --}}
-    <form method="post" action="{{ route('pegawai.profile.update') }}" enctype="multipart/form-data" class="space-y-6">
+  {{-- Ubah agar rutenya dinamis sesuai role --}}
+    <form method="post" 
+        action="{{ Auth::user()->role === 'admin' ? route('admin.profile.update') : route('pegawai.profile.update') }}" 
+        enctype="multipart/form-data" 
+        class="space-y-6">
         @csrf
-        @method('patch')
+        @method('patch') {{-- Pastikan di web.php rute admin.profile.update juga menggunakan PATCH --}}
 
     {{-- Pastikan container utama form memiliki x-data --}}
     <div class="space-y-6">

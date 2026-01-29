@@ -15,12 +15,22 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-
-        // Ambil relasi pegawai (jika ada)
         $pegawai = $user->pegawai ?? null;
 
-        // Kirim $user dan $pegawai ke Blade
         return view('admin.profile.profile', compact('user', 'pegawai'));
+    }
+
+    /**
+     * 🔹 TAMBAHKAN FUNGSI INI: Tampilkan halaman form edit.
+     * Ini yang dicari oleh rute 'admin.profile.edit'
+     */
+    public function edit()
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai ?? null;
+
+        // Pastikan Anda sudah memiliki file: resources/views/admin/profile/edit.blade.php
+        return view('admin.profile.edit', compact('user', 'pegawai'));
     }
 
     /**
@@ -30,16 +40,28 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        // Validasi input profil
+        // Pastikan nama field di sini SAMA dengan atribut 'name' di Blade
         $validated = $request->validate([
-            'name'  => 'required|string|max:100',
-            'email' => 'required|email|max:100|unique:users,email,' . $user->id,
+            'nama'    => 'required|string|max:100', // Sesuai name="nama"
+            'email'   => 'required|email|max:100|unique:users,email,' . $user->id,
+            'telepon' => 'nullable|string|max:13', // Sesuai name="telepon"
         ]);
 
-        // Update data user di database
-        $user->update($validated);
+        // 1. Update tabel Users
+        $user->update([
+            'name'  => $validated['nama'], // Simpan ke kolom 'name' di tabel users
+            'email' => $validated['email'],
+        ]);
 
-        return back()->with('success', 'Profil berhasil diperbarui!');
+        // 2. Update tabel Pegawai melalui relasi
+        if ($user->pegawai) {
+            $user->pegawai->update([
+                'nama'    => $validated['nama'],
+                'telepon' => $validated['telepon'], // Simpan ke kolom 'telepon' di tabel pegawai
+            ]);
+        }
+
+        return redirect()->route('admin.profile.index')->with('success', 'Profil berhasil diperbarui!');
     }
 
     /**
