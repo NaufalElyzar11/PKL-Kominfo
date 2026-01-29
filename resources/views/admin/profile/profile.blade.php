@@ -112,13 +112,13 @@
                         {{ $pegawai->jabatan ?? 'Administrator Sistem' }} • {{ $pegawai->unit_kerja ?? 'Kominfo' }}
                     </p>
                     
-                    <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
+                    <!-- <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">
                         <a href="{{ route('admin.profile.edit') }}" class="px-6 py-3 bg-white text-electric-blue rounded-2xl font-bold shadow-xl hover:bg-lime-green hover:text-slate-900 transition-all flex items-center gap-2">
                             <span class="material-symbols-outlined">settings</span>
                             Pengaturan Akun
                         </a>
                         {{-- Tombol Ubah Password (jika ingin dipisah, sementara arahkan ke edit juga) --}}
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>
@@ -176,7 +176,7 @@
             
             {{-- Kontak --}}
             <div class="lg:col-span-6 flex flex-col h-full">
-                <div class="bg-white rounded-card p-8 card-shadow border border-white h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
+                <!-- <div class="bg-white rounded-card p-8 card-shadow border border-white h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
                     <div class="w-12 h-12 bg-soft-orange/10 text-soft-orange rounded-2xl flex items-center justify-center mb-6">
                         <span class="material-symbols-outlined text-2xl">alternate_email</span>
                     </div>
@@ -189,19 +189,19 @@
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Telepon</label>
                             <p class="font-bold text-slate-800 text-sm">{{ $pegawai->telepon ?? '-' }}</p>
-                        </div>
+                        </div> 
                     </div>
-                    <div class="pt-6 mt-auto">
+                     <div class="pt-6 mt-auto">
                         <a href="{{ route('admin.profile.edit') }}" class="w-full py-3 border-2 border-slate-100 rounded-xl font-bold text-slate-500 hover:border-soft-orange hover:text-soft-orange transition-all flex items-center justify-center gap-2 text-sm group">
                             <span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">edit</span>
                             Edit Kontak
                         </a>
-                    </div>
-                </div>
+                    </div> 
+                </div> -->
             </div>
 
             {{-- Jabatan / Info Tambahan --}}
-            <div class="lg:col-span-6 flex flex-col h-full">
+            <div class="lg:col-span-12 flex flex-col h-full">
                 <div class="bg-white rounded-card p-8 card-shadow border border-white h-full hover:shadow-lg transition-shadow duration-300">
                     <div class="w-12 h-12 bg-electric-blue/10 text-electric-blue rounded-2xl flex items-center justify-center mb-6">
                         <span class="material-symbols-outlined text-2xl">badge</span>
