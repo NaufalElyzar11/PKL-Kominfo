@@ -11,7 +11,8 @@
             <h1 class="text-lg font-bold text-gray-800">Daftar Pengajuan Cuti Pegawai</h1>
 
             {{-- Filter sederhana --}}
-            <form method="GET" action="{{ route('admin.cuti.index') }}" class="flex flex-wrap items-center gap-2 text-[10px]">
+            <form method="GET" action="{{ route('admin.cuti.index') }}" class="flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                <div class="flex flex-wrap items-center gap-2">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama/NIP"
                     class="px-2 py-1 border border-gray-300 rounded w-40 focus:ring-1 focus:ring-blue-400 outline-none">
 
@@ -37,16 +38,15 @@
                         Reset
                     </a>
                 @endif
-            </form>
+                </div>
 
-            {{-- 🔹 LETAKKAN TOMBOL EXPORT PDF DI SINI 🔹 --}}
-            <div class="flex justify-start pt-2">
+                {{-- Tombol Export PDF di ujung kanan --}}
                 <a href="{{ route('admin.cuti.export-pdf', request()->query()) }}" 
-                class="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-sm text-[10px] font-bold">
+                    class="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-sm text-[10px] font-bold">
                     <i class="fa-solid fa-file-pdf"></i>
                     Export PDF
                 </a>
-            </div>
+            </form>
 
             {{-- Tabel cuti (compact) --}}
             <div class="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
