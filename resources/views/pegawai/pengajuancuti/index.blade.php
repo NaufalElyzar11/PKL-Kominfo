@@ -341,7 +341,7 @@
             @endif
         </div>
 
-{{-- ================= TAB RIWAYAT (13 KOLOM) ================= --}}
+{{-- ================= TAB RIWAYAT (12 KOLOM SINKRON) ================= --}}
 <div x-show="tab === 'riwayat'" x-cloak class="space-y-2">
     <div class="overflow-x-auto rounded border border-gray-300 shadow-sm">
         <table class="min-w-full divide-y divide-gray-200 text-[11px]">
@@ -358,6 +358,7 @@
                     <th class="px-1 py-1 font-semibold text-left">Alasan</th>
                     <th class="px-1 py-1 text-center font-semibold">Status</th>
                     <th class="px-1 py-1 text-center font-semibold">Aksi</th>
+                    <th class="px-1 py-1 text-center font-semibold">Pengganti (Delegasi)</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -368,15 +369,10 @@
                         $nipR = $r->pegawai->nip ?? '-';
                         $nipMaskedR = (strlen($nipR) > 6) ? substr($nipR, 0, 3) . '***' . substr($nipR, -3) : $nipR;
 
-                        /** * LOGIKA SISA CUTI:
-                         * 1. Ambil jatah dasar (12)
-                         * 2. Hitung total pemakaian yang 'disetujui' di tahun tersebut 
-                         * sampai dengan baris ini (berdasarkan ID)
-                         */
                         $kuotaDasar = 12;
                         $pemakaianKumulatif = \App\Models\Cuti::where('user_id', $r->user_id)
                             ->where('tahun', $r->tahun)
-                            ->where('status', 'disetujui')
+                            ->whereIn('status', ['disetujui', 'disetujui atasan'])
                             ->where('id', '<=', $r->id)
                             ->sum('jumlah_hari');
                         
@@ -391,19 +387,16 @@
                             {{ optional($r->tanggal_mulai)->format('d/m/Y') }} <br> s/d {{ optional($r->tanggal_selesai)->format('d/m/Y') }}
                         </td>
                         <td class="px-1 py-2 text-center font-bold">{{ $r->jumlah_hari }}</td>
-                        
-                        {{-- REVISI KOLOM SISA --}}
                         <td class="px-1 py-2 text-center font-bold">
-                            <span class="{{ $sisa_final <= 3 ? 'text-red-600' : 'text-sky-600' }}">
-                                {{ $sisa_final }}
-                            </span>
+                            <span class="{{ $sisa_final <= 3 ? 'text-red-600' : 'text-sky-600' }}">{{ $sisa_final }}</span>
                         </td>
-
-                        <td class="px-1 py-2">{{ Str::limit($r->alamat, 20) }}</td>
-                        <td class="px-1 py-2">{{ Str::limit($r->alasan_cuti, 20) }}</td>
+                        <td class="px-1 py-2">{{ Str::limit($r->alamat, 15) }}</td>
+                        <td class="px-1 py-2">{{ Str::limit($r->alasan_cuti, 15) }}</td>
+                        
+                        {{-- STATUS WARNA OTOMATIS --}}
                         <td class="px-1 py-2 text-center">
-                            @if($status == 'disetujui')
-                                <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Disetujui Kadis</span>
+                            @if($status == 'disetujui' || $status == 'disetujui kadis')
+                                <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Disetujui</span>
                             @elseif($status == 'disetujui atasan')
                                 <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold">Disetujui Atasan</span>
                             @elseif($status == 'ditolak')
@@ -412,67 +405,54 @@
                                 <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold">Menunggu</span>
                             @endif
                         </td>
+
                         <td class="px-1 py-2 text-center flex justify-center gap-1">
-                            {{-- Tombol Detail --}}
+                            {{-- Tombol Detail: Menggunakan @js agar aman dari karakter aneh/newline --}}
                             <button @click="
                                 detailRiwayat = {
                                     id: '{{ $r->id }}',
-                                    nama: '{{ $r->pegawai->nama ?? '-' }}',
-                                    nip: '{{ $r->pegawai->nip ?? '-' }}',
-                                    jabatan: '{{ $r->pegawai->jabatan ?? '-' }}',
-                                    jenis_cuti: '{{ $r->jenis_cuti }}',
-                                    status: '{{ $r->status }}',
-                                    tanggal_mulai: '{{ optional($r->tanggal_mulai)->format('d/m/Y') }}',
-                                    tanggal_selesai: '{{ optional($r->tanggal_selesai)->format('d/m/Y') }}',
-                                    jumlah_hari: '{{ $r->jumlah_hari }}',
-                                    sisa_cuti: '{{ $sisa_final }}',
-                                    atasan: '{{ $r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-' }}',
-                                    pejabat: '{{ $r->pejabatPemberiCuti->nama_pejabat ?? $r->pejabat_nama ?? '-' }}',
-                                    alasan_cuti: '{{ addslashes($r->alasan_cuti) }}',
-                                    alamat: '{{ addslashes($r->alamat) }}'
+                                    nama: @js($r->pegawai->nama ?? '-'),
+                                    nip: @js($r->pegawai->nip ?? '-'),
+                                    jabatan: @js($r->pegawai->jabatan ?? '-'),
+                                    jenis_cuti: @js($r->jenis_cuti),
+                                    status: @js($r->status),
+                                    tanggal_mulai: @js(optional($r->tanggal_mulai)->format('d/m/Y')),
+                                    tanggal_selesai: @js(optional($r->tanggal_selesai)->format('d/m/Y')),
+                                    jumlah_hari: @js($r->jumlah_hari),
+                                    sisa_cuti: @js($sisa_final),
+                                    atasan: @js($r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-'),
+                                    pejabat: @js($r->pejabatPemberiCuti->nama_pejabat ?? $r->pejabat_nama ?? '-'),
+                                    alasan_cuti: @js($r->alasan_cuti),
+                                    alamat: @js($r->alamat),
+                                    tahun: @js($r->tahun)
                                 };
                                 showDetailRiwayat = true;
                             " class="p-1 text-sky-600 hover:bg-sky-100 rounded">
                                 <i class="fa-solid fa-eye text-[12px]"></i>
                             </button>
 
-                            @if ($status === 'ditolak')
-                                <button @click="
-                                    detail = { nama: '{{ $r->pegawai->nama }}' };
-                                    catatanContent = '{{ addslashes($r->catatan_penolakan ?? 'Tidak ada catatan.') }}';
-                                    openCatatanKadis = true;
-                                " class="p-1 text-yellow-600 hover:bg-yellow-100 rounded">
-                                    <i class="fa-solid fa-note-sticky text-[12px]"></i>
-                                </button>
-                            @endif
-
-                            <form action="{{ route('pegawai.cuti.destroy', $r->id) }}"
-                                method="POST"
-                                class="form-delete inline">
-                                @csrf
+                            {{-- Tombol Hapus: Pastikan data-nama merujuk ke $r --}}
+                            <form action="{{ route('pegawai.cuti.destroy', $r->id) }}" method="POST" class="form-delete inline">
+                                @csrf 
                                 @method('DELETE')
-
-                                <button type="submit"
-                                        data-nama="{{ $r->pegawai->nama }}"
-                                        class="p-1 text-red-600 hover:bg-red-50 rounded">
+                                <button type="submit" data-nama="{{ $r->pegawai->nama ?? 'Pengajuan' }}" class="p-1 text-red-600 hover:bg-red-50 rounded">
                                     <i class="fa-solid fa-trash text-[12px]"></i>
                                 </button>
                             </form>
+                        </td>
 
+                        {{-- PINDAHKAN DATA PENGGANTI KE PALING AKHIR AGAR SINKRON --}}
+                        <td class="px-1 py-2 border-l text-[10px] text-gray-700">
+                            <div class="font-bold text-sky-700">{{ $r->delegasi->nama ?? '-' }}</div>
+                            <div class="text-[9px] text-gray-400">{{ $r->delegasi->jabatan ?? '' }}</div>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="13" class="text-center py-4 text-gray-400 italic font-medium">Tidak ada riwayat cuti</td></tr>
+                    <tr><td colspan="12" class="text-center py-4 text-gray-400 italic font-medium">Tidak ada riwayat cuti</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    @if ($riwayatIsPaginator && $riwayat->lastPage() > 1)
-        <div class="flex justify-between items-center text-xs text-gray-700">
-            <p>Menampilkan {{ $riwayat->firstItem() }} - {{ $riwayat->lastItem() }} dari {{ $riwayat->total() }} hasil</p>
-            <div>{{ $riwayat->links('vendor.pagination.tailwind') }}</div>
-        </div>
-    @endif
 </div>
 
 {{-- =====================================
@@ -531,6 +511,11 @@
             <h3 class="text-sm font-bold text-sky-600 mb-2 pb-1.5 border-b flex items-center gap-2">
                 <i class="fa-solid fa-calendar-plus text-xs"></i> AJUKAN CUTI
             </h3>
+
+            <div class="bg-yellow-100 p-1 text-[8px]">
+                Unit Kerja Anda: {{ $pegawai->unit_kerja }} | 
+                Jumlah Rekan Ditemukan: {{ $rekanSebidang->count() }}
+            </div>
 
             <form action="{{ route('pegawai.cuti.store') }}" method="POST" class="space-y-2 text-[10px]">
                 @csrf
@@ -676,6 +661,9 @@
                             required
                             oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')"></textarea>
                     </div>
+
+
+                     <!-- ALASAN -->
                         <div>
                             <label class="font-bold text-gray-600">Alasan *</label>
                             <textarea 
@@ -692,6 +680,25 @@
                                 pattern="^[a-zA-Z\s]+$"
                                 title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
                         </div>
+
+                     <!-- DELEGASI PEGAWAI -->
+                    <div>
+                        <label class="font-bold text-gray-600">Pegawai Pengganti (Delegasi) *</label>
+                        <select 
+                            name="id_delegasi" 
+                            class="w-full mt-0.5 p-1 rounded border border-gray-300 bg-white outline-none focus:ring-1 focus:ring-sky-400"
+                            required>
+                            <option value="" disabled selected>-- Pilih Pegawai Pengganti --</option>
+                            @forelse($rekanSebidang as $rekan)
+                                <option value="{{ $rekan->id }}">{{ $rekan->nama }} ({{ $rekan->jabatan }})</option>
+                            @empty
+                                <option value="" disabled>Tidak ada rekan sebidang tersedia</option>
+                            @endforelse
+                        </select>
+                        <p class="text-[8px] text-gray-400 mt-0.5 italic">* Pegawai ini yang akan menggantikan tugas Anda selama cuti.</p>
+                    </div>
+
+
                     <!-- JUMLAH HARI DAN SISA CUTI -->
                     <div class="space-y-2">
                         <!-- Jumlah Hari Cuti -->
@@ -1130,5 +1137,33 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 </script>
 @endif
+
+<script>
+document.addEventListener('submit', function (e) {
+    // Cari apakah yang di-submit adalah form dengan class .form-delete
+    if (e.target.classList.contains('form-delete')) {
+        e.preventDefault(); // Stop submit otomatis
+        
+        const form = e.target;
+        // Ambil nama dari atribut data-nama pada button di dalam form tersebut
+        const nama = form.querySelector('button').getAttribute('data-nama') || 'Pengajuan';
+
+        Swal.fire({
+            title: 'Yakin ingin menghapus?',
+            text: `Pengajuan cuti milik ${nama} akan dihapus permanen!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit(); // Kirim form jika user setuju
+            }
+        });
+    }
+});
+</script>
 
 @endsection

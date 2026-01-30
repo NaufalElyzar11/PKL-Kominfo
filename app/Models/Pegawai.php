@@ -23,7 +23,9 @@ class Pegawai extends Model
         'foto',
         'email',
         'kuota_cuti',
-        'sisa_cuti'
+        'sisa_cuti',
+        'id_atasan_langsung',
+        'id_pejabat_pemberi_cuti',
     ];
 
     protected $appends = ['sisa_cuti'];

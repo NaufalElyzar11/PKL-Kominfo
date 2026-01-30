@@ -14,6 +14,7 @@ class Cuti extends Model
     protected $fillable = [
         'user_id',
         'id_pegawai',
+        'id_delegasi',
         'nama',
         'nip',
         'jabatan',
@@ -28,8 +29,8 @@ class Cuti extends Model
         'catatan_penolakan',
         'id_atasan_langsung',
         'id_pejabat_pemberi_cuti',
-        'atasan_nama', // Snapshot nama atasan saat pengajuan
-        'pejabat_nama', // Snapshot nama pejabat saat pengajuan
+        'atasan_nama',
+        'pejabat_nama',
     ];
 
     protected $casts = [
@@ -86,5 +87,10 @@ class Cuti extends Model
             'ditolak'   => '<span class="px-2 py-1 text-[10px] bg-red-100 text-red-700 rounded-full font-bold">Ditolak</span>',
             default     => '<span class="px-2 py-1 text-[10px] bg-yellow-100 text-yellow-700 rounded-full font-bold">Menunggu</span>',
         };
+    }
+
+    public function delegasi()
+    {
+        return $this->belongsTo(Pegawai::class, 'id_delegasi');
     }
 }

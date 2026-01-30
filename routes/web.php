@@ -158,6 +158,10 @@ Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')
         Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
         Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');
         Route::patch('/update', [PegawaiProfileController::class, 'update'])->name('update');
-    }); // <--- Penutup Grup Profile
+    });
+
+    // routes/web.php
+Route::get('/pegawai/cuti/cek-tersedia', [App\Http\Controllers\Pegawai\PengajuanCutiController::class, 'getAvailableDelegates'])
+    ->name('pegawai.cuti.cek-tersedia');
 
 }); // <--- Penutup Grup Utama Pejabat (PASTIKAN TIDAK ADA LAGI }); DI BAWAH INI)

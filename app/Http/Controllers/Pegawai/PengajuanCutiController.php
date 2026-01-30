@@ -18,53 +18,74 @@ use App\Exports\CutiExport;
 class PengajuanCutiController extends Controller
 {
 /** ========================== 🏠 INDEX ============================= */
-public function index()
-{
-    $user = Auth::user();
-    $pegawai = $user->pegawai;
-    $tahun = request('tahun', date('Y')); // Default tahun sekarang
+    public function index()
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+        $tahun = request('tahun', date('Y'));
 
-    // 1. Logika Pengecekan Profil
-    $warningMessage = null;
-    if (!$pegawai) {
-        $warningMessage = '⚠️ Data pegawai belum ditemukan. Silakan hubungi admin.';
-    } elseif (!$this->isPegawaiLengkap($pegawai)) {
-        $warningMessage = '⚠️ Lengkapi profil Anda terlebih dahulu sebelum mengajukan cuti.';
+        // 1. Ambil Rekan Sebidang untuk Delegasi
+        // Kita pastikan data pegawai ada dan memiliki kolom 'unit_kerja'
+        $rekanSebidang = collect(); 
+        if ($pegawai && $pegawai->unit_kerja) {
+            $rekanSebidang = \App\Models\Pegawai::where('unit_kerja', 'LIKE', trim($pegawai->unit_kerja))
+            ->where('id', '!=', $pegawai->id)
+            ->whereHas('user', function($query) {
+                $query->where('role', 'pegawai');
+            })
+            ->get();
+        }
+
+        // 2. Logika Pengecekan Profil
+        $warningMessage = null;
+        if (!$pegawai) {
+            $warningMessage = '⚠️ Data pegawai belum ditemukan. Silakan hubungi admin.';
+        } elseif (!$this->isPegawaiLengkap($pegawai)) {
+            $warningMessage = '⚠️ Lengkapi profil Anda terlebih dahulu sebelum mengajukan cuti.';
+        }
+
+        // 3. Query Dasar
+        $baseQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti', 'delegasi'])
+                ->where('user_id', $user->id);
+
+        if ($tahun !== 'semua') {
+            $baseQuery->where('tahun', $tahun);
+        }
+
+        // 4. Pagination
+        $cuti = (clone $baseQuery)
+        ->whereIn('status', ['Menunggu', 'menunggu', 'MENUNGGU'])
+        ->latest()
+        ->paginate(10, ['*'], 'menunggu_page');
+
+        $riwayat = (clone $baseQuery)
+        ->whereIn('status', [
+            'Disetujui', 'disetujui', 'DISETUJUI', 
+            'Ditolak', 'ditolak', 'DITOLAK',
+            'Disetujui Atasan', 'disetujui atasan'
+        ])
+        ->latest()
+        ->paginate(10, ['*'], 'riwayat_page');
+
+        $globalStats = Cuti::where('user_id', $user->id);
+
+        return view('pegawai.pengajuancuti.index', [
+            'pegawai' => $pegawai,
+            'rekanSebidang' => $rekanSebidang,
+            'cuti' => $cuti,
+            'riwayat' => $riwayat,
+            'tahun' => $tahun,
+            'totalCuti' => (clone $globalStats)->count(),
+            'cutiPending' => (clone $globalStats)->where('status', 'Menunggu')->count(),
+            'cutiDisetujui' => (clone $globalStats)->where('status', 'Disetujui')->count(),
+            'cutiDitolak' => (clone $globalStats)->where('status', 'Ditolak')->count(),
+            'sisaCuti' => $this->hitungSisaCuti($user->id),
+            'warningMessage' => $warningMessage,
+            'hasPendingCuti' => Cuti::where('user_id', $user->id)->where('status', 'Menunggu')->exists(),
+            'cutiIsPaginator' => $cuti instanceof \Illuminate\Pagination\LengthAwarePaginator,
+            'riwayatIsPaginator' => $riwayat instanceof \Illuminate\Pagination\LengthAwarePaginator,
+        ]);
     }
-
-    // 2. Query Dasar
-    $baseQuery = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-                    ->where('user_id', $user->id);
-
-    // 3. Filter Tahun (Hanya jika bukan 'semua')
-    if ($tahun !== 'semua') {
-        $baseQuery->where('tahun', $tahun);
-    }
-
-    // 4. Pagination untuk Tabel
-    // Gunakan clone agar query dasar tidak "terkontaminasi" status tertentu saat menghitung statistik
-    $cuti = (clone $baseQuery)->where('status', 'Menunggu')->latest()->paginate(10, ['*'], 'menunggu_page');
-    $riwayat = (clone $baseQuery)->whereIn('status', ['Disetujui', 'Ditolak'])->latest()->paginate(10, ['*'], 'riwayat_page');
-
-    // 5. Statistik Dashboard (Biasanya statistik bersifat global, tidak terpengaruh filter tahun)
-    $globalStats = Cuti::where('user_id', $user->id);
-
-    return view('pegawai.pengajuancuti.index', [
-        'pegawai' => $pegawai,
-        'cuti' => $cuti,
-        'riwayat' => $riwayat,
-        'tahun' => $tahun,
-        'totalCuti' => (clone $globalStats)->count(),
-        'cutiPending' => (clone $globalStats)->where('status', 'Menunggu')->count(),
-        'cutiDisetujui' => (clone $globalStats)->where('status', 'Disetujui')->count(),
-        'cutiDitolak' => (clone $globalStats)->where('status', 'Ditolak')->count(),
-        'sisaCuti' => $this->hitungSisaCuti($user->id),
-        'warningMessage' => $warningMessage,
-        'hasPendingCuti' => Cuti::where('user_id', $user->id)->where('status', 'Menunggu')->exists(),
-        'cutiIsPaginator' => $cuti instanceof \Illuminate\Pagination\LengthAwarePaginator,
-        'riwayatIsPaginator' => $riwayat instanceof \Illuminate\Pagination\LengthAwarePaginator,
-    ]);
-}
 
     /** ========================== 📝 STORE CUTI ============================= */
     public function store(Request $request)
@@ -76,7 +97,7 @@ public function index()
             return back()->with('error', 'Data pegawai belum ditemukan.');
         }
 
-        // 1. PENGAMAN: Cek apakah ada pengajuan yang masih 'Menunggu'
+        // 1. PENGAMAN: Cek pengajuan pending milik sendiri
         $hasPending = Cuti::where('user_id', $user->id)
                         ->where('status', 'Menunggu')
                         ->exists();
@@ -85,12 +106,13 @@ public function index()
             return back()->with('error', 'Anda masih memiliki pengajuan cuti yang menunggu persetujuan.');
         }
 
-        // 2. VALIDASI
+        // 2. VALIDASI FORM
         $validated = $request->validate([
-            'jenis_cuti' => 'required|in:Tahunan',
-            'alamat'     => 'required|string|max:255',
-            'keterangan' => 'required|string|max:500', // Dibuat lebih fleksibel (tanpa regex huruf saja)
-            'tanggal_mulai' => [
+            'id_delegasi'     => 'required|exists:pegawai,id',
+            'jenis_cuti'      => 'required|in:Tahunan',
+            'alamat'          => 'required|string|max:255',
+            'keterangan'      => 'required|string|max:500',
+            'tanggal_mulai'   => [
                 'required', 'date',
                 function ($attribute, $value, $fail) {
                     if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
@@ -101,17 +123,45 @@ public function index()
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
 
-        // 3. HITUNG JUMLAH HARI KERJA (Exclude weekend dan libur nasional)
-        $jumlah_hari = $this->calculateWorkingDays($validated['tanggal_mulai'], $validated['tanggal_selesai']);
+        // 3. VALIDASI DELEGASI (Unit Kerja & Role)
+        // Gunakan eager load 'user' untuk mengecek role
+        $delegasi = \App\Models\Pegawai::with('user')->find($validated['id_delegasi']);
 
-        // Tambahkan Validasi Kuota di sini
-        if ($pegawai->sisa_cuti < $jumlah_hari) {
-            return back()->with('error', 'Gagal! Sisa cuti Anda (' . $pegawai->sisa_cuti . ' hari) tidak mencukupi untuk pengajuan selama ' . $jumlah_hari . ' hari.');
+        if ($delegasi->unit_kerja !== $pegawai->unit_kerja || $delegasi->id === $pegawai->id) {
+            return back()->with('error', 'Pegawai pengganti harus berada di unit kerja yang sama dan bukan diri sendiri.');
         }
 
-        // 4. SIMPAN DATA
+        // Filter agar hanya role 'pegawai' yang bisa dipilih
+        if ($delegasi->user->role !== 'pegawai') {
+            return back()->with('error', 'Pegawai pengganti harus memiliki jabatan staf (bukan Atasan/Pejabat).');
+        }
+
+        // 4. VALIDASI KETERSEDIAAN (Cek tabrakan jadwal cuti delegasi)
+        $isDelegateOnLeave = Cuti::where('id_pegawai', $delegasi->id)
+            ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis'])
+            ->where(function ($query) use ($validated) {
+                // Logika Overlap: (StartA <= EndB) AND (EndA >= StartB)
+                $query->where('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+                    ->where('tanggal_selesai', '>=', $validated['tanggal_mulai']);
+            })
+            ->exists();
+
+        if ($isDelegateOnLeave) {
+            return back()->with('error', 'Gagal! Pegawai pengganti (' . $delegasi->nama . ') sudah memiliki jadwal cuti yang disetujui pada periode tersebut.');
+        }
+
+        // 5. HITUNG DURASI & CEK KUOTA
+        $jumlah_hari = $this->calculateWorkingDays($validated['tanggal_mulai'], $validated['tanggal_selesai']);
+
+        if ($pegawai->sisa_cuti < $jumlah_hari) {
+            return back()->with('error', 'Gagal! Sisa cuti Anda tidak mencukupi.');
+        }
+
+        // 6. SIMPAN DATA
         Cuti::create([
             'user_id'         => $user->id,
+            'id_pegawai'      => $pegawai->id,
+            'id_delegasi'     => $validated['id_delegasi'],
             'nama'            => $pegawai->nama,
             'nip'             => $pegawai->nip,
             'jabatan'         => $pegawai->jabatan,
@@ -124,16 +174,13 @@ public function index()
             'keterangan'      => $validated['keterangan'],
             'status'          => 'Menunggu',
             
-            // Ambil nama dari relasi agar snapshot akurat
             'atasan_nama'     => $pegawai->atasanLangsung->nama_atasan ?? '-', 
             'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
-
             'id_atasan_langsung'      => $pegawai->id_atasan_langsung,
             'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
         ]);
 
-        return redirect()->route('pegawai.cuti.index')
-            ->with('success', 'Pengajuan cuti berhasil dikirim.');
+        return redirect()->route('pegawai.cuti.index')->with('success', 'Pengajuan cuti berhasil dikirim.');
     }
 
     /** ========================== ✏️ UPDATE CUTI ============================= */
@@ -230,14 +277,14 @@ public function destroy($id)
 
     // 3. GEMBOK LOGIKA: Cek status sebelum hapus
     // Jika status sudah 'Disetujui' atau 'Ditolak', jangan biarkan dihapus!
-    if ($cuti->status !== 'Menunggu') {
-        return redirect()->back()->with('error', 'Gagal! Pengajuan yang sudah diproses oleh atasan tidak dapat dihapus untuk alasan arsip.');
-    }
+    //if ($cuti->status !== 'Menunggu') {
+        //return redirect()->back()->with('error', 'Gagal! Pengajuan yang sudah diproses oleh atasan tidak dapat dihapus untuk alasan arsip.');
+    //}
 
     // 4. Eksekusi jika masih berstatus 'Menunggu'
     $cuti->delete();
 
-    return redirect()->back()->with('success', 'Pengajuan cuti berhasil dibatalkan.');
+    return redirect()->back()->with('success', 'Riwayat pengajuan cuti berhasil dihapus.');
 }
 
 
@@ -349,19 +396,19 @@ private function calculateWorkingDays($startDate, $endDate)
  * Mengambil data libur dari API dayoffapi.vercel.app
  * ============================================================================
  */
-private function getHolidays($year)
-{
-    try {
-        $url = "https://dayoffapi.vercel.app/api?year={$year}";
-        $response = file_get_contents($url);
-        $data = json_decode($response, true);
-        
-        // Return array of date strings
-        return array_column($data, 'tanggal');
-    } catch (\Exception $e) {
-        // Jika API error, return empty array
-        \Log::warning('Failed to fetch holidays: ' . $e->getMessage());
-        return [];
+    private function getHolidays($year)
+    {
+        try {
+            $url = "https://dayoffapi.vercel.app/api?year={$year}";
+            $response = file_get_contents($url);
+            $data = json_decode($response, true);
+            
+            // Return array of date strings
+            return array_column($data, 'tanggal');
+        } catch (\Exception $e) {
+            // Jika API error, return empty array
+            \Log::warning('Failed to fetch holidays: ' . $e->getMessage());
+            return [];
+        }
     }
-}
 }

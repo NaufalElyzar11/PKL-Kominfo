@@ -164,8 +164,8 @@ public function update(Request $request, $id)
 
     public function exportPdf(Request $request)
     {
-        // Gunakan relasi yang sama dengan index agar konsisten
-        $query = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti']);
+        // PERBAIKAN: Tambahkan 'delegasi' ke dalam eager loading agar data pengganti ikut diambil
+        $query = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti', 'delegasi']);
 
         // 1. Search (Gunakan kolom di tabel cuti agar sinkron dengan index)
         if ($request->filled('search')) {
@@ -176,12 +176,17 @@ public function update(Request $request, $id)
             });
         }
 
-        // 2. Filter Status (WAJIB TAMBAHKAN INI)
+        // 2. Filter Status (Gunakan whereIn agar lebih fleksibel terhadap variasi status)
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = $request->status;
+            if ($status === 'disetujui') {
+                $query->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Kadis']);
+            } else {
+                $query->where('status', $status);
+            }
         }
 
-        // 3. Filter Tanggal (WAJIB TAMBAHKAN INI)
+        // 3. Filter Tanggal
         if ($request->filled('tanggal_dari')) {
             $query->whereDate('tanggal_mulai', '>=', $request->tanggal_dari);
         }
@@ -189,10 +194,12 @@ public function update(Request $request, $id)
             $query->whereDate('tanggal_selesai', '<=', $request->tanggal_sampai);
         }
 
+        // Urutkan berdasarkan yang terbaru agar laporan rapi
         $cuti = $query->orderBy('created_at', 'desc')->get();
 
+        // Load view dengan data yang sudah menyertakan delegasi
         $pdf = Pdf::loadView('admin.cuti.export_pdf', compact('cuti'))
-                ->setPaper('a4', 'potrait');
+                    ->setPaper('a4', 'portrait');
 
         return $pdf->download('Laporan_Cuti_Pegawai_' . now()->format('d-m-Y') . '.pdf');
     }
