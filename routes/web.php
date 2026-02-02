@@ -145,15 +145,26 @@ Route::middleware(['auth'])->group(function () {
 
 // GRUP UTAMA PEJABAT (Hanya satu pembuka di sini)
 Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')->group(function () {
-    
-    // 1. Rute Dashboard & Approval
-    Route::get('/dashboard', [PejabatApprovalController::class, 'dashboard'])->name('dashboard');
-    Route::get('/approval', [PejabatApprovalController::class, 'index'])->name('approval.index');
-    Route::post('/approval/{id}/setuju', [PejabatApprovalController::class, 'approve'])->name('approval.approve');
-    Route::post('/approval/{id}/tolak', [PejabatApprovalController::class, 'reject'])->name('approval.reject');
-    Route::post('/approval/{id}/cancel', [PejabatApprovalController::class, 'cancel'])->name('approval.cancel');
 
-    // 2. Rute Profile (Dimasukkan ke dalam grup Pejabat agar aman)
+    // Dashboard
+    Route::get('/dashboard', [PejabatApprovalController::class, 'dashboard'])->name('dashboard');
+
+    // Approve cuti
+    Route::post('/approval/{id}/setuju', 
+        [PejabatApprovalController::class, 'approve']
+    )->name('approval.approve');
+
+    // Reject cuti (pakai modal)
+    Route::post('/cuti/{id}/tolak', 
+        [PejabatApprovalController::class, 'cancel']
+    )->name('approval.reject');
+
+    // Cancel persetujuan
+    Route::post('/approval/{id}/cancel', 
+        [PejabatApprovalController::class, 'cancel']
+    )->name('approval.cancel');
+
+    // Profile
     Route::prefix('profile')->as('profile.')->group(function () {
         Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
         Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');

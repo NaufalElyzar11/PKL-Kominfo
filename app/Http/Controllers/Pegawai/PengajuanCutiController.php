@@ -163,7 +163,7 @@ class PengajuanCutiController extends Controller
             'id_pegawai'      => $pegawai->id,
             'id_delegasi'     => $validated['id_delegasi'],
             'nama'            => $pegawai->nama,
-            'nip'             => $pegawai->nip,
+            'nip'             => $pegawai->nip ?? '-',
             'jabatan'         => $pegawai->jabatan,
             'alamat'          => $validated['alamat'],
             'jenis_cuti'      => $validated['jenis_cuti'],
@@ -344,7 +344,6 @@ private function isPegawaiLengkap($pegawai)
 
     $dataWajib = [
         'nama',
-        'nip',
         'jabatan',
         'unit_kerja',
         'telepon',

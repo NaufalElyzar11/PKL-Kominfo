@@ -785,7 +785,7 @@
                             <div class="space-y-1.5">
                                 <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                     <i class="fa-solid fa-location-dot text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Alamat Selama Cuti <span class="text-red-500">*</span>
+                                    Alamat <span class="text-red-500">*</span>
                                 </label>
                                 <textarea 
                                     name="alamat"

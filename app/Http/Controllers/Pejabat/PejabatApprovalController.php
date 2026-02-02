@@ -42,14 +42,29 @@ class PejabatApprovalController extends Controller
         return back()->with('success', 'Pengajuan cuti telah disetujui secara final.');
     }
 
-    public function cancel($id)
+    public function cancel(Request $request, $id)
     {
-        $cuti = Cuti::findOrFail($id);
-        
-        // Mengembalikan status menjadi ditolak/dibatalkan
-        // Jatah cuti akan otomatis bertambah kembali di tampilan profil pegawai
-        $cuti->update(['status' => 'Ditolak']);
+        $request->validate([
+            'catatan_penolakan' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z\s]+$/'
+            ]
+        ], [
+            'catatan_penolakan.required' => 'Alasan penolakan wajib diisi.',
+            'catatan_penolakan.max' => 'Alasan penolakan maksimal 100 karakter.',
+            'catatan_penolakan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi saja.'
+        ]);
 
-        return back()->with('success', 'Persetujuan berhasil dibatalkan.');
+        $cuti = Cuti::findOrFail($id);
+
+        $cuti->update([
+            'status' => 'Ditolak',
+            'catatan_penolakan' => $request->catatan_penolakan
+        ]);
+
+        return back()->with('success', 'Pengajuan cuti berhasil ditolak.');
     }
+
 }

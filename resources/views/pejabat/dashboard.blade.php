@@ -6,13 +6,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 <script>
     tailwind.config = {
         darkMode: "class",
         theme: {
             extend: {
                 colors: {
-                    "primary": "#008fd3", {{-- Warna Kominfo --}}
+                    "primary": "#008fd3", //Warna Kominfo
                     "background-light": "#f6f7f8",
                     "background-dark": "#101922",
                 },
@@ -26,9 +28,13 @@
     }
 </script>
 <style>
-    .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    }
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+[x-cloak] {
+    display: none !important;
+}
 </style>
 @endpush
 
@@ -155,8 +161,12 @@
                                     </form>
                                     
                                     {{-- Reject Button --}}
-                                    <button type="button" @click="rejectId = {{ $c->id }}; showRejectModal = true" class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Tolak">
-                                        <span class="material-symbols-outlined text-[18px]">close</span>
+                                    <button type="button" 
+                                            @click.stop="rejectId = {{ $c->id }}; showRejectModal = true" 
+                                            class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm" 
+                                            title="Tolak">
+                                        {{-- pointer-events-none memastikan klik masuk ke button, bukan ke ikon --}}
+                                        <span class="material-symbols-outlined text-[18px] pointer-events-none">close</span>
                                     </button>
                                 </div>
                             </td>
@@ -177,6 +187,55 @@
 
         </div>
     </div>
+
+{{-- Modal Alasan Penolakan --}}
+<div x-show="showRejectModal" 
+    x-transition.opacity 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" 
+    x-cloak>
+    
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6" @click.away="showRejectModal = false">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-rose-500">report_problem</span>
+            Alasan Penolakan
+        </h3>
+
+        <form :action="'{{ route('pejabat.approval.reject', ['id' => '_id']) }}'.replace('_id', rejectId)" method="POST">
+            @csrf
+
+        <div x-data="{ count: 0 }">
+            <textarea name="catatan_penolakan"
+                rows="4"
+                required
+                maxlength="255"
+                pattern="[A-Za-z\s]+"
+                oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, ''); count = this.value.length"
+                x-on:input="count = $event.target.value.length"
+                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-rose-500 focus:border-rose-500 p-2 border text-sm"
+                placeholder="Contoh: Pekerjaan sedang menumpuk, mohon tunda cuti..."></textarea>
+
+            <div class="text-xs text-gray-500 text-right mt-1">
+                <span x-text="count"></span>/100 karakter
+            </div>
+        </div>
+
+            
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" 
+                    @click="showRejectModal = false" 
+                    class="text-gray-600 px-4 py-2 text-sm font-medium">
+                    Batal
+                </button>
+
+                <button type="submit" 
+                    class="bg-rose-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-rose-700 shadow-md">
+                    Kirim Penolakan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 
     {{-- Riwayat Section --}}
     <div>
@@ -223,11 +282,14 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-gray-500 italic">
+                            <td class="px-6 py-4">
                                 @if($r->status == 'Ditolak')
-                                    <span class="text-red-500 font-semibold">Alasan:</span> {{ $r->catatan_atasan ?? $r->catatan_penolakan ?? '-' }}
+                                    <div class="bg-red-50 border border-red-200 text-red-700 text-xs p-2 rounded-md">
+                                        <span class="font-semibold">Alasan:</span>
+                                        {{ $r->catatan_penolakan ?? '-' }}
+                                    </div>
                                 @else
-                                    -
+                                    <span class="text-gray-400">-</span>
                                 @endif
                             </td>
 
@@ -261,37 +323,41 @@
         </div>
     </div>
 </div>
-    {{-- Modal Reject --}}
-    <div x-show="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
-        <div class="fixed inset-0 bg-black/50" @click="showRejectModal = false"></div>
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative z-10">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Alasan Penolakan</h3>
-            
-            <form :action="'{{ url('pejabat/approval') }}/' + rejectId + '/tolak'" method="POST">
-                @csrf
-                <textarea name="catatan" rows="4" required
-                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 p-2 border"
-                    placeholder="Contoh: Pekerjaan sedang menumpuk, mohon tunda cuti..."></textarea>
-                
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button type="button" @click="showRejectModal = false" class="text-gray-600 px-4 py-2 text-sm">Batal</button>
-                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-700">Kirim Penolakan</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
 </div>
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // 1. Notifikasi Sukses
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: {{ \Illuminate\Support\Js::from(session('success')) }}, 
+            showConfirmButton: false,
+            timer: 3000,
+            borderRadius: '15px'
+        });
+    @endif
+
+    // 2. Notifikasi Gagal/Error Validasi
+    @if($errors->any())
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: {{ \Illuminate\Support\Js::from($errors->first()) }},
+            confirmButtonColor: '#ef4444'
+        });
+    @endif
+
+    // 3. Fungsi Approve (Tetap di sini)
     function confirmApprove(id) {
         Swal.fire({
             title: 'Setujui Pengajuan?',
-            text: "Apakah Anda yakin ingin menyetujui pengajuan cuti ini (Final)?",
+            text: "Apakah Anda yakin ingin menyetujui pengajuan cuti ini?",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#10b981', // Emerald 500
+            confirmButtonColor: '#10b981',
             cancelButtonColor: '#6b7280',
             confirmButtonText: 'Ya, Setujui!',
             cancelButtonText: 'Batal'

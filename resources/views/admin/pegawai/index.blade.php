@@ -343,12 +343,11 @@
             {{-- Bagian NIP pada Modal Tambah --}}
             <div> 
                 <label class="block font-medium text-gray-700 mb-0.5">
-                    NIP <span class="text-red-500">*</span> {{-- Tambahkan tanda wajib isi --}}
+                    NIP {{-- Hapus tanda bintang di sini --}}
                 </label>
                 <input type="text" name="nip"
                     x-model="nip"
-                    required {{-- Tambahkan atribut required --}}
-                    minlength="13" 
+                    {{-- Hapus atribut required --}}
                     maxlength="18"
                     inputmode="numeric"
                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
@@ -468,13 +467,9 @@
                 </button>
                 
                 <button type="submit"
-                    {{-- Tombol mati jika NIP kosong ATAU NIP kurang dari 13 karakter --}}
-                    :disabled="!nip || nip.length < 13"
-                    
-                    {{-- Warna berubah menjadi abu-abu jika disabled, dan biru jika siap simpan --}}
-                    :class="(!nip || nip.length < 13) 
-                            ? 'opacity-50 cursor-not-allowed bg-gray-400' 
-                            : 'bg-sky-600 hover:bg-sky-700'"
+                    {{-- Tombol hanya mati jika NIP diisi tapi kurang dari 13 angka. Jika NIP kosong, tombol tetap aktif. --}}
+                    :disabled="nip.length > 0 && nip.length < 13"
+                    :class="(nip.length > 0 && nip.length < 13) ? 'bg-gray-400' : 'bg-sky-600'"
                     class="px-3 py-1 text-sm font-medium rounded-lg text-white transition-all">
                     Simpan Data
                 </button>
@@ -706,11 +701,10 @@
 
         {{-- Tombol Update pada Modal Edit --}}
         <button type="submit"
-            {{-- Tombol mati jika NIP tidak valid ATAU data tidak ada yang berubah --}}
-            :disabled="(selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()"
+            {{-- Tombol mati HANYA jika data tidak berubah ATAU NIP diisi tapi salah (kurang dari 13) --}}
+            :disabled="isUnchanged() || (selectedPegawai?.nip?.length > 0 && selectedPegawai.nip.length < 13)"
             
-            {{-- Styling abu-abu jika disabled (nip tidak valid atau data tidak berubah) --}}
-            :class="((selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()) 
+            :class="(isUnchanged() || (selectedPegawai?.nip?.length > 0 && selectedPegawai.nip.length < 13)) 
                     ? 'opacity-50 cursor-not-allowed bg-gray-400' 
                     : 'bg-yellow-600 hover:bg-yellow-700'"
             
