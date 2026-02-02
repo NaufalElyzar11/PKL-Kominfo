@@ -496,262 +496,402 @@
         </div>
     </div>
 </div>
-<!-- MODAL AJUKAN CUTI -->
+<!-- MODAL AJUKAN CUTI - REDESIGNED (WIDER + RESPONSIVE) -->
 <template x-if="showModal">
     <div
-        class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
         @click.self="showModal = false"
         x-cloak
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
     >
         <div
-            class="bg-white rounded-xl shadow-xl w-full max-w-sm p-4 border border-gray-200"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-md lg:max-w-3xl overflow-hidden border border-gray-100"
             @click.stop
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
         >
-
-            <h3 class="text-sm font-bold text-sky-600 mb-2 pb-1.5 border-b flex items-center gap-2">
-                <i class="fa-solid fa-calendar-plus text-xs"></i> AJUKAN CUTI
-            </h3>
-
-            <div class="bg-yellow-100 p-1 text-[8px]">
-                Unit Kerja Anda: {{ $pegawai->unit_kerja }} | 
-                Jumlah Rekan Ditemukan: {{ $rekanSebidang->count() }}
+            {{-- ========== HEADER DENGAN GRADIENT ========== --}}
+            <div class="bg-gradient-to-r from-sky-500 to-blue-600 px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <i class="fa-solid fa-calendar-plus text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-base sm:text-lg tracking-wide">Ajukan Cuti</h3>
+                            <p class="text-sky-100 text-[10px] sm:text-xs">Isi formulir pengajuan cuti tahunan</p>
+                        </div>
+                    </div>
+                    <button @click="showModal = false" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                        <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                    </button>
+                </div>
             </div>
 
-            <form action="{{ route('pegawai.cuti.store') }}" method="POST" class="space-y-2 text-[10px]">
-                @csrf
+            {{-- ========== FORM CONTENT ========== --}}
+            <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
+                <form action="{{ route('pegawai.cuti.store') }}" method="POST">
+                    @csrf
 
-                <!-- WARNING PENDING -->
-                <div x-show="hasPendingCuti"
-                     class="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-[9px] leading-tight">
-                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
-                    Ada pengajuan yang masih <b>Menunggu Persetujuan</b>.
-                </div>
-
-                <!-- INFO PEGAWAI -->
-                <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded border border-gray-200 text-gray-500">
-                    <div class="col-span-2 border-b border-gray-200 pb-1 mb-1">
-                        <span class="font-bold">Nama:</span> {{ $pegawai->nama ?? '-' }}
-                    </div>
-                    <div><span class="font-bold">NIP:</span> {{ $pegawai->nip ?? '-' }}</div>
-                    <div><span class="font-bold">Jabatan:</span> {{ $pegawai->jabatan ?? '-' }}</div>
-
-                    {{-- TAMBAHKAN DUA BARIS INI --}}
-                    <div><span class="font-bold">Atasan:</span> {{ $pegawai->atasan ?? '-' }}</div>
-                    <div><span class="font-bold">Pejabat:</span> {{ $pegawai->pemberi_cuti ?? '-' }}</div>
-
-                    {{-- INPUT HIDDEN AGAR MASUK KE DATABASE SAAT STORE --}}
-                    <input type="hidden" name="atasan" value="{{ $pegawai->atasan }}">
-                    <input type="hidden" name="pemberi_cuti" value="{{ $pegawai->pemberi_cuti }}">
-                </div>
-
-                <fieldset :disabled="hasPendingCuti" class="space-y-2">
-
-                    <!-- JENIS CUTI -->
-                    <div>
-                        <label class="font-bold text-gray-600">Jenis Cuti *</label>
-                        <input type="text"
-                               value="Tahunan"
-                               class="w-full mt-0.5 p-1 rounded border border-gray-300 bg-gray-100"
-                               disabled>
-                        <input type="hidden" name="jenis_cuti" value="Tahunan">
+                    {{-- WARNING PENDING (Full Width) --}}
+                    <div x-show="hasPendingCuti" x-transition
+                         class="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl mb-4">
+                        <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-clock text-amber-600"></i>
+                        </div>
+                        <div class="text-[11px] sm:text-xs">
+                            <p class="font-bold text-amber-800">Pengajuan Pending</p>
+                            <p class="text-amber-700">Ada pengajuan yang masih menunggu persetujuan. Harap tunggu hingga selesai diproses.</p>
+                        </div>
                     </div>
 
-                    <!-- TANGGAL -->
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="font-bold text-gray-600">Mulai *</label>
-                            <div class="relative">
-                                <input type="text"
-                                       name="tanggal_mulai"
-                                       x-model="tanggalMulaiTambah"
-                                       x-ref="tambahMulai"
-                                       placeholder="Pilih Tanggal"
-                                       class="flatpickr w-full mt-0.5 p-1 rounded border border-gray-300 bg-white"
-                                       required>
-                                <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
-                                    <i class="fa-regular fa-calendar"></i>
+                    {{-- ========== 2-COLUMN LAYOUT (Desktop) / 1-COLUMN (Mobile) ========== --}}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                        
+                        {{-- ===== KOLOM KIRI: DATA PEGAWAI + RINGKASAN ===== --}}
+                        <div class="space-y-4">
+                            {{-- INFO PEGAWAI SECTION --}}
+                            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                                <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-user-tie text-sky-600 text-sm"></i>
+                                        <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Pegawai</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    {{-- Nama --}}
+                                    <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+                                        <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-id-badge text-sky-600 text-sm"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Nama Lengkap</p>
+                                            <p class="text-[12px] sm:text-sm font-semibold text-gray-800 truncate">{{ $pegawai->nama ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                    {{-- Info Grid --}}
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">NIP</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-700">{{ $pegawai->nip ?? '-' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Jabatan</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-700">{{ $pegawai->jabatan ?? '-' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Atasan Langsung</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-700">{{ $pegawai->atasan ?? '-' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Pejabat Pemberi Cuti</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-700">{{ $pegawai->pemberi_cuti ?? '-' }}</p>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="atasan" value="{{ $pegawai->atasan }}">
+                                    <input type="hidden" name="pemberi_cuti" value="{{ $pegawai->pemberi_cuti }}">
+                                </div>
+                            </div>
+
+                            {{-- RINGKASAN CUTI (display on desktop, hidden on mobile - will show at bottom) --}}
+                            <div class="hidden lg:block bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
+                                <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <i class="fa-solid fa-chart-pie text-sky-600 text-sm"></i>
+                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Ringkasan Pengajuan</span>
+                                </div>
+                                
+                                {{-- Jumlah Hari --}}
+                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-sky-100 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-calendar-week text-sky-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Jumlah Hari Cuti</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-600">Hari kerja yang diajukan</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-2xl font-black text-sky-600" x-text="jumlahHariTambah">0</span>
+                                        <span class="text-[10px] sm:text-xs text-gray-400 ml-1">hari</span>
+                                    </div>
+                                </div>
+
+                                {{-- Sisa Cuti --}}
+                                <div class="flex items-center justify-between p-3 rounded-xl border shadow-sm transition-all duration-300"
+                                     :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                                             :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'bg-red-100' : 'bg-emerald-100'">
+                                            <i class="fa-solid fa-wallet" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-600'"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] uppercase tracking-wide" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">Sisa Kuota</p>
+                                            <p class="text-[11px] sm:text-xs font-medium" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-700'">Setelah pengajuan ini</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-2xl font-black" 
+                                              :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-600'"
+                                              x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)">12</span>
+                                        <span class="text-[10px] sm:text-xs ml-1" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">hari</span>
+                                    </div>
+                                </div>
+
+                                {{-- Warning --}}
+                                <div x-show="jumlahHariTambah > sisaCutiTersedia" 
+                                     x-transition
+                                     class="flex items-start gap-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+                                    <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="fa-solid fa-exclamation text-red-600 text-[10px]"></i>
+                                    </div>
+                                    <p class="text-[10px] sm:text-xs text-red-700 leading-relaxed">
+                                        <span class="font-bold">Kuota tidak mencukupi!</span><br>
+                                        Pengajuan (<span x-text="jumlahHariTambah"></span> hari) melebihi sisa kuota (<span x-text="sisaCutiTersedia"></span> hari).
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="font-bold text-gray-600">Selesai *</label>
-                             <div class="relative">
-                                <input type="text"
-                                       name="tanggal_selesai"
-                                       x-model="tanggalSelesaiTambah"
-                                       x-ref="tambahSelesai"
-                                        placeholder="Pilih Tanggal"
-                                       class="flatpickr w-full mt-0.5 p-1 rounded border border-gray-300 bg-white"
-                                       required>
-                                <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
-                                    <i class="fa-regular fa-calendar"></i>
+                        {{-- ===== KOLOM KANAN: FORM INPUT ===== --}}
+                        <fieldset :disabled="hasPendingCuti" class="space-y-4">
+                            {{-- JENIS CUTI --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-tag text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Jenis Cuti
+                                </label>
+                                <div class="relative">
+                                    <input type="text" value="Cuti Tahunan" disabled
+                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50 text-[12px] sm:text-sm font-medium text-gray-600 cursor-not-allowed">
+                                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                        <span class="px-2 py-0.5 bg-sky-100 text-sky-700 text-[9px] sm:text-[10px] font-bold rounded-full uppercase">Default</span>
+                                    </div>
                                 </div>
+                                <input type="hidden" name="jenis_cuti" value="Tahunan">
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Watcher untuk re-init atau update logic -->
-                    <div x-effect="
-                        if(holidaysLoaded) {
-                            // Re-init khusus start date dengan minDate
-                            if($refs.tambahMulai) {
-                                flatpickr($refs.tambahMulai, {
-                                    locale: 'id',
-                                    dateFormat: 'Y-m-d',
-                                    minDate: new Date().fp_incr(3), // Hari ini + 3 hari
-                                    disable: [
-                                        function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
-                                        ...holidays.map(h => h.date)
-                                    ],
-                                    onDayCreate: (dObj, dStr, fp, dayElem) => {
-                                        const dateStr = dayElem.dateObj.toISOString().split('T')[0];
-                                        const holiday = holidays.find(h => h.date === dateStr);
-                                        if (holiday) {
-                                            dayElem.className += ' holiday';
-                                            dayElem.title = holiday.desc;
-                                        }
-                                    },
-                                    onChange: (selectedDates, dateStr) => {
-                                        tanggalMulaiTambah = dateStr;
-                                        hitungHariTambah();
-                                        // Update minDate untuk tanggal selesai
-                                        if ($refs.tambahSelesai._flatpickr) {
-                                            $refs.tambahSelesai._flatpickr.set('minDate', dateStr);
-                                        }
+                            {{-- TANGGAL --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-calendar-days text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Periode Cuti <span class="text-red-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="relative group">
+                                        <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+                                            <i class="fa-regular fa-calendar text-gray-400 group-focus-within:text-sky-500 transition-colors text-xs"></i>
+                                        </div>
+                                        <input type="text"
+                                               name="tanggal_mulai"
+                                               x-model="tanggalMulaiTambah"
+                                               x-ref="tambahMulai"
+                                               placeholder="Tanggal Mulai"
+                                               class="flatpickr w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                      focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                               required>
+                                    </div>
+                                    <div class="relative group">
+                                        <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+                                            <i class="fa-regular fa-calendar-check text-gray-400 group-focus-within:text-sky-500 transition-colors text-xs"></i>
+                                        </div>
+                                        <input type="text"
+                                               name="tanggal_selesai"
+                                               x-model="tanggalSelesaiTambah"
+                                               x-ref="tambahSelesai"
+                                               placeholder="Tanggal Selesai"
+                                               class="flatpickr w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                      focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                               required>
+                                    </div>
+                                </div>
+                                <p class="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Tanggal merah & akhir pekan otomatis dilewati
+                                </p>
+                            </div>
+
+                            {{-- Watcher untuk re-init Flatpickr --}}
+                            <div x-effect="
+                                if(holidaysLoaded) {
+                                    if($refs.tambahMulai) {
+                                        flatpickr($refs.tambahMulai, {
+                                            locale: 'id',
+                                            dateFormat: 'Y-m-d',
+                                            minDate: new Date().fp_incr(3),
+                                            disable: [
+                                                function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                                ...holidays.map(h => h.date)
+                                            ],
+                                            onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                                const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                                const holiday = holidays.find(h => h.date === dateStr);
+                                                if (holiday) {
+                                                    dayElem.className += ' holiday';
+                                                    dayElem.title = holiday.desc;
+                                                }
+                                            },
+                                            onChange: (selectedDates, dateStr) => {
+                                                tanggalMulaiTambah = dateStr;
+                                                hitungHariTambah();
+                                                if ($refs.tambahSelesai._flatpickr) {
+                                                    $refs.tambahSelesai._flatpickr.set('minDate', dateStr);
+                                                }
+                                            }
+                                        });
                                     }
-                                });
-                            }
+                                    if($refs.tambahSelesai) {
+                                        flatpickr($refs.tambahSelesai, {
+                                            locale: 'id',
+                                            dateFormat: 'Y-m-d',
+                                            minDate: tanggalMulaiTambah || new Date().fp_incr(3),
+                                            disable: [
+                                                function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                                ...holidays.map(h => h.date)
+                                            ],
+                                            onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                                const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                                const holiday = holidays.find(h => h.date === dateStr);
+                                                if (holiday) {
+                                                    dayElem.className += ' holiday';
+                                                    dayElem.title = holiday.desc;
+                                                }
+                                            },
+                                            onChange: (selectedDates, dateStr) => {
+                                                tanggalSelesaiTambah = dateStr;
+                                                hitungHariTambah();
+                                            }
+                                        });
+                                    }
+                                }
+                            "></div>
+
+                            {{-- ALAMAT --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-location-dot text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Alamat Selama Cuti <span class="text-red-500">*</span>
+                                </label>
+                                <textarea 
+                                    name="alamat"
+                                    rows="2"
+                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 resize-none"
+                                    placeholder="Masukkan alamat lengkap selama Anda menjalani cuti..."
+                                    required
+                                    oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')"></textarea>
+                            </div>
+
+                            {{-- ALASAN --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-pen-fancy text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Alasan Cuti <span class="text-red-500">*</span>
+                                </label>
+                                <textarea 
+                                    name="keterangan" 
+                                    rows="2" 
+                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 resize-none" 
+                                    placeholder="Jelaskan alasan pengajuan cuti Anda..." 
+                                    required
+                                    oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"></textarea>
+                            </div>
+
+                            {{-- DELEGASI --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-user-group text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Pegawai Pengganti <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <select 
+                                        name="id_delegasi" 
+                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                               focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                        required>
+                                        <option value="" disabled selected>— Pilih pegawai pengganti —</option>
+                                        @forelse($rekanSebidang as $rekan)
+                                            <option value="{{ $rekan->id }}">{{ $rekan->nama }} — {{ $rekan->jabatan }}</option>
+                                        @empty
+                                            <option value="" disabled>Tidak ada rekan tersedia</option>
+                                        @endforelse
+                                    </select>
+                                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                                    </div>
+                                </div>
+                                <p class="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    Pegawai ini akan menggantikan tugas selama Anda cuti
+                                </p>
+                            </div>
                             
-                            // Re-init khusus end date
-                            if($refs.tambahSelesai) {
-                                flatpickr($refs.tambahSelesai, {
-                                    locale: 'id',
-                                    dateFormat: 'Y-m-d',
-                                    minDate: tanggalMulaiTambah || new Date().fp_incr(3),
-                                    disable: [
-                                        function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
-                                        ...holidays.map(h => h.date)
-                                    ],
-                                    onDayCreate: (dObj, dStr, fp, dayElem) => {
-                                        const dateStr = dayElem.dateObj.toISOString().split('T')[0];
-                                        const holiday = holidays.find(h => h.date === dateStr);
-                                        if (holiday) {
-                                            dayElem.className += ' holiday';
-                                            dayElem.title = holiday.desc;
-                                        }
-                                    },
-                                    onChange: (selectedDates, dateStr) => {
-                                        tanggalSelesaiTambah = dateStr;
-                                        hitungHariTambah();
-                                    }
-                                });
-                            }
-                        }
-                    "></div>
-
-                    <!-- ALAMAT -->
-                    <div>
-                        <label class="font-bold text-gray-600">Alamat *</label>
-                        <textarea 
-                            name="alamat"
-                            rows="1"
-                            class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none"
-                            placeholder="Contoh: Komplek Bukit Permata Indah Jl. Permata Jamrud Blok E No 127"
-                            required
-                            oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')"></textarea>
-                    </div>
-
-
-                     <!-- ALASAN -->
-                        <div>
-                            <label class="font-bold text-gray-600">Alasan *</label>
-                            <textarea 
-                                name="keterangan" 
-                                rows="1" 
-                                class="w-full mt-0.5 p-1 rounded border border-gray-300 outline-none resize-none" 
-                                placeholder="Contoh: Menghadiri acara keluarga atau keperluan mendesak lainnya.." 
-                                pattern="[A-Za-z\s]+"
-                                title="Alasan cuti hanya boleh huruf"
-                                required
-                                {{-- Mencegah input angka secara real-time --}}
-                                oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                                {{-- Validasi regex: hanya huruf dan spasi, minimal 5 karakter --}}
-                                pattern="^[a-zA-Z\s]+$"
-                                title="Alasan hanya boleh berisi huruf dan tidak boleh ada angka"></textarea>
-                        </div>
-
-                     <!-- DELEGASI PEGAWAI -->
-                    <div>
-                        <label class="font-bold text-gray-600">Pegawai Pengganti (Delegasi) *</label>
-                        <select 
-                            name="id_delegasi" 
-                            class="w-full mt-0.5 p-1 rounded border border-gray-300 bg-white outline-none focus:ring-1 focus:ring-sky-400"
-                            required>
-                            <option value="" disabled selected>-- Pilih Pegawai Pengganti --</option>
-                            @forelse($rekanSebidang as $rekan)
-                                <option value="{{ $rekan->id }}">{{ $rekan->nama }} ({{ $rekan->jabatan }})</option>
-                            @empty
-                                <option value="" disabled>Tidak ada rekan sebidang tersedia</option>
-                            @endforelse
-                        </select>
-                        <p class="text-[8px] text-gray-400 mt-0.5 italic">* Pegawai ini yang akan menggantikan tugas Anda selama cuti.</p>
-                    </div>
-
-
-                    <!-- JUMLAH HARI DAN SISA CUTI -->
-                    <div class="space-y-2">
-                        <!-- Jumlah Hari Cuti -->
-                        <div class="flex justify-between items-center bg-sky-50 p-1.5 rounded border border-sky-100">
-                            <span class="font-bold text-sky-700 uppercase tracking-tighter text-[9px]">
-                                Jumlah Cuti (Hari Kerja)
-                            </span>
-                            <div class="text-sky-800 font-black">
-                                <span x-text="jumlahHariTambah"></span> Hari
-                            </div>
                             <input type="hidden" name="jumlah_hari" :value="jumlahHariTambah">
-                        </div>
+                        </fieldset>
+                    </div>
 
-                        <!-- Sisa Cuti Setelah Pengajuan -->
-                        <div class="flex justify-between items-center p-1.5 rounded border"
-                             :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'">
-                            <span class="font-bold uppercase tracking-tighter text-[9px]"
-                                  :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-700' : 'text-green-700'">
-                                Sisa Cuti Setelah Pengajuan
-                            </span>
-                            <div class="font-black"
-                                 :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-800' : 'text-green-800'">
-                                <span x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)"></span> Hari
+                    {{-- RINGKASAN CUTI - MOBILE ONLY (ditampilkan di bawah form pada layar kecil) --}}
+                    <div class="lg:hidden mt-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
+                        <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
+                            <i class="fa-solid fa-chart-pie text-sky-600 text-sm"></i>
+                            <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Ringkasan Pengajuan</span>
+                        </div>
+                        
+                        {{-- Jumlah Hari + Sisa Cuti in a row for mobile --}}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="flex flex-col items-center p-3 bg-white rounded-xl border border-sky-100 shadow-sm">
+                                <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-1">Hari Cuti</p>
+                                <span class="text-2xl font-black text-sky-600" x-text="jumlahHariTambah">0</span>
+                                <span class="text-[9px] text-gray-400">hari kerja</span>
+                            </div>
+                            <div class="flex flex-col items-center p-3 rounded-xl border shadow-sm transition-all duration-300"
+                                 :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'">
+                                <p class="text-[9px] uppercase tracking-wide mb-1" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">Sisa Kuota</p>
+                                <span class="text-2xl font-black" 
+                                      :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-600'"
+                                      x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)">12</span>
+                                <span class="text-[9px]" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">hari tersisa</span>
                             </div>
                         </div>
 
-                        <!-- Warning jika melebihi kuota -->
+                        {{-- Warning --}}
                         <div x-show="jumlahHariTambah > sisaCutiTersedia" 
-                             class="p-2 bg-red-50 border border-red-200 text-red-700 rounded text-[9px] leading-tight">
-                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
-                            Pengajuan cuti (<span x-text="jumlahHariTambah"></span> hari) melebihi sisa kuota Anda (<span x-text="sisaCutiTersedia"></span> hari).
+                             x-transition
+                             class="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-xl">
+                            <i class="fa-solid fa-exclamation-circle text-red-600"></i>
+                            <p class="text-[10px] text-red-700">
+                                <span class="font-bold">Kuota tidak mencukupi!</span>
+                            </p>
                         </div>
                     </div>
 
-                </fieldset>
-
-                <!-- BUTTON -->
-                <div class="flex justify-end gap-2 pt-2 border-t">
-                    <button type="button"
-                            @click="showModal=false"
-                            class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg font-bold">
-                        Batal
-                    </button>
-
-                    <button type="submit"
-                            :disabled="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0"
-                            class="px-3 py-1 text-white rounded-lg font-bold transition"
-                            :class="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700'">
-                        Kirim
-                    </button>
-                </div>
-            </form>
-
+                    {{-- ACTION BUTTONS --}}
+                    <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 pt-4 mt-4 border-t border-gray-100">
+                        <button type="button"
+                                @click="showModal = false"
+                                class="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-xmark"></i>
+                            Batal
+                        </button>
+                        <button type="submit"
+                                :disabled="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0"
+                                class="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                                :class="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0 
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                                    : 'bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 hover:shadow-sky-200'">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Kirim Pengajuan
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </template>
