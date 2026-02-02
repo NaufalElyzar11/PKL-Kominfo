@@ -3,8 +3,8 @@
 @section('title', 'Data Pegawai & Pengajuan Cuti')
 
 @section('content')
-<div class="min-h-screen px-4 py-6 bg-[#E3F2FD]"
-   x-data="{
+{{-- Root x-data container (no styling) --}}
+<div x-data="{
     // Modal utama
     showCreateModal: false,
     showEditModal: false,
@@ -77,6 +77,8 @@
 }"
      @keydown.escape.window="closeModal()">
 
+{{-- Inner container with background styling --}}
+<div class="min-h-screen px-4 py-6 bg-[#E3F2FD]">
     {{-- =============================================== --}}
     {{-- BAGIAN 1: DATA PEGAWAI (Daftar & Filter) --}}
     {{-- =============================================== --}}
@@ -272,219 +274,293 @@
 
     <hr>
 
-{{-- ================= MODAL TAMBAH PEGAWAI (LEBIH KECIL) ================= --}}
-<div x-show="showCreateModal" x-cloak @click.self="closeModal()"
-     class="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-start justify-center z-50 pt-16">
+</div>{{-- End of bg-[#E3F2FD] container --}}
 
-    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 text-sm max-h-[85vh] overflow-y-auto">
-        
-       <h3 class="text-base font-bold text-sky-600 border-b pb-2 mb-2 flex items-center gap-2">
-            <i class="fa-solid fa-user-plus text-sky-600"></i>
-            Formulir Tambah Pegawai Baru
-        </h3>
+{{-- ================= MODAL TAMBAH PEGAWAI (PREMIUM DESIGN) ================= --}}
+<template x-if="showCreateModal">
+    <div x-cloak
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
+         @click.self="closeModal()"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
 
-        <form action="{{ route('admin.pegawai.store') }}" method="POST" class="space-y-3" autocomplete="off">
-            @csrf
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md lg:max-w-3xl overflow-hidden border border-gray-100"
+             @click.stop
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0">
 
-        {{-- FORM UTAMA --}}
-        <div class="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+            {{-- ========== HEADER DENGAN GRADIENT ========== --}}
+            <div class="bg-gradient-to-r from-sky-500 to-blue-600 px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <i class="fa-solid fa-user-plus text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-base sm:text-lg tracking-wide">Tambah Pegawai</h3>
+                            <p class="text-sky-100 text-[10px] sm:text-xs">Isi formulir untuk menambahkan pegawai baru</p>
+                        </div>
+                    </div>
+                    <button @click="closeModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                        <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                    </button>
+                </div>
+            </div>
 
-            {{-- ATASAN & PEMBERI CUTI (PALING ATAS, FULL WIDTH) --}}
-            <div class="col-span-2">
-                <div class="grid grid-cols-2 gap-2 bg-blue-50/50 p-2 rounded-lg border border-blue-100">
-                    <div>
-                        <label class="block font-medium text-gray-700 mb-0.5">
-                            Atasan Langsung <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="atasan"
-                            {{-- Menggunakan old() agar input tidak hilang jika validasi lain gagal --}}
-                            value="{{ old('atasan') }}" 
-                            class="block w-full border rounded-lg p-1 @error('atasan') border-red-500 @enderror"
-                            placeholder="Nama Atasan"
-                            {{-- Tambahkan atribut required di bawah ini --}}
-                            required 
-                            oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')"
-                            pattern="^[a-zA-Z\s.,]+$"
-                            title="Hanya diperbolehkan huruf, spasi, titik, dan koma">
+            {{-- ========== FORM CONTENT ========== --}}
+            <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
+                <form action="{{ route('admin.pegawai.store') }}" method="POST" autocomplete="off">
+                    @csrf
+
+                    {{-- ========== 2-COLUMN LAYOUT ========== --}}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                         
-                        {{-- Menampilkan pesan error dari Laravel --}}
-                        @error('atasan')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        {{-- ===== KOLOM KIRI: DATA PEGAWAI ===== --}}
+                        <div class="space-y-4">
+                            {{-- DATA PEGAWAI SECTION --}}
+                            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                                <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-user-tie text-sky-600 text-sm"></i>
+                                        <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Pegawai</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    {{-- Nama Lengkap --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-user text-sky-500 text-[10px]"></i>
+                                            Nama Lengkap <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="nama" required
+                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                      focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                               placeholder="Nama Pegawai"
+                                               oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')">
+                                    </div>
+
+                                    {{-- NIP --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-hashtag text-sky-500 text-[10px]"></i>
+                                            NIP <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="nip" x-model="nip" required
+                                               minlength="13" maxlength="18" inputmode="numeric"
+                                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                      focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                               placeholder="Masukkan 18 digit NIP">
+                                    </div>
+
+                                    {{-- Jabatan & Unit Kerja --}}
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-briefcase text-sky-500 text-[10px]"></i>
+                                                Jabatan <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" name="jabatan" required
+                                                   oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                                   placeholder="Staf IT">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-building text-sky-500 text-[10px]"></i>
+                                                Unit Kerja <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" name="unit_kerja" required
+                                                   oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                                   placeholder="Bidang Informatika">
+                                        </div>
+                                    </div>
+
+                                    {{-- Atasan & Pemberi Cuti --}}
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
+                                                Atasan <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" name="atasan" value="{{ old('atasan') }}" required
+                                                   oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')"
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                                   placeholder="Nama Atasan">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
+                                                Pemberi Cuti
+                                            </label>
+                                            <input type="text" name="pemberi_cuti" value="Kanafi, S.IP, MM" readonly
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- RINGKASAN INFO (Desktop only) --}}
+                            <div class="hidden lg:block bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
+                                <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <i class="fa-solid fa-circle-info text-sky-600 text-sm"></i>
+                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Informasi</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-sky-100 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-shield-halved text-sky-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Role Akses</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-600">Pilih role untuk pegawai</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-check-circle text-emerald-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-emerald-500 uppercase tracking-wide">Status Default</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-emerald-700">Pegawai Aktif</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ===== KOLOM KANAN: KEAMANAN AKUN ===== --}}
+                        <div class="space-y-4">
+                            {{-- ROLE & STATUS --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-shield-halved text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Role <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <select name="role" required
+                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                                   focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                        <option value="" disabled selected>Pilih Role</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="atasan">Atasan Langsung</option>
+                                        <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
+                                        <option value="pegawai">Pegawai</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-regular fa-circle-check text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Status <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <select name="status" required
+                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                                   focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                        <option value="" disabled selected>Pilih Status</option>
+                                        <option value="aktif">Aktif</option>
+                                        <option value="nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- PASSWORD DENGAN VALIDASI --}}
+                            <div x-data="{ 
+                                show: false, 
+                                pw: '',
+                                get hasUpper() { return /[A-Z]/.test(this.pw) },
+                                get hasNumber() { return /[0-9]/.test(this.pw) },
+                                get hasSymbol() { return /[!@#$%^&*(),.?':{}|<>]/.test(this.pw) },
+                                get isLongEnough() { return this.pw.length >= 8 }
+                            }" class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-key text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Password <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input :type="show ? 'text' : 'password'" 
+                                           name="password" x-model="pw" required
+                                           pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}"
+                                           class="w-full px-3 py-2.5 sm:py-3 pr-10 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                  focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                           placeholder="Kombinasi minimal 8 karakter">
+                                    <span @click="show = !show"
+                                          class="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400 hover:text-sky-600 transition">
+                                        <i class="fa-solid text-xs" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </span>
+                                </div>
+
+                                {{-- Password validation indicators --}}
+                                <div class="grid grid-cols-2 gap-2 mt-2">
+                                    <div class="flex items-center gap-1.5 text-[10px]" :class="hasUpper ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid" :class="hasUpper ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        <span>Huruf Kapital (A-Z)</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[10px]" :class="hasNumber ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid" :class="hasNumber ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        <span>Angka (0-9)</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[10px]" :class="hasSymbol ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid" :class="hasSymbol ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        <span>Simbol (!@#$%^&*)</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-[10px]" :class="isLongEnough ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid" :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        <span>Minimal 8 Karakter</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Info Box Warning --}}
+                            <div class="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-circle-info text-amber-600"></i>
+                                </div>
+                                <div class="text-[11px] sm:text-xs">
+                                    <p class="font-bold text-amber-800">Perhatian</p>
+                                    <p class="text-amber-700">Pastikan semua data telah diisi dengan benar sebelum menyimpan.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Pejabat Pemberi Cuti</label>
-                    <input type="text" 
-                        name="pemberi_cuti" 
-                        value="Kanafi, S.IP, MM"
-                        readonly 
-                        class="block w-full border border-gray-200 rounded-lg p-1" 
-                        placeholder="Nama Pejabat">
-                </div>
-                </div>
-            </div>
 
-            {{-- NAMA LENGKAP --}}
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">
-                    Nama Lengkap <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="nama" required
-                    class="block w-full border rounded-lg p-1 focus:ring-1 focus:ring-sky-500 outline-none"
-                    placeholder="Nama Pegawai"
-                    {{-- Mengizinkan huruf, spasi, titik, dan koma --}}
-                    oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')"
-                    {{-- Validasi pola agar menyertakan titik dan koma --}}
-                    pattern="^[a-zA-Z\s.,]+$"
-                    {{-- Pesan peringatan diperbarui --}}
-                    title="Nama hanya boleh berisi huruf, spasi, titik, dan koma">
+                    {{-- ACTION BUTTONS --}}
+                    <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 pt-4 mt-4 border-t border-gray-100">
+                        <button type="button" @click="closeModal()"
+                                class="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-xmark"></i>
+                            Batal
+                        </button>
+                        <button type="submit"
+                                :disabled="!nip || nip.length < 13"
+                                class="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                                :class="(!nip || nip.length < 13) 
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                                    : 'bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 hover:shadow-sky-200'">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Simpan Pegawai
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            {{-- Bagian NIP pada Modal Tambah --}}
-            <div> 
-                <label class="block font-medium text-gray-700 mb-0.5">
-                    NIP <span class="text-red-500">*</span> {{-- Tambahkan tanda wajib isi --}}
-                </label>
-                <input type="text" name="nip"
-                    x-model="nip"
-                    required {{-- Tambahkan atribut required --}}
-                    minlength="13" 
-                    maxlength="18"
-                    inputmode="numeric"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    class="block w-full border rounded-lg p-1 focus:ring-sky-500 focus:border-sky-500"
-                    placeholder="Masukkan 18 digit NIP">
-            </div>
-
-            {{-- JABATAN (KINI BERDAMPINGAN DENGAN UNIT KERJA) --}}
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">
-                    Jabatan <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="jabatan" required
-                    class="block w-full border rounded-lg p-1"
-                    placeholder="Staf IT"
-                    oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                    pattern="^[a-zA-Z\s]+$"
-                    title="Jabatan hanya boleh berisi huruf dan spasi">
-            </div>
-
-            {{-- UNIT KERJA (PENGHAPUSAN col-span-2 AGAR MASUK KE KOLOM SEBELAHNYA) --}}
-            <div>
-                <label class="block font-medium text-gray-700 mb-0.5">
-                    Unit Kerja <span class="text-red-500">*</span>
-                </label>
-                <input type="text" name="unit_kerja" required
-                    class="block w-full border rounded-lg p-1"
-                    placeholder="Contoh: Bidang Informatika"
-                    oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                    pattern="^[a-zA-Z\s]+$"
-                    title="Unit kerja hanya boleh berisi huruf dan spasi">
-            </div>
-
         </div>
-
-            {{-- ROLE + STATUS + EMAIL + PASSWORD --}}
-            <div class="grid grid-cols-2 gap-2">
-
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Role <span class="text-red-500">*</span></label>
-                    <select name="role" required class="block w-full border rounded-lg p-1">
-                        <option value="">Pilih</option>
-                        <option value="admin">Admin</option>
-                        <option value="atasan">Atasan Langsung</option>
-                        <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
-                        <option value="pegawai">Pegawai</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block font-medium text-gray-700 mb-0.5">Status <span class="text-red-500">*</span></label>
-                    <select name="status" required class="block w-full border rounded-lg p-1">
-                        <option value="">Pilih</option>
-                        <option value="aktif">Aktif</option>
-                        <option value="nonaktif">Nonaktif</option>
-                    </select>
-                </div>
-
-                {{-- PASSWORD DENGAN VALIDASI KOMBINASI --}}
-                <div x-data="{ 
-                    show: false, 
-                    pw: '',
-                    get hasUpper() { return /[A-Z]/.test(this.pw) },
-                    get hasNumber() { return /[0-9]/.test(this.pw) },
-                    get hasSymbol() { return /[!@#$%^&*(),.?':{}|<>]/.test(this.pw) },
-                    get isLongEnough() { return this.pw.length >= 8 }
-                }">
-                    <label class="block font-medium text-gray-700 mb-0.5 text-xs">
-                        Password <span class="text-red-500">*</span>
-                    </label>
-                    
-                    <div class="relative">
-                        <input :type="show ? 'text' : 'password'" 
-                            name="password" 
-                            x-model="pw"
-                            required 
-                            {{-- Regex Pattern untuk browser --}}
-                            pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}"
-                            title="Password harus minimal 8 karakter, mengandung huruf kapital, angka, dan simbol."
-                            class="block w-full border rounded-lg p-1.5 pr-8 text-xs focus:ring-1 focus:ring-sky-500 outline-none"
-                            placeholder="Kombinasi minimal 8 karakter">
-
-                        <span @click="show = !show"
-                            class="absolute inset-y-0 right-2 flex items-center cursor-pointer text-gray-400 hover:text-sky-600 transition">
-                            <i class="fa-solid" :class="show ? 'fa-eye-slash' : 'fa-eye'" style="font-size: 10px;"></i>
-                        </span>
-                    </div>
-
-                    {{-- INDIKATOR VALIDASI REAL-TIME --}}
-                    <div class="mt-2 space-y-1 text-[10px]">
-                        <div class="flex items-center gap-1.5" :class="hasUpper ? 'text-green-600' : 'text-gray-400'">
-                            <i class="fa-solid" :class="hasUpper ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                            <span>Huruf Kapital (A-Z)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5" :class="hasNumber ? 'text-green-600' : 'text-gray-400'">
-                            <i class="fa-solid" :class="hasNumber ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                            <span>Angka (0-9)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5" :class="hasSymbol ? 'text-green-600' : 'text-gray-400'">
-                            <i class="fa-solid" :class="hasSymbol ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                            <span>Simbol (!@#$%^&*)</span>
-                        </div>
-                        <div class="flex items-center gap-1.5" :class="isLongEnough ? 'text-green-600' : 'text-gray-400'">
-                            <i class="fa-solid" :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                            <span>Minimal 8 Karakter</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- BUTTON --}}
-            <div class="flex justify-end gap-2 pt-2">
-                <button type="button" @click="closeModal()"
-                        class="px-3 py-1 text-sm rounded-lg bg-gray-200 hover:bg-gray-300">
-                    Batal
-                </button>
-                
-                <button type="submit"
-                    {{-- Tombol mati jika NIP kosong ATAU NIP kurang dari 13 karakter --}}
-                    :disabled="!nip || nip.length < 13"
-                    
-                    {{-- Warna berubah menjadi abu-abu jika disabled, dan biru jika siap simpan --}}
-                    :class="(!nip || nip.length < 13) 
-                            ? 'opacity-50 cursor-not-allowed bg-gray-400' 
-                            : 'bg-sky-600 hover:bg-sky-700'"
-                    class="px-3 py-1 text-sm font-medium rounded-lg text-white transition-all">
-                    Simpan Data
-                </button>
-            </div>
-
-            </div>
-
-        </form>
     </div>
-</div>
+</template>
 
 {{-- ================= MODAL DETAIL (COMPACT VERSION) ================= --}}
 <div x-show="showDetailModal" x-cloak @click.self="closeModal()" 
@@ -580,146 +656,237 @@
 
     </div>
 </div>
-{{-- ================= MODAL EDIT (VERSI DIPERKECIL) ================= --}}
-<div x-show="showEditModal" x-cloak @click.self="closeModal()" 
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+{{-- ================= MODAL EDIT (PREMIUM DESIGN) ================= --}}
+<template x-if="showEditModal">
+    <div x-cloak
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
+         @click.self="closeModal()"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
 
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-4">
-        
-        {{-- HEADER --}}
-        <div class="flex justify-between items-center mb-3 border-b pb-2">
-            <h3 class="text-base font-bold text-sky-700">
-                <i class="fa-solid fa-user-pen mr-2"></i> Edit Pegawai
-            </h3>
-            <button @click="closeModal()" class="text-gray-500 hover:text-gray-700">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md lg:max-w-3xl overflow-hidden border border-gray-100"
+             @click.stop
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+
+            {{-- ========== HEADER DENGAN GRADIENT ========== --}}
+            <div class="bg-gradient-to-r from-amber-500 to-yellow-600 px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <i class="fa-solid fa-user-pen text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-base sm:text-lg tracking-wide">Edit Pegawai</h3>
+                            <p class="text-amber-100 text-[10px] sm:text-xs">Perbarui informasi data pegawai</p>
+                        </div>
+                    </div>
+                    <button @click="closeModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                        <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- ========== FORM CONTENT ========== --}}
+            <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
+                <form x-bind:action="selectedPegawai ? editRoute.replace(':pegawaiId', selectedPegawai.id) : '#'" method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    {{-- ========== 2-COLUMN LAYOUT ========== --}}
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                        
+                        {{-- ===== KOLOM KIRI: DATA PEGAWAI ===== --}}
+                        <div class="space-y-4">
+                            {{-- DATA PEGAWAI SECTION --}}
+                            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                                <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-user-tie text-amber-600 text-sm"></i>
+                                        <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Pegawai</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    {{-- Nama Lengkap --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-user text-amber-500 text-[10px]"></i>
+                                            Nama Lengkap <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text" name="nama"
+                                               x-model="selectedPegawai.nama"
+                                               @input="selectedPegawai.nama = selectedPegawai.nama.replace(/[^a-zA-Z\s.,]/g, '')"
+                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                      focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
+                                               placeholder="Nama Pegawai">
+                                    </div>
+
+                                    {{-- NIP --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-hashtag text-amber-500 text-[10px]"></i>
+                                            NIP
+                                        </label>
+                                        <input type="text" name="nip"
+                                               x-model="selectedPegawai.nip"
+                                               maxlength="18"
+                                               @input="selectedPegawai.nip = selectedPegawai.nip.replace(/[^0-9]/g, '').slice(0,18)"
+                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                      focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
+                                               placeholder="Masukkan 18 digit NIP">
+                                    </div>
+
+                                    {{-- Jabatan & Unit Kerja --}}
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-briefcase text-amber-500 text-[10px]"></i>
+                                                Jabatan
+                                            </label>
+                                            <input type="text" name="jabatan"
+                                                   x-model="selectedPegawai.jabatan"
+                                                   @input="selectedPegawai.jabatan = selectedPegawai.jabatan.replace(/[^a-zA-Z\s]/g, '')"
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                          focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
+                                                   placeholder="Jabatan">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-building text-amber-500 text-[10px]"></i>
+                                                Unit Kerja
+                                            </label>
+                                            <input type="text" name="unit_kerja"
+                                                   x-model="selectedPegawai.unit_kerja"
+                                                   @input="selectedPegawai.unit_kerja = selectedPegawai.unit_kerja.replace(/[^a-zA-Z\s]/g, '')"
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                          focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
+                                                   placeholder="Unit Kerja">
+                                        </div>
+                                    </div>
+
+                                    {{-- Atasan & Pemberi Cuti --}}
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-user-tie text-amber-500 text-[10px]"></i>
+                                                Atasan
+                                            </label>
+                                            <input type="text" name="atasan"
+                                                   x-model="selectedPegawai.atasan"
+                                                   @input="selectedPegawai.atasan = selectedPegawai.atasan.replace(/[^a-zA-Z\s.,]/g, '')"
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                          focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
+                                                   placeholder="Nama Atasan">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-stamp text-amber-500 text-[10px]"></i>
+                                                Pemberi Cuti
+                                            </label>
+                                            <input type="text" name="pemberi_cuti" value="Kanafi, S.IP, MM" readonly
+                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ===== KOLOM KANAN: ROLE & STATUS ===== --}}
+                        <div class="space-y-4">
+                            {{-- Role --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-shield-halved text-amber-500 text-[10px] sm:text-xs"></i>
+                                    Role
+                                </label>
+                                <div class="relative">
+                                    <select name="role" x-model="selectedPegawai.role"
+                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                                   focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200">
+                                        <option value="pegawai">Pegawai</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="atasan">Atasan</option>
+                                        <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Status --}}
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-toggle-on text-amber-500 text-[10px] sm:text-xs"></i>
+                                    Status
+                                </label>
+                                <div class="relative">
+                                    <select name="status" x-model="selectedPegawai.status"
+                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                                   focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200">
+                                        <option value="aktif">Aktif</option>
+                                        <option value="nonaktif">Nonaktif</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Info Box --}}
+                            <div class="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-circle-info text-amber-600"></i>
+                                </div>
+                                <div class="text-[11px] sm:text-xs">
+                                    <p class="font-bold text-amber-800">Perhatian</p>
+                                    <p class="text-amber-700">Perubahan data akan langsung tersimpan ke database.</p>
+                                </div>
+                            </div>
+
+                            {{-- Ringkasan Info (Desktop only) --}}
+                            <div class="hidden lg:block bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
+                                <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
+                                    <i class="fa-solid fa-circle-info text-amber-600 text-sm"></i>
+                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Saat Ini</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-100 shadow-sm">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                                            <i class="fa-solid fa-id-badge text-amber-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">NIP</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-600" x-text="selectedPegawai?.nip || '-'"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ACTION BUTTONS --}}
+                    <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 pt-4 mt-4 border-t border-gray-100">
+                        <button type="button" @click="closeModal()"
+                                class="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-xmark"></i>
+                            Batal
+                        </button>
+                        <button type="submit"
+                                :disabled="(selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()"
+                                class="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
+                                :class="((selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()) 
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                                    : 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white hover:from-amber-600 hover:to-yellow-700 hover:shadow-amber-200'">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Update Data
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-<form 
-    x-bind:action="selectedPegawai ? editRoute.replace(':pegawaiId', selectedPegawai.id) : '#'" 
-    method="POST">
-
-    @csrf
-    @method('PUT')
-
-    <div class="grid grid-cols-2 gap-3 text-sm">
-
-        {{-- Nama Lengkap --}}
-        <div>
-            <label class="font-medium text-xs">Nama Lengkap</label>
-            <input type="text" name="nama"
-                x-model="selectedPegawai.nama"
-                {{-- Mengizinkan huruf, spasi, titik (.), dan koma (,) --}}
-                @input="selectedPegawai.nama = selectedPegawai.nama.replace(/[^a-zA-Z\s.,]/g, '')"
-                {{-- Tambahkan pattern agar browser memvalidasi saat submit --}}
-                pattern="^[a-zA-Z\s.,]+$"
-                title="Nama hanya boleh berisi huruf, spasi, titik, dan koma"
-                class="w-full border rounded px-2 py-1 text-sm focus:ring-1 focus:ring-sky-500 outline-none">
-        </div>
-
-        {{-- NIP --}}
-        <div>
-            <label class="font-medium text-xs">NIP</label>
-            <input type="text" name="nip"
-                x-model="selectedPegawai.nip"
-                maxlength="18"
-                @input="selectedPegawai.nip = selectedPegawai.nip.replace(/[^0-9]/g, '').slice(0,18)"
-                class="w-full border rounded px-2 py-1 text-sm">
-        </div>
-
-        {{-- Role --}}
-        <div>
-            <label class="font-medium text-xs">Role</label>
-            <select name="role"
-                x-model="selectedPegawai.role"
-                class="w-full border rounded px-2 py-1 text-sm">
-                <option value="pegawai">Pegawai</option>
-                <option value="admin">Admin</option>
-                <option value="atasan">Atasan</option>
-                <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
-            </select>
-        </div>
-
-        {{-- Jabatan --}}
-        <div>
-            <label class="font-medium text-xs">Jabatan</label>
-            <input type="text" name="jabatan"
-                x-model="selectedPegawai.jabatan"
-                @input="selectedPegawai.jabatan = selectedPegawai.jabatan.replace(/[^a-zA-Z\s]/g, '')"
-                class="w-full border rounded px-2 py-1 text-sm">
-        </div>
-
-        {{-- Unit Kerja --}}
-        <div>
-            <label class="font-medium text-xs">Unit Kerja</label>
-            <input type="text" name="unit_kerja"
-                x-model="selectedPegawai.unit_kerja"
-                @input="selectedPegawai.unit_kerja = selectedPegawai.unit_kerja.replace(/[^a-zA-Z\s]/g, '')"
-                class="w-full border rounded px-2 py-1 text-sm">
-        </div>
-
-        {{-- Atasan Langsung --}}
-        <div>
-            <label class="font-medium text-xs">Atasan Langsung</label>
-            <input type="text" 
-                name="atasan" 
-                x-model="selectedPegawai.atasan" 
-                {{-- 1. Menambahkan . dan , di dalam regex --}}
-                @input="selectedPegawai.atasan = selectedPegawai.atasan.replace(/[^a-zA-Z\s.,]/g, '')"
-                {{-- 2. Memperbarui pattern agar mengizinkan . dan , --}}
-                pattern="^[a-zA-Z\s.,]+$"
-                {{-- 3. Memperbarui pesan panduan --}}
-                title="Hanya diperbolehkan huruf, spasi, titik, dan koma"
-                class="w-full border rounded px-2 py-1 text-sm">
-        </div>
-
-        {{-- Pejabat Pemberi Cuti --}}
-        <div>
-            <label class="font-medium text-xs">Pejabat Pemberi Cuti</label>
-            <input type="text" 
-                name="pemberi_cuti" 
-                value="Kanafi, S.IP, MM" 
-                readonly
-                class="w-full border border-gray-200 bg-gray-100 rounded px-2 py-1 text-sm cursor-not-allowed">
-        </div>
-
-        {{-- Status --}}
-        <div>
-            <label class="font-medium text-xs">Status</label>
-            <select name="status"
-                x-model="selectedPegawai.status"
-                class="w-full border rounded px-2 py-1 text-sm">
-                <option value="aktif">Aktif</option>
-                <option value="nonaktif">Nonaktif</option>
-            </select>
-        </div>
-
     </div>
-
-    {{-- FOOTER --}}
-    <div class="mt-4 text-right border-t pt-3">
-        <button type="button" @click="closeModal()"
-            class="px-3 py-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
-            Batal
-        </button>
-
-        {{-- Tombol Update pada Modal Edit --}}
-        <button type="submit"
-            {{-- Tombol mati jika NIP tidak valid ATAU data tidak ada yang berubah --}}
-            :disabled="(selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()"
-            
-            {{-- Styling abu-abu jika disabled (nip tidak valid atau data tidak berubah) --}}
-            :class="((selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()) 
-                    ? 'opacity-50 cursor-not-allowed bg-gray-400' 
-                    : 'bg-yellow-600 hover:bg-yellow-700'"
-            
-            class="px-3 py-1.5 text-white rounded text-sm transition-all duration-200">
-            Update
-        </button>
-        
-    </div>
-</form>
+</template>
 
 
 {{-- =============================================== --}}
