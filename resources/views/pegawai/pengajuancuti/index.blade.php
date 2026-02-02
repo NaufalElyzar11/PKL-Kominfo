@@ -278,17 +278,24 @@
                                 <td class="px-1 py-2 text-center flex justify-center gap-1">
                                 {{-- Tambahkan baris alasan_cuti di dalam parameter showPendingDetail --}}
                                 <button @click="showPendingDetail({
-                                    nama: '{{ $c->pegawai->nama }}', 
-                                    nip: '{{ $c->pegawai->nip }}', 
-                                    jabatan: '{{ $c->pegawai->jabatan }}',
-                                    atasan: '{{ $c->pegawai->atasan }}',
-                                    pejabat: '{{ $c->pegawai->pemberi_cuti }}',
-                                    jenis_cuti: '{{ $c->jenis_cuti }}', 
-                                    tanggal_mulai: '{{ $c->tanggal_mulai->translatedFormat('d M Y') }}',
-                                    tanggal_selesai: '{{ $c->tanggal_selesai->translatedFormat('d M Y') }}', 
-                                    jumlah_hari: '{{ $c->jumlah_hari }}',
-                                    sisa_cuti: '{{ $sisaCuti }}',
-                                    alasan_cuti: '{{ addslashes($c->alasan_cuti) }}' {{-- <-- BARIS INI YANG KURANG --}}
+                                    nama: {{ Js::from($c->pegawai->nama ?? '-') }}, 
+                                    nip: {{ Js::from($c->pegawai->nip ?? '-') }}, 
+                                    jabatan: {{ Js::from($c->pegawai->jabatan ?? '-') }},
+                                    atasan: {{ Js::from($c->pegawai->atasan ?? '-') }},
+                                    pejabat: {{ Js::from($c->pegawai->pemberi_cuti ?? '-') }},
+                                    
+                                    {{-- Data Delegasi: Gunakan null-safe operator ?-> --}}
+                                    pengganti_nama: {{ Js::from($c->delegasi->nama ?? '-') }}, 
+                                    pengganti_jabatan: {{ Js::from($c->delegasi->jabatan ?? '') }}, 
+
+                                    jenis_cuti: {{ Js::from($c->jenis_cuti ?? '') }}, 
+                                    tanggal_mulai: {{ Js::from($c->tanggal_mulai ? $c->tanggal_mulai->translatedFormat('d M Y') : '-') }},
+                                    tanggal_selesai: {{ Js::from($c->tanggal_selesai ? $c->tanggal_selesai->translatedFormat('d M Y') : '-') }}, 
+                                    jumlah_hari: {{ Js::from($c->jumlah_hari ?? 0) }},
+                                    sisa_cuti: {{ Js::from($sisaCuti ?? 0) }},
+                                    
+                                    {{-- Alasan Cuti seringkali menjadi penyebab NULL --}}
+                                    alasan_cuti: {{ Js::from($c->alasan_cuti ?? '') }} 
                                 })" class="p-1 text-sky-600 hover:bg-sky-50 rounded">
                                     <i class="fa-solid fa-eye text-[12px]"></i>
                                 </button>
@@ -408,28 +415,30 @@
 
                         <td class="px-1 py-2 text-center flex justify-center gap-1">
                             {{-- Tombol Detail: Menggunakan @js agar aman dari karakter aneh/newline --}}
-                            <button @click="
-                                detailRiwayat = {
-                                    id: '{{ $r->id }}',
-                                    nama: @js($r->pegawai->nama ?? '-'),
-                                    nip: @js($r->pegawai->nip ?? '-'),
-                                    jabatan: @js($r->pegawai->jabatan ?? '-'),
-                                    jenis_cuti: @js($r->jenis_cuti),
-                                    status: @js($r->status),
-                                    tanggal_mulai: @js(optional($r->tanggal_mulai)->format('d/m/Y')),
-                                    tanggal_selesai: @js(optional($r->tanggal_selesai)->format('d/m/Y')),
-                                    jumlah_hari: @js($r->jumlah_hari),
-                                    sisa_cuti: @js($sisa_final),
-                                    atasan: @js($r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-'),
-                                    pejabat: @js($r->pejabatPemberiCuti->nama_pejabat ?? $r->pejabat_nama ?? '-'),
-                                    alasan_cuti: @js($r->alasan_cuti),
-                                    alamat: @js($r->alamat),
-                                    tahun: @js($r->tahun)
-                                };
-                                showDetailRiwayat = true;
-                            " class="p-1 text-sky-600 hover:bg-sky-100 rounded">
-                                <i class="fa-solid fa-eye text-[12px]"></i>
-                            </button>
+                        <button @click="
+                            detailRiwayat = {
+                                id: '{{ $r->id }}',
+                                nama: {{ Js::from($r->pegawai->nama ?? '-') }},
+                                nip: {{ Js::from($r->pegawai->nip ?? '-') }},
+                                jabatan: {{ Js::from($r->pegawai->jabatan ?? '-') }},
+                                pengganti_nama: {{ Js::from($r->delegasi->nama ?? '-') }},
+                                pengganti_jabatan: {{ Js::from($r->delegasi->jabatan ?? '') }},
+                                jenis_cuti: {{ Js::from($r->jenis_cuti ?? '') }},
+                                status: {{ Js::from($r->status ?? '') }},
+                                tanggal_mulai: {{ Js::from($r->tanggal_mulai ? $r->tanggal_mulai->format('d/m/Y') : '-') }},
+                                tanggal_selesai: {{ Js::from($r->tanggal_selesai ? $r->tanggal_selesai->format('d/m/Y') : '-') }},
+                                jumlah_hari: {{ Js::from($r->jumlah_hari ?? 0) }},
+                                sisa_cuti: {{ Js::from($sisa_final ?? 0) }},
+                                atasan: {{ Js::from($r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-') }},
+                                pejabat: {{ Js::from($r->pejabatPemberiCuti->nama_pejabat ?? $r->pejabat_nama ?? '-') }},
+                                alasan_cuti: {{ Js::from($r->alasan_cuti ?? '') }},
+                                alamat: {{ Js::from($r->alamat ?? '') }},
+                                tahun: {{ Js::from($r->tahun ?? date('Y')) }}
+                            };
+                            showDetailRiwayat = true;
+                        " class="p-1 text-sky-600 hover:bg-sky-100 rounded">
+                            <i class="fa-solid fa-eye text-[12px]"></i>
+                        </button>
 
                             {{-- Tombol Hapus: Pastikan data-nama merujuk ke $r --}}
                             <form action="{{ route('pegawai.cuti.destroy', $r->id) }}" method="POST" class="form-delete inline">
@@ -931,6 +940,16 @@
             <p class="flex justify-between border-b border-gray-100 pb-1">
                 <span class="font-semibold text-gray-500">Pejabat:</span> 
                 <span x-text="detailPending.pejabat || '-'"></span>
+            </p>
+
+            <p class="flex justify-between border-b border-gray-100 pb-1">
+                <span class="font-semibold text-gray-500">Pegawai Pengganti:</span> 
+                <span class="text-right">
+                    {{-- Nama Pengganti --}}
+                    <span class="font-bold text-sky-700" x-text="detailPending.pengganti_nama || '-'"></span><br>
+                    {{-- Jabatan Pengganti (Opsional) --}}
+                    <small class="text-gray-400" x-text="detailPending.pengganti_jabatan || ''"></small>
+                </span>
             </p>
 
             <p class="flex justify-between border-b border-gray-100 pb-1">
