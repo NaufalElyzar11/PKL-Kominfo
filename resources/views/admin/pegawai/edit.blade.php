@@ -3,136 +3,217 @@
 @section('title', 'Edit Data Pegawai')
 
 @section('content')
-<div class="max-w-2xl mx-auto bg-white dark:bg-gray-900 p-6 rounded-xl shadow-md 
-            border border-gray-200 dark:border-gray-700 mt-6 transition-all duration-300">
+{{-- MODAL-STYLE CONTAINER --}}
+<div x-data="{ show: false }"
+     x-init="setTimeout(() => show = true, 100)"
+     x-show="show"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4">
 
-    <h1 class="text-xl font-semibold mb-6 text-center text-sky-700 dark:text-sky-300">
-        Edit Data Pegawai
-    </h1>
-
-    <form action="{{ route('admin.pegawai.update', $pegawai->id) }}" method="POST" 
-          class="space-y-4 bg-white dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-700">
-        @csrf
-        @method('PUT')
-
-        {{-- Nama Lengkap --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Nama Lengkap
-            </label>
-            <input type="text" name="nama" value="{{ old('nama', $pegawai->nama) }}"
-                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 
-                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
-                          focus:ring-2 focus:ring-sky-500 outline-none transition text-sm" required>
-            @error('nama')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
+    <div x-show="show"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         class="bg-white rounded-2xl shadow-2xl w-full max-w-md lg:max-w-3xl overflow-hidden border border-gray-100">
+        
+        {{-- ========== HEADER DENGAN GRADIENT ========== --}}
+        <div class="bg-gradient-to-r from-sky-500 to-blue-600 px-4 sm:px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <i class="fa-solid fa-user-pen text-white text-lg sm:text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-base sm:text-lg tracking-wide">Edit Data Pegawai</h3>
+                        <p class="text-sky-100 text-[10px] sm:text-xs">Perbarui informasi pegawai</p>
+                    </div>
+                </div>
+                <a href="{{ route('admin.pegawai.index') }}" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                    <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                </a>
+            </div>
         </div>
 
-        {{-- NIP --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                NIP
-            </label>
-            <input type="text" name="nip" value="{{ old('nip', $pegawai->nip) }}"
-                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 
-                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
-                          focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">
-            @error('nip')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+        {{-- ========== FORM CONTENT ========== --}}
+        <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
+            <form action="{{ route('admin.pegawai.update', $pegawai->id) }}" method="POST">
+                @csrf
+                @method('PUT')
 
-        {{-- Role --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Role / Hak Akses
-            </label>
-            <select name="role"
-                    class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 
-                           bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
-                           focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">
-                <option value="" disabled>Pilih Role</option>
-                <option value="super_admin" {{ old('role', $pegawai->user->role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
-                <option value="admin" {{ old('role', $pegawai->user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
-                <option value="kadis" {{ old('role', $pegawai->user->role) == 'kadis' ? 'selected' : '' }}>Kadis (Kepala Dinas)</option>
-                <option value="pegawai" {{ old('role', $pegawai->user->role) == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
-            </select>
-            @error('role')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                {{-- ========== 2-COLUMN LAYOUT ========== --}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    
+                    {{-- ===== KOLOM KIRI: DATA PEGAWAI ===== --}}
+                    <div class="space-y-4">
+                        {{-- DATA PEGAWAI SECTION --}}
+                        <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                            <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-user-tie text-sky-600 text-sm"></i>
+                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Pegawai</span>
+                                </div>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                {{-- Nama --}}
+                                <div class="flex items-center gap-3 pb-3 border-b border-gray-100">
+                                    <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-id-badge text-sky-600 text-sm"></i>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">ID Pegawai</p>
+                                        <p class="text-[12px] sm:text-sm font-semibold text-gray-800 truncate">#{{ $pegawai->id }}</p>
+                                    </div>
+                                </div>
+                                {{-- Info Grid --}}
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">NIP Saat Ini</p>
+                                        <p class="text-[11px] sm:text-xs font-medium text-gray-700">{{ $pegawai->nip ?? '-' }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Role Saat Ini</p>
+                                        <p class="text-[11px] sm:text-xs font-medium text-gray-700 capitalize">{{ $pegawai->user->role ?? '-' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-        {{-- Jabatan --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Jabatan
-            </label>
-            <input type="text" name="jabatan" value="{{ old('jabatan', $pegawai->jabatan) }}"
-                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 
-                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
-                          focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">
-            @error('jabatan')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                        {{-- INFO BOX --}}
+                        <div class="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+                            </div>
+                            <div class="text-[11px] sm:text-xs">
+                                <p class="font-bold text-amber-800">Perhatian</p>
+                                <p class="text-amber-700">Perubahan role akan mempengaruhi hak akses pegawai di sistem.</p>
+                            </div>
+                        </div>
+                    </div>
 
-        {{-- Unit Kerja --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Unit Kerja
-            </label>
-            <input type="text" name="unit_kerja" value="{{ old('unit_kerja', $pegawai->unit_kerja) }}"
-                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 
-                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
-                          focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">
-            @error('unit_kerja')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                    {{-- ===== KOLOM KANAN: FORM INPUT ===== --}}
+                    <div class="space-y-4">
+                        {{-- NAMA --}}
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                <i class="fa-solid fa-user text-sky-500 text-[10px] sm:text-xs"></i>
+                                Nama Lengkap <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="nama" value="{{ old('nama', $pegawai->nama) }}"
+                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                   placeholder="Masukkan nama lengkap" required>
+                            @error('nama') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                        </div>
 
-        {{-- Alamat --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Alamat
-            </label>
-            <textarea name="alamat" rows="2"
-                      class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 
-                             bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
-                             focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">{{ old('alamat', $pegawai->alamat) }}</textarea>
-            @error('alamat')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                        {{-- NIP --}}
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                <i class="fa-solid fa-hashtag text-sky-500 text-[10px] sm:text-xs"></i>
+                                NIP
+                            </label>
+                            <input type="text" name="nip" value="{{ old('nip', $pegawai->nip) }}"
+                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                   placeholder="Masukkan NIP">
+                            @error('nip') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                        </div>
 
-        {{-- Telepon --}}
-        <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Nomor Telepon
-            </label>
-            <input type="text" name="telepon" value="{{ old('telepon', $pegawai->telepon) }}"
-                   class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 
-                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 
-                          focus:ring-2 focus:ring-sky-500 outline-none transition text-sm">
-            @error('telepon')
-                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-            @enderror
-        </div>
+                        {{-- JABATAN & UNIT KERJA --}}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-user-tie text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Jabatan
+                                </label>
+                                <input type="text" name="jabatan" value="{{ old('jabatan', $pegawai->jabatan) }}"
+                                       class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                              focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                       placeholder="Jabatan">
+                                @error('jabatan') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                            </div>
 
-        {{-- Tombol Aksi --}}
-        <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <a href="{{ route('admin.pegawai.index') }}"
-               class="px-4 py-1.5 bg-gray-400 dark:bg-gray-600 text-white rounded-md 
-                      hover:bg-gray-500 dark:hover:bg-gray-500 transition text-xs font-medium">
-                Batal
-            </a>
-            <button type="submit"
-                    class="px-4 py-1.5 bg-sky-600 text-white rounded-md 
-                           hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-600 
-                           transition text-xs font-medium">
-                Simpan
-            </button>
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-building text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Unit Kerja
+                                </label>
+                                <input type="text" name="unit_kerja" value="{{ old('unit_kerja', $pegawai->unit_kerja) }}"
+                                       class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                              focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                       placeholder="Unit Kerja">
+                                @error('unit_kerja') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        {{-- ALAMAT --}}
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                <i class="fa-solid fa-location-dot text-sky-500 text-[10px] sm:text-xs"></i>
+                                Alamat
+                            </label>
+                            <textarea name="alamat" rows="2"
+                                      class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                             focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 resize-none"
+                                      placeholder="Masukkan alamat">{{ old('alamat', $pegawai->alamat) }}</textarea>
+                            @error('alamat') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- TELEPON & ROLE --}}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-phone text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Telepon
+                                </label>
+                                <input type="text" name="telepon" value="{{ old('telepon', $pegawai->telepon) }}"
+                                       class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                              focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                       placeholder="08xxxxxxxxxx">
+                                @error('telepon') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                    <i class="fa-solid fa-shield-halved text-sky-500 text-[10px] sm:text-xs"></i>
+                                    Role
+                                </label>
+                                <div class="relative">
+                                    <select name="role"
+                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                                   focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                        <option value="super_admin" {{ old('role', $pegawai->user->role) == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                        <option value="admin" {{ old('role', $pegawai->user->role) == 'admin' ? 'selected' : '' }}>Admin</option>
+                                        <option value="kadis" {{ old('role', $pegawai->user->role) == 'kadis' ? 'selected' : '' }}>Kadis</option>
+                                        <option value="pegawai" {{ old('role', $pegawai->user->role) == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
+                                    </select>
+                                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
+                                    </div>
+                                </div>
+                                @error('role') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ACTION BUTTONS --}}
+                <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 pt-4 mt-4 border-t border-gray-100">
+                    <a href="{{ route('admin.pegawai.index') }}"
+                       class="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-xmark"></i>
+                        Batal
+                    </a>
+                    <button type="submit"
+                            class="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg
+                                   bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 hover:shadow-sky-200">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 @endsection
