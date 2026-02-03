@@ -47,7 +47,7 @@ get isLongEnough() {
     get filteredAtasan() {
         if (this.role === 'pegawai') return this.dataAtasan;
         if (this.role === 'atasan') return this.dataPejabat;
-        if (this.role === 'pemberi_cuti') return [{id: 99, nama: 'Lisa Halaby'}]; // Default Pejabat
+        if (this.role === 'pejabat') return [{id: 99, nama: 'Lisa Halaby'}]; // Default Pejabat
         return [];
     },
 
@@ -55,7 +55,7 @@ get isLongEnough() {
     handleRoleChange() {
         this.atasan = '';
 
-        if (this.role === 'pemberi_cuti') {
+        if (this.role === 'pejabat') {
             this.atasan = 'Lisa Halaby';
             this.pemberi_cuti = 'Lisa Halaby';
         } else {
@@ -512,7 +512,7 @@ get isLongEnough() {
                                         </div>
                                         <div>
                                             <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Role Akses</p>
-                                            <p class="text-[11px] sm:text-xs font-medium text-gray-600">Pilih role untuk pegawai</p>
+                                            <p class="text-[11px] sm:text-xs font-medium text-gray-600">Pilih role untuk pengguna</p>
                                         </div>
                                     </div>
                                 </div>
@@ -548,7 +548,7 @@ get isLongEnough() {
                                                    focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
                                         <option value="" disabled selected>Pilih Role</option>
                                         <option value="atasan">Atasan</option>
-                                        <option value="pemberi_cuti">Pejabat</option>
+                                        <option value="pejabat">Pejabat</option>
                                         <option value="pegawai">Pegawai</option>
                                     </select>
                                 </div>
@@ -654,7 +654,7 @@ get isLongEnough() {
                                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
                                         : 'bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 hover:shadow-sky-200'">
                             <i class="fa-solid fa-paper-plane"></i>
-                            Simpan Pegawai
+                            Simpan Pengguna
                         </button>
                     </div>
                 </form>
