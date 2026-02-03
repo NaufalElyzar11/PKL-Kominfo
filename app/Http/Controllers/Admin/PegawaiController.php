@@ -39,6 +39,16 @@ class PegawaiController extends Controller
 
         $pegawai = $query->orderBy('nama')->paginate(10)->withQueryString();
 
+    // Ambil daftar Pegawai yang memiliki Role 'atasan'
+        $listAtasan = Pegawai::whereHas('user', function($q) {
+            $q->where('role', 'atasan');
+        })->get(['id', 'nama']);
+
+        // Ambil daftar Pegawai yang memiliki Role 'pemberi_cuti' (Pejabat)
+        $listPejabat = Pegawai::whereHas('user', function($q) {
+            $q->where('role', 'pejabat');
+        })->get(['id', 'nama']);
+
         return view('admin.pegawai.index', [
             'pegawai'         => $pegawai,
             'search'          => $search,
@@ -48,6 +58,8 @@ class PegawaiController extends Controller
             'cutiDisetujui'   => Cuti::where('status', 'disetujui')->count(),
             'cutiDitolak'     => Cuti::where('status', 'ditolak')->count(),
             'unitKerjaList'   => Pegawai::whereNotNull('unit_kerja')->distinct()->pluck('unit_kerja'),
+            'listAtasan'      => $listAtasan,
+            'listPejabat'     => $listPejabat,
         ]);
     }
 
@@ -58,10 +70,10 @@ class PegawaiController extends Controller
     {
         $validated = $request->validate([
             'nama'         => 'required|string|max:255',
-            'nip'  => 'nullable|numeric|digits_between:13,18|unique:pegawai,nip',
+            'nip'          => 'nullable|numeric|digits_between:13,18|unique:pegawai,nip',
             'jabatan'      => 'required|string|max:100',
             'unit_kerja'   => 'required|string|max:100',
-            'role'         => 'required|in:pegawai,admin,pemberi_cuti,atasan',
+            'role'         => 'required|in:pegawai,admin,pejabat,atasan',
             'status'       => 'required|string',
             'atasan'       => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s.,]+$/'],
             'pemberi_cuti' => 'nullable|string|max:255',
@@ -113,7 +125,7 @@ public function update(Request $request, $id)
     $validated = $request->validate([
         'nama'       => 'required|string|max:255',
         'nip'        => 'nullable|string|min:13|max:18|unique:pegawai,nip,' . $pegawai->id,
-        'role'       => 'required|in:pegawai,admin,pemberi_cuti,atasan',
+        'role'       => 'required|in:pegawai,admin,pejabat,atasan',
         'status'     => 'required|string',
         'jabatan'    => 'nullable|string|max:255',
         'unit_kerja' => 'nullable|string|max:255',
