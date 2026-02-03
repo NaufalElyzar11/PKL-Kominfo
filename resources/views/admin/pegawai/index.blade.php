@@ -20,6 +20,24 @@
     role: '',        // Terhubung ke select role
     status: '',
     password: '',
+    pemberi_cuti: 'Kanafi, S.IP, MM',
+    showPassword: false,
+
+    get hasUpper() {
+    return /[A-Z]/.test(this.password)
+},
+
+get hasNumber() {
+    return /[0-9]/.test(this.password)
+},
+
+get hasSymbol() {
+    return /[!@#$%^&*(),.?':{}|<>]/.test(this.password)
+},
+
+get isLongEnough() {
+    return this.password.length >= 8
+},
 
     // 3. Data dari Laravel (Hanya untuk referensi dropdown)
     dataAtasan: {{ Js::from($listAtasan) }},
@@ -35,13 +53,16 @@
 
     // Fungsi tambahan untuk auto-select nama
     handleRoleChange() {
-        this.atasan = ''; // Reset atasan setiap ganti role
-        
-        // JIKA memilih Pejabat, otomatis atasan terisi 'Lisa Halaby'
+        this.atasan = '';
+
         if (this.role === 'pemberi_cuti') {
             this.atasan = 'Lisa Halaby';
+            this.pemberi_cuti = 'Lisa Halaby';
+        } else {
+            this.pemberi_cuti = 'Kanafi, S.IP, MM';
         }
     },
+
 
     // 5. Logika Validasi Tombol Simpan
     isFormValid() {
@@ -466,8 +487,12 @@
                                                 <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
                                                 Pemberi Cuti
                                             </label>
-                                            <input type="text" name="pemberi_cuti" value="Kanafi, S.IP, MM" readonly
-                                                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
+                                            <input type="text"
+                                            name="pemberi_cuti"
+                                            x-model="pemberi_cuti"
+                                            readonly
+                                            :class="role === 'pemberi_cuti' ? 'text-sky-600 font-semibold' : 'text-gray-500'"
+                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
                                         </div>
                                     </div>
                                 </div>
@@ -522,8 +547,8 @@
                                     class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
                                                    focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
                                         <option value="" disabled selected>Pilih Role</option>
-                                        <option value="atasan">Atasan Langsung</option>
-                                        <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
+                                        <option value="atasan">Atasan</option>
+                                        <option value="pemberi_cuti">Pejabat</option>
                                         <option value="pegawai">Pegawai</option>
                                     </select>
                                 </div>
@@ -546,48 +571,59 @@
                             </div>
 
                             {{-- PASSWORD DENGAN VALIDASI --}}
-                            <div x-data="{ show: false }" class="space-y-1.5">
-
+                            <div class="space-y-1.5">
                                 <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                     <i class="fa-solid fa-key text-sky-500 text-[10px] sm:text-xs"></i>
                                     Password <span class="text-red-500">*</span>
                                 </label>
 
                                 <div class="relative">
-                                    <input :type="show ? 'text' : 'password'" 
+                                    <input :type="showPassword ? 'text' : 'password'"
                                         name="password"
                                         x-model="password"
                                         required
-                                        pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}"
-                                        class="w-full px-3 py-2.5 sm:py-3 pr-10 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs"
-                                        placeholder="Kombinasi minimal 8 karakter">
+                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                        focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
+                                        placeholder="Kombinasi Minimal 8 Karakter">
 
-                                    <span @click="show = !show"
+                                    <span @click="showPassword = !showPassword"
                                         class="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400">
-                                        <i class="fa-solid text-xs" :class="show ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                        <i class="fa-solid text-xs"
+                                        :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
                                     </span>
                                 </div>
 
-
                                 {{-- Password validation indicators --}}
                                 <div class="grid grid-cols-2 gap-2 mt-2">
-                                    <div class="flex items-center gap-1.5 text-[10px]" :class="hasUpper ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid" :class="hasUpper ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        <span>Huruf Kapital (A-Z)</span>
+                                    <div class="flex items-center gap-1.5 text-[10px]"
+                                        :class="hasUpper ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid"
+                                        :class="hasUpper ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        Huruf Kapital (A-Z)
                                     </div>
-                                    <div class="flex items-center gap-1.5 text-[10px]" :class="hasNumber ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid" :class="hasNumber ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        <span>Angka (0-9)</span>
+
+                                    <div class="flex items-center gap-1.5 text-[10px]"
+                                        :class="hasNumber ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid"
+                                        :class="hasNumber ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        Angka (0-9)
                                     </div>
-                                    <div class="flex items-center gap-1.5 text-[10px]" :class="hasSymbol ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid" :class="hasSymbol ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        <span>Simbol (!@#$%^&*)</span>
+
+                                    <div class="flex items-center gap-1.5 text-[10px]"
+                                        :class="hasSymbol ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid"
+                                        :class="hasSymbol ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        Simbol (!@#$%^&*)
                                     </div>
-                                    <div class="flex items-center gap-1.5 text-[10px]" :class="isLongEnough ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid" :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        <span>Minimal 8 Karakter</span>
+
+                                    <div class="flex items-center gap-1.5 text-[10px]"
+                                        :class="isLongEnough ? 'text-emerald-600' : 'text-gray-400'">
+                                        <i class="fa-solid"
+                                        :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                        Minimal 8 Karakter
                                     </div>
                                 </div>
+
                             </div>
 
                             {{-- Info Box Warning --}}
@@ -834,46 +870,50 @@
                                         </div>
                                     </div>
 
-{{-- Atasan & Pemberi Cuti --}}
-<div class="grid grid-cols-2 gap-3">
-    <div class="space-y-1.5">
-        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-            <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
-            Atasan <span class="text-red-500">*</span>
-        </label>
-        
-        {{-- Perbaikan: Input diganti Dropdown Dinamis --}}
-        <select name="atasan" 
-                x-model="atasan" 
-                :disabled="!role || (role !== 'pegawai' && role !== 'atasan')"
-                required
-                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                       focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 
-                       disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none">
-            
-                {{-- Tambahkan atribut 'disabled' agar tidak bisa diklik, dan 'selected' sebagai pilihan awal --}}
-                <option value="" 
-                        disabled 
-                        selected 
-                        x-text="!role ? 'Pilih Role dahulu' : 'Pilih Nama Atasan'">
-                </option>
-            
-            {{-- Loop daftar atasan yang sudah difilter oleh getter di x-data --}}
-            <template x-for="item in filteredAtasan" :key="item.id">
-                <option :value="item.nama" x-text="item.nama"></option>
-            </template>
-        </select>
-    </div>
-    
-    <div class="space-y-1.5">
-        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-            <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
-            Pemberi Cuti
-        </label>
-        <input type="text" name="pemberi_cuti" value="Kanafi, S.IP, MM" readonly
-               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
-    </div>
-</div>
+                                {{-- Atasan & Pemberi Cuti --}}
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
+                                            Atasan Langsung <span class="text-red-500">*</span>
+                                        </label>
+                                        
+                                        {{-- Perbaikan: Input diganti Dropdown Dinamis --}}
+                                        <select name="atasan" 
+                                                x-model="atasan" 
+                                                :disabled="!role || (role !== 'pegawai' && role !== 'atasan')"
+                                                required
+                                                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                    focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 
+                                                    disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none">
+                                            
+                                                {{-- Tambahkan atribut 'disabled' agar tidak bisa diklik, dan 'selected' sebagai pilihan awal --}}
+                                                <option value="" 
+                                                        disabled 
+                                                        selected 
+                                                        x-text="!role ? 'Pilih Role dahulu' : 'Pilih Nama Atasan'">
+                                                </option>
+                                            
+                                            {{-- Loop daftar atasan yang sudah difilter oleh getter di x-data --}}
+                                            <template x-for="item in filteredAtasan" :key="item.id">
+                                                <option :value="item.nama" x-text="item.nama"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
+                                            Pemberi Cuti
+                                        </label>
+                                        <input type="text"
+                                        name="pemberi_cuti"
+                                        x-model="pemberi_cuti"
+                                        readonly
+                                        :class="role === 'pemberi_cuti' ? 'text-sky-600 font-semibold' : 'text-gray-500'"
+                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
+                                    </div>
+                                </div>
                                 </div>
                             </div>
                         </div>
