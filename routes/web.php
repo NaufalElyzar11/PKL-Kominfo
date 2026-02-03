@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 
 // Import Controllers
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ForgotPasswordWaController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboard;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\KepalaDinas\DashboardController as KadisDashboard;
@@ -34,6 +35,17 @@ Route::controller(LoginController::class)->group(function () {
     Route::get('/login', 'showLoginForm')->name('login');
     Route::post('/login', 'login')->name('login.post');
     Route::post('/logout', 'logout')->name('logout');
+});
+
+// Forgot Password via WhatsApp (Fonnte)
+Route::prefix('forgot-password')->name('password.')->group(function () {
+    Route::get('/', [ForgotPasswordWaController::class, 'showRequestForm'])->name('request');
+    Route::post('/send', [ForgotPasswordWaController::class, 'sendResetToken'])->name('send');
+    Route::get('/verify', [ForgotPasswordWaController::class, 'showVerifyForm'])->name('verify');
+    Route::post('/verify', [ForgotPasswordWaController::class, 'verifyToken'])->name('verify.post');
+    Route::post('/resend', [ForgotPasswordWaController::class, 'resendOtp'])->name('resend');
+    Route::get('/reset', [ForgotPasswordWaController::class, 'showResetForm'])->name('reset');
+    Route::post('/reset', [ForgotPasswordWaController::class, 'resetPassword'])->name('update');
 });
 
 // Logika Redirect Dashboard (Satu blok saja agar tidak bentrok)
@@ -69,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('profile')->as('profile.')->group(function () {
             Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
             Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');
+            Route::patch('/update', [PegawaiProfileController::class, 'update'])->name('update');
         });
     });
 

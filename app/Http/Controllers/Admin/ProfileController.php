@@ -47,10 +47,11 @@ class ProfileController extends Controller
             'telepon' => 'nullable|string|max:13', // Sesuai name="telepon"
         ]);
 
-        // 1. Update tabel Users
+        // 1. Update tabel Users (termasuk telepon untuk fitur forgot password via WA)
         $user->update([
-            'name'  => $validated['nama'], // Simpan ke kolom 'name' di tabel users
-            'email' => $validated['email'],
+            'name'    => $validated['nama'], // Simpan ke kolom 'name' di tabel users
+            'email'   => $validated['email'],
+            'telepon' => $validated['telepon'],
         ]);
 
         // 2. Update tabel Pegawai melalui relasi

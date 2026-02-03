@@ -30,14 +30,16 @@ class ProfileController extends Controller
         $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'telepon'  => ['nullable', 'string', 'max:13'],
             'password' => ['nullable', 'min:8', 'confirmed', 'regex:/[A-Z]/', 'regex:/[0-9]/'],
         ],[
             'password.regex' => 'Password harus mengandung huruf besar dan angka.'
         ]);
 
-        // Update data user
-        $user->name  = $request->name;
-        $user->email = $request->email;
+        // Update data user (termasuk telepon untuk fitur forgot password via WA)
+        $user->name    = $request->name;
+        $user->email   = $request->email;
+        $user->telepon = $request->telepon;
 
         // Update password jika diisi
         if ($request->filled('password')) {
@@ -46,10 +48,11 @@ class ProfileController extends Controller
 
         $user->save();
 
-        // Jika Kepala Dinas juga punya data pegawai → update juga (opsional)
+        // Jika Kepala Dinas juga punya data pegawai → update juga
         if ($user->pegawai) {
             $user->pegawai->update([
-                'nama'       => $request->name, // otomatis ikut berubah
+                'nama'    => $request->name,
+                'telepon' => $request->telepon,
             ]);
         }
 

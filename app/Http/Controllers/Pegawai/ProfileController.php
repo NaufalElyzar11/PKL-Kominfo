@@ -78,10 +78,11 @@ class ProfileController extends Controller
                 $fotoPath = $request->file('foto')->store('profile_photos', 'public');
             }
 
-            // 3. Update User
+            // 3. Update User (termasuk telepon untuk fitur forgot password via WA)
             $user->update([
-                'name'  => $validated['nama'],
-                'email' => $validated['email'],
+                'name'    => $validated['nama'],
+                'email'   => $validated['email'],
+                'telepon' => $validated['telepon'],
             ]);
 
             // 4. Update Pegawai
