@@ -21,8 +21,6 @@ class PegawaiController extends Controller
         $search          = $request->search;
         $searchUnitKerja = $request->unit_kerja;
 
-        // PERBAIKAN: Jangan gunakan whereHas jika ingin menampilkan SEMUA pegawai
-        // Terlepas dari apakah mereka punya akun user atau tidak
         $query = Pegawai::with('user'); 
 
         if ($search) {
@@ -37,14 +35,27 @@ class PegawaiController extends Controller
             $query->where('unit_kerja', 'like', "%{$searchUnitKerja}%");
         }
 
-        $pegawai = $query->orderBy('nama')->paginate(10)->withQueryString();
+        // --- PERBAIKAN LOGIKA PENGURUTAN DI SINI ---
+        $pegawai = $query->orderByRaw("
+            CASE 
+                WHEN jabatan = 'Kepala Dinas' THEN 1
+                WHEN jabatan = 'Sekretaris Dinas' THEN 2
+                WHEN jabatan LIKE 'Kepala Bidang%' THEN 3
+                WHEN jabatan LIKE 'Kepala Sub Bagian%' THEN 4
+                WHEN jabatan LIKE 'Kepala Seksi%' THEN 5
+                ELSE 6 
+            END ASC
+        ")
+        ->orderBy('nama', 'asc') // Menangani urutan A-Z untuk pegawai (skor 6)
+        ->paginate(10)
+        ->withQueryString();
+        // -------------------------------------------
 
-    // Ambil daftar Pegawai yang memiliki Role 'atasan'
+        // Ambil daftar pendukung lainnya tetap seperti sebelumnya...
         $listAtasan = Pegawai::whereHas('user', function($q) {
             $q->where('role', 'atasan');
-        })->get(['id', 'nama']);
+        })->get(['id', 'nama', 'unit_kerja', 'jabatan']);
 
-        // Ambil daftar Pegawai yang memiliki Role 'pemberi_cuti' (Pejabat)
         $listPejabat = Pegawai::whereHas('user', function($q) {
             $q->where('role', 'pejabat');
         })->get(['id', 'nama']);
@@ -92,7 +103,7 @@ class PegawaiController extends Controller
                 'unit_kerja'   => $validated['unit_kerja'],
                 'status'       => $validated['status'],
                 'atasan'       => $request->atasan,
-                'pemberi_cuti' => $request->pemberi_cuti,
+                'pemberi_cuti' => $request->pejabat,
                 'kuota_cuti'   => 12,
             ]);
 
@@ -148,7 +159,7 @@ public function update(Request $request, $id)
             'unit_kerja'              => $validated['unit_kerja'],
             'status'                  => $validated['status'],
             'atasan'                  => $validated['atasan'], 
-            'pemberi_cuti'            => $request->pemberi_cuti,
+            'pemberi_cuti'            => $request->pejabat,
             // Gunakan kolom ID relasi agar sinkron dengan store
             'id_atasan_langsung'      => $request->id_atasan_langsung, 
             'id_pejabat_pemberi_cuti' => $request->id_pejabat_pemberi_cuti,

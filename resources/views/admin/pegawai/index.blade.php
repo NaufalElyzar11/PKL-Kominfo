@@ -6,10 +6,64 @@
 {{-- Root x-data container (no styling) --}}
 <div x-data="{
     // 1. Status Modal
-    showCreateModal: false,
+    showCreateModal: {{ $errors->any() ? 'true' : 'false' }},
     showEditModal: false,
     showDetailModal: false,
     showDelete: false,
+
+    // 1. DAFTAR SEMUA UNIT KERJA
+    daftarUnit: [
+        'Bidang Sekretariat',
+        'Bidang Informatika',
+        'Bidang Statistik & Persandian',
+        'Bidang Komunikasi',
+        'Dinas Komunikasi dan Informatika'
+    ],
+
+    // 2. GETTER UNTUK FILTER UNIT KERJA
+    get filteredUnitKerja() {
+    if (this.role === 'pegawai') {
+                // Pegawai tetap tidak boleh pilih unit induk Dinas
+                return this.daftarUnit.filter(u => u !== 'Dinas Komunikasi dan Informatika');
+            }
+            // Admin, Atasan, dan Pejabat boleh melihat semua unit
+            return this.daftarUnit;
+        },
+
+    // 3. LOGIKA OTOMATIS: Jika Atasan pilih Dinas, otomatis pilihkan Sekretaris
+    // Masukkan ini ke dalam tag select Unit Kerja menggunakan @change
+    handleUnitChange() {
+        if (this.role === 'atasan' && this.unit_kerja === 'Dinas Komunikasi dan Informatika') {
+            this.jabatan = 'Sekretaris';
+        } else if (this.role === 'atasan') {
+            this.jabatan = ''; // Reset jika ganti ke bidang lain agar admin pilih manual
+        }
+    },
+
+    handleRoleChange() {
+        this.jabatan = '';
+        this.atasan = '';
+
+        if (this.role === 'pejabat') {
+            this.unit_kerja = 'Dinas Komunikasi dan Informatika';
+            this.jabatan = 'Kepala Dinas';
+            this.atasan = 'Hj. Erna Lisa Halaby';
+        } else {
+            // Reset unit kerja jika role berubah dari Pejabat ke yang lain
+            if (this.unit_kerja === 'Dinas Komunikasi dan Informatika') {
+                this.unit_kerja = '';
+            }
+        }
+    },
+
+    // 1. DAFTAR JABATAN PER BIDANG (Khusus untuk Role Atasan)
+    jabatanMap: {
+        'Bidang Sekretariat': ['Kepala Sub Bagian Umum dan Kepegawaian', 'Kepala Sub Bagian Perencanaan dan Keuangan', 'Sekretaris Dinas'],
+        'Bidang Informatika': ['Kepala Seksi Pengelolaan Jaringan Komunikasi Data','Kepala Seksi Pengembangan Sistem Informasi dan Website Pemerintah', 'Kepala Bidang Informatika'],
+        'Bidang Statistik & Persandian': ['Kepala Seksi Statistik', 'Kepala Seksi Persandian', 'Kepala Bidang Statistik & Persandian'],
+        'Bidang Komunikasi': ['Kepala Seksi Pelayanan Informasi', 'Kepala Seksi Komunikasi dan Kelembagaan Informasi Publik','Kepala Bidang Komunikasi'],
+        'Dinas Komunikasi dan Informatika': ['Sekretaris Dinas']
+    },
 
     // 2. Variabel Form Tambah (Hanya didefinisikan satu kali agar tidak bentrok)
     nama: '',
@@ -20,7 +74,7 @@
     role: '',        // Terhubung ke select role
     status: '',
     password: '',
-    pemberi_cuti: 'Kanafi, S.IP, MM',
+    pejabat: 'Kanafi, S.IP, MM',
     showPassword: false,
 
     get hasUpper() {
@@ -45,21 +99,69 @@ get isLongEnough() {
 
 // Getter untuk filter daftar nama di dropdown
     get filteredAtasan() {
-        if (this.role === 'pegawai') return this.dataAtasan;
-        if (this.role === 'atasan') return this.dataPejabat;
-        if (this.role === 'pejabat') return [{id: 99, nama: 'Lisa Halaby'}]; // Default Pejabat
-        return [];
+        if (!this.unit_kerja || !this.jabatan) return [];
+
+        // Logika untuk KEPALA SUB BAGIAN (Kasubbag)
+        // Atasannya WAJIB Sekretaris Dinas
+        if (this.jabatan.includes('Kepala Sub Bagian')) {
+            return this.dataAtasan.filter(at => at.jabatan === 'Sekretaris Dinas');
+        }
+
+        // KONDISI KHUSUS: Jika Jabatan adalah Sekretaris Dinas
+        // Atasannya otomatis adalah Pejabat (Kepala Dinas)
+        if (this.jabatan === 'Sekretaris Dinas') {
+        return [{ id: 'pj_1', nama: this.pejabat }];
+        }
+
+            // 1. Logika untuk KEPALA SEKSI (Kasi)
+            // Atasannya harus Kepala Bidang (Kabid) di bidang yang sama
+            if (this.jabatan.includes('Kepala Seksi')) {
+                return this.dataAtasan.filter(at => 
+                    at.unit_kerja === this.unit_kerja && 
+                    at.jabatan.includes('Kepala Bidang')
+                );
+            }
+
+            // 2. Logika untuk PEGAWAI
+            // Atasannya harus Kasi atau Kasubag di bidang yang sama
+            if (this.role === 'pegawai') {
+                return this.dataAtasan.filter(at => 
+                    at.unit_kerja === this.unit_kerja && 
+                    (at.jabatan.includes('Kepala Seksi') || at.jabatan.includes('Kepala Sub Bagian'))
+                );
+            }
+
+            // 3. Logika untuk KEPALA BIDANG (Kabid)
+            // Atasannya adalah Sekretaris Dinas
+            if (this.jabatan.includes('Kepala Bidang')) {
+                return this.dataAtasan.filter(at => at.jabatan.includes('Sekretaris Dinas'));
+            }
+
+            // 4. Logika untuk PEJABAT (Kepala Dinas)
+            if (this.role === 'pejabat') {
+                return [{ id: 'sp_1', nama: 'Lisa Halaby' }];
+            }
+
+            return [];
     },
 
     // Fungsi tambahan untuk auto-select nama
     handleRoleChange() {
-        this.atasan = '';
+        this.jabatan = ''; // Reset jabatan setiap ganti role
+        this.atasan = '';  // Reset atasan setiap ganti role
 
         if (this.role === 'pejabat') {
-            this.atasan = 'Lisa Halaby';
-            this.pemberi_cuti = 'Lisa Halaby';
+            // Default otomatis untuk Pejabat
+            this.unit_kerja = 'Dinas Komunikasi dan Informatika';
+            this.jabatan = 'Kepala Dinas';
+            this.atasan = 'Hj. Erna Lisa Halaby';
+            this.pejabat = 'Hj. Erna Lisa Halaby';
+        } else if (this.role === 'atasan') {
+            this.pejabat = 'Kanafi, S.IP, MM';
         } else {
-            this.pemberi_cuti = 'Kanafi, S.IP, MM';
+            // Role Pegawai
+            this.unit_kerja = ''; 
+            this.pejabat = 'Kanafi, S.IP, MM';
         }
     },
 
@@ -107,6 +209,15 @@ get isLongEnough() {
     openEditModal(pegawai) {
         this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
         this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
+
+        // 2. SINKRONISASI: Pindahkan data ke variabel yang digunakan logika dropdown
+        this.role = this.selectedPegawai.role;
+        this.unit_kerja = this.selectedPegawai.unit_kerja;
+        this.atasan = this.selectedPegawai.atasan;
+        this.jabatan = this.selectedPegawai.jabatan;
+
+        this.pejabat = this.selectedPegawai.pejabat || 'Kanafi, S.IP, MM';
+
         this.showEditModal = true;
     },
 
@@ -206,7 +317,7 @@ get isLongEnough() {
                             'jabatan' => $p->jabatan,
                             'unit_kerja' => $p->unit_kerja,
                             'atasan' => $p->atasan, 
-                            'pemberi_cuti' => $p->pemberi_cuti,
+                            'pejabat' => $p->pemberi_cuti,
                             'telepon' => $p->telepon,
                             'status' => $p->status
                         ];
@@ -229,7 +340,14 @@ get isLongEnough() {
                         <td class="px-2 py-1 border hidden lg:table-cell">{{ $p->unit_kerja ?? '-' }}</td>
                         <td class="px-2 py-1 border hidden lg:table-cell">{{ $p->atasan ?? '-' }}</td>
                         <td class="px-2 py-1 border hidden lg:table-cell">{{ $p->pemberi_cuti ?? '-' }}</td>
-                        <td class="px-2 py-1 border text-center">{{ $p->status ?? '-' }}</td>
+                        <td class="px-2 py-1 border text-center whitespace-nowrap">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold
+                                {{ $p->status === 'aktif' 
+                                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' 
+                                    : 'bg-rose-100 text-rose-700 border border-rose-200' }}">
+                                {{ ucfirst($p->status ?? 'nonaktif') }}
+                            </span>
+                        </td>
 
                         <td class="px-2 py-1 border text-center whitespace-nowrap">
                             <div class="flex justify-center items-center gap-2">
@@ -368,6 +486,18 @@ get isLongEnough() {
                 <form action="{{ route('admin.pegawai.store') }}" method="POST" autocomplete="off">
                     @csrf
 
+                    {{-- PESAN ERROR --}}
+                    @if ($errors->any())
+                        <div class="mb-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-[11px] rounded shadow-sm">
+                            <p class="font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Gagal Menyimpan:</p>
+                            <ul class="list-disc ml-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     {{-- ========== 2-COLUMN LAYOUT ========== --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                         
@@ -415,69 +545,109 @@ get isLongEnough() {
 
                                     {{-- Jabatan & Unit Kerja --}}
                                     <div class="grid grid-cols-2 gap-3">
+                                        {{-- BAGIAN JABATAN --}}
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                                 <i class="fa-solid fa-briefcase text-sky-500 text-[10px]"></i>
                                                 Jabatan <span class="text-red-500">*</span>
                                             </label>
-                                            <input type="text" name="jabatan" required
-                                            x-model="jabatan"
-                                                   oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                                   placeholder="Staf IT">
+
+                                            {{-- KONDISI 1: Role Pegawai atau Role Belum Dipilih --}}
+                                            <template x-if="role === 'pegawai' || role === ''">
+                                                <input type="text" name="jabatan" x-model="jabatan" required
+                                                    {{-- TERKUNCI JIKA ROLE KOSONG --}}
+                                                    :disabled="!role || !unit_kerja"
+                                                    {{-- PLACEHOLDER DINAMIS SESUAI PERMINTAAN --}}
+                                                    :placeholder="!role ? 'Pilih Role dahulu' : 'Masukkan Nama Jabatan'"
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed">
+                                            </template>
+
+                                            {{-- KONDISI 2: Role Atasan atau Pejabat --}}
+                                            <template x-if="role === 'atasan' || role === 'pejabat'">
+                                                <div>
+                                                    <select :name="role !== 'pejabat' ? 'jabatan' : ''" 
+                                                            x-model="jabatan" 
+                                                            :disabled="role === 'pejabat' || !unit_kerja"
+                                                            required
+                                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                                        
+                                                        {{-- PLACEHOLDER: Pilih Jabatan Bidang (Atasan) atau Kepala Dinas (Pejabat) --}}
+                                                        <option value="" disabled selected x-text="role === 'pejabat' ? 'Kepala Dinas' : 'Pilih Jabatan Bidang'"></option>
+                                                        
+                                                        <template x-if="role === 'atasan' && unit_kerja !== ''">
+                                                            <template x-for="j in jabatanMap[unit_kerja]" :key="j">
+                                                                <option :value="j" x-text="j"></option>
+                                                            </template>
+                                                        </template>
+
+                                                        <template x-if="role === 'pejabat'">
+                                                            <option value="Kepala Dinas" selected>Kepala Dinas</option>
+                                                        </template>
+                                                    </select>
+
+                                                    {{-- Hidden input agar data tetap terkirim ke database meski select-nya disabled --}}
+                                                    <template x-if="role === 'pejabat'">
+                                                        <input type="hidden" name="jabatan" value="Kepala Dinas">
+                                                    </template>
+                                                </div>
+                                            </template>
                                         </div>
+
+                                        {{-- BAGIAN UNIT KERJA --}}
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                                 <i class="fa-solid fa-building text-sky-500 text-[10px]"></i>
                                                 Unit Kerja <span class="text-red-500">*</span>
                                             </label>
                                             
-                                            {{-- Mengganti input dengan select --}}
-                                            <select name="unit_kerja" 
+                                            <select :name="role !== 'pejabat' ? 'unit_kerja' : ''" 
                                                     x-model="unit_kerja" 
+                                                    :disabled="role === 'pejabat' || !role"
+                                                    @change="handleUnitChange()"
                                                     required
-                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs ...">
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 disabled:cursor-not-allowed focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
                                                 
-                                                {{-- Value wajib kosong agar sinkron dengan unit_kerja = '' --}}
                                                 <option value="" disabled selected>Pilih Unit Kerja</option>
                                                 
-                                                <option value="Bidang Sekretariat">Bidang Sekretariat</option>
-                                                <option value="Bidang Informatika">Bidang Informatika</option>
-                                                <option value="Bidang Statistika & Persandian">Bidang Statistika & Persandian</option>
-                                                <option value="Bidang Komunikasi">Bidang Komunikasi</option>
-                                                <option value="Dinas Komunikasi dan Informatika">Dinas Komunikasi dan Informatika</option>
+                                                <template x-for="unit in filteredUnitKerja" :key="unit">
+                                                    <option :value="unit" x-text="unit"></option>
+                                                </template>
                                             </select>
+
+                                            {{-- Hidden input untuk role Pejabat --}}
+                                            <template x-if="role === 'pejabat'">
+                                                <input type="hidden" name="unit_kerja" value="Dinas Komunikasi dan Informatika">
+                                            </template>
                                         </div>
                                     </div>
-
+                                    
                                     {{-- Atasan & Pemberi Cuti --}}
                                     <div class="grid grid-cols-2 gap-3">
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                                 <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
-                                                Atasan <span class="text-red-500">*</span>
+                                                Atasan Langsung <span class="text-red-500">*</span>
                                             </label>
                                             
-                                            {{-- Perbaikan: Input diganti Dropdown Dinamis --}}
-                                            <select name="atasan" 
-                                                    x-model="atasan" 
-                                                    :disabled="!role" {{-- Akan aktif otomatis jika role sudah diisi --}}
+                                            <select name="atasan" x-model="atasan" 
+                                                    :disabled="!unit_kerja || !role || !jabatan"
                                                     required
-                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                        focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 
-                                                        disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none">
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs ...">
                                                 
-                                                {{-- Tambahkan atribut 'disabled' agar tidak bisa diklik, dan 'selected' sebagai pilihan awal --}}
-                                                <option value="" 
-                                                        disabled 
-                                                        selected 
-                                                        x-text="!role ? 'Pilih Role dahulu' : 'Pilih Nama Atasan'">
-                                                </option>
+                                                <template x-if="!jabatan">
+                                                    <option value="">Pilih Jabatan dahulu</option>
+                                                </template>
                                                 
-                                                {{-- Loop daftar atasan yang sudah difilter oleh getter di x-data --}}
+                                                <template x-if="jabatan && filteredAtasan.length === 0">
+                                                    <option value="">Tidak ada jabatan Atasan yang sesuai di bidang ini</option>
+                                                </template>
+
+                                                <template x-if="jabatan && filteredAtasan.length > 0">
+                                                    <option value="" disabled selected>Pilih Nama Atasan</option>
+                                                </template>
+
                                                 <template x-for="item in filteredAtasan" :key="item.id">
-                                                    <option :value="item.nama" x-text="item.nama" :selected="atasan === item.nama"></option>
+                                                    <option :value="item.nama" x-text="item.nama"></option>
                                                 </template>
                                             </select>
                                         </div>
@@ -488,10 +658,10 @@ get isLongEnough() {
                                                 Pemberi Cuti
                                             </label>
                                             <input type="text"
-                                            name="pemberi_cuti"
-                                            x-model="pemberi_cuti"
+                                            name="pejabat"
+                                            x-model="pejabat"
                                             readonly
-                                            :class="role === 'pemberi_cuti' ? 'text-sky-600 font-semibold' : 'text-gray-500'"
+                                            :class="role === 'pejabat' ? 'text-sky-600 font-semibold' : 'text-gray-500'"
                                             class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
                                         </div>
                                     </div>
@@ -727,7 +897,7 @@ get isLongEnough() {
             {{-- Pejabat Pemberi Cuti --}}
             <div class="p-1.5 border border-gray-200 rounded-md">
                 <p class="font-semibold text-[10px] text-gray-500">Pejabat Pemberi Cuti</p>
-                <p x-text="selectedPegawai?.pemberi_cuti || '-'" class="font-medium"></p>
+                <p x-text="selectedPegawai?.pejabat || '-'" class="font-medium"></p>
             </div>
 
             {{-- Telepon --}}
@@ -842,78 +1012,115 @@ get isLongEnough() {
                                                placeholder="Masukkan 18 digit NIP">
                                     </div>
 
-                                    {{-- Jabatan & Unit Kerja --}}
+                                    {{-- Jabatan & Unit Kerja (Modal Edit) --}}
                                     <div class="grid grid-cols-2 gap-3">
+                                        {{-- BAGIAN JABATAN --}}
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                                 <i class="fa-solid fa-briefcase text-amber-500 text-[10px]"></i>
-                                                Jabatan
+                                                Jabatan <span class="text-red-500">*</span>
                                             </label>
-                                            <input type="text" name="jabatan"
-                                                   x-model="selectedPegawai.jabatan"
-                                                   @input="selectedPegawai.jabatan = selectedPegawai.jabatan.replace(/[^a-zA-Z\s]/g, '')"
-                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                          focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
-                                                   placeholder="Jabatan">
+
+                                            {{-- Role Pegawai -> Input Manual --}}
+                                            <template x-if="role === 'pegawai' || role === ''">
+                                                <input type="text" name="jabatan" x-model="jabatan" required
+                                                    :disabled="!unit_kerja"
+                                                    :placeholder="!unit_kerja ? 'Pilih Unit Kerja dahulu' : 'Masukkan Nama Jabatan'"
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200 disabled:bg-gray-50">
+                                            </template>
+
+                                            {{-- Role Atasan atau Pejabat -> Dropdown --}}
+                                            <template x-if="role === 'atasan' || role === 'pejabat'">
+                                                <div>
+                                                    <select :name="role !== 'pejabat' ? 'jabatan' : ''" 
+                                                            x-model="jabatan" 
+                                                            :disabled="role === 'pejabat' || !unit_kerja"
+                                                            required
+                                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 appearance-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100">
+                                                        
+                                                        <option value="" disabled selected x-text="!unit_kerja ? 'Pilih Unit Kerja dahulu' : (role === 'pejabat' ? 'Kepala Dinas' : 'Pilih Jabatan Bidang')"></option>
+                                                        
+                                                        <template x-if="role === 'atasan' && unit_kerja !== ''">
+                                                            <template x-for="j in jabatanMap[unit_kerja]" :key="j">
+                                                                <option :value="j" x-text="j" :selected="j === jabatan"></option>
+                                                            </template>
+                                                        </template>
+
+                                                        <template x-if="role === 'pejabat'">
+                                                            <option value="Kepala Dinas" selected>Kepala Dinas</option>
+                                                        </template>
+                                                    </select>
+                                                    <template x-if="role === 'pejabat'">
+                                                        <input type="hidden" name="jabatan" value="Kepala Dinas">
+                                                    </template>
+                                                </div>
+                                            </template>
                                         </div>
+
+                                        {{-- BAGIAN UNIT KERJA --}}
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                                 <i class="fa-solid fa-building text-amber-500 text-[10px]"></i>
-                                                Unit Kerja
+                                                Unit Kerja <span class="text-red-500">*</span>
                                             </label>
-                                            <input type="text" name="unit_kerja"
-                                                   x-model="selectedPegawai.unit_kerja"
-                                                   @input="selectedPegawai.unit_kerja = selectedPegawai.unit_kerja.replace(/[^a-zA-Z\s]/g, '')"
-                                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                          focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
-                                                   placeholder="Unit Kerja">
+                                            
+                                            <select :name="role !== 'pejabat' ? 'unit_kerja' : ''" 
+                                                    x-model="unit_kerja" 
+                                                    :disabled="role === 'pejabat' || !role"
+                                                    @change="handleUnitChange()"
+                                                    required
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 focus:border-amber-400 focus:ring-2 focus:ring-amber-100">
+                                                
+                                                <option value="" disabled selected>Pilih Unit Kerja</option>
+                                                <template x-for="unit in filteredUnitKerja" :key="unit">
+                                                    <option :value="unit" x-text="unit" :selected="unit === unit_kerja"></option>
+                                                </template>
+                                            </select>
+
+                                            <template x-if="role === 'pejabat'">
+                                                <input type="hidden" name="unit_kerja" value="Dinas Komunikasi dan Informatika">
+                                            </template>
                                         </div>
                                     </div>
 
-                                {{-- Atasan & Pemberi Cuti --}}
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div class="space-y-1.5">
-                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                            <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
-                                            Atasan Langsung <span class="text-red-500">*</span>
-                                        </label>
+                                    {{-- Atasan & Pemberi Cuti (Modal Edit) --}}
+                                    <div class="grid grid-cols-2 gap-3 mt-4">
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
+                                                Atasan Langsung <span class="text-red-500">*</span>
+                                            </label>
+                                            
+                                            <select name="atasan" x-model="atasan" 
+                                                    :disabled="!jabatan || !role"
+                                                    required
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100">
+                                                
+                                                <template x-if="!jabatan">
+                                                    <option value="">Pilih Jabatan dahulu</option>
+                                                </template>
+                                                <template x-if="jabatan && filteredAtasan.length === 0">
+                                                    <option value="">Tidak ada atasan sesuai</option>
+                                                </template>
+                                                <template x-if="jabatan && filteredAtasan.length > 0">
+                                                    <option value="" disabled selected>Pilih Nama Atasan</option>
+                                                </template>
+
+                                                <template x-for="item in filteredAtasan" :key="item.id">
+                                                    <option :value="item.nama" x-text="item.nama" :selected="item.nama === atasan"></option>
+                                                </template>
+                                            </select>
+                                        </div>
                                         
-                                        {{-- Perbaikan: Input diganti Dropdown Dinamis --}}
-                                        <select name="atasan" 
-                                                x-model="atasan" 
-                                                :disabled="!role || (role !== 'pegawai' && role !== 'atasan')"
-                                                required
-                                                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                    focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 
-                                                    disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none">
-                                            
-                                                {{-- Tambahkan atribut 'disabled' agar tidak bisa diklik, dan 'selected' sebagai pilihan awal --}}
-                                                <option value="" 
-                                                        disabled 
-                                                        selected 
-                                                        x-text="!role ? 'Pilih Role dahulu' : 'Pilih Nama Atasan'">
-                                                </option>
-                                            
-                                            {{-- Loop daftar atasan yang sudah difilter oleh getter di x-data --}}
-                                            <template x-for="item in filteredAtasan" :key="item.id">
-                                                <option :value="item.nama" x-text="item.nama"></option>
-                                            </template>
-                                        </select>
+                                        <div class="space-y-1.5">
+                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                                <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
+                                                Pemberi Cuti
+                                            </label>
+                                            <input type="text" name="pejabat" x-model="pejabat" readonly
+                                                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
+                                        </div>
                                     </div>
-                                    
-                                    <div class="space-y-1.5">
-                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                            <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
-                                            Pemberi Cuti
-                                        </label>
-                                        <input type="text"
-                                        name="pemberi_cuti"
-                                        x-model="pemberi_cuti"
-                                        readonly
-                                        :class="role === 'pemberi_cuti' ? 'text-sky-600 font-semibold' : 'text-gray-500'"
-                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
-                                    </div>
-                                </div>
                                 </div>
                             </div>
                         </div>
@@ -928,13 +1135,13 @@ get isLongEnough() {
                                 </label>
                                 <div class="relative">
                                     {{-- Tambahkan x-model="role" di sini --}}
-                                    <select name="role" x-model="role" required
+                                    <select name="role" x-model="role" @change="handleRoleChange()" required
                                             class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
                                                 focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
                                         <option value="" disabled selected>Pilih Role</option>
                                         <option value="admin">Admin</option>
-                                        <option value="atasan">Atasan Langsung</option>
-                                        <option value="pemberi_cuti">Pejabat Pemberi Cuti</option>
+                                        <option value="atasan">Atasan</option>
+                                        <option value="pejabat">Pejabat</option>
                                         <option value="pegawai">Pegawai</option>
                                     </select>
                                 </div>
