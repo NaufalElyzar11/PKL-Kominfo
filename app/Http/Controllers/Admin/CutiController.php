@@ -204,4 +204,69 @@ public function update(Request $request, $id)
         return $pdf->download('Laporan_Cuti_Pegawai_' . now()->format('d-m-Y') . '.pdf');
     }
 
+    /**
+     * 🔹 Halaman Approval Cuti (seperti dashboard pejabat)
+     */
+    public function approval()
+    {
+        $stats = [
+            'menunggu'  => Cuti::where('status', 'Disetujui Atasan')->count(),
+            'disetujui' => Cuti::where('status', 'Disetujui')->count(),
+            'ditolak'   => Cuti::where('status', 'Ditolak')->count(),
+        ];
+
+        $pengajuan = Cuti::with('pegawai')
+            ->where('status', 'Disetujui Atasan')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $riwayat = Cuti::with('pegawai')
+            ->whereIn('status', ['Disetujui', 'Ditolak'])
+            ->orderBy('updated_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        return view('admin.cuti.approval', compact('stats', 'pengajuan', 'riwayat'));
+    }
+
+    /**
+     * 🔹 Setujui pengajuan cuti
+     */
+    public function approve($id)
+    {
+        $cuti = Cuti::findOrFail($id);
+        
+        $cuti->update(['status' => 'Disetujui']);
+
+        return back()->with('success', 'Pengajuan cuti telah disetujui.');
+    }
+
+    /**
+     * 🔹 Tolak pengajuan cuti
+     */
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'catatan_penolakan' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z\s]+$/'
+            ]
+        ], [
+            'catatan_penolakan.required' => 'Alasan penolakan wajib diisi.',
+            'catatan_penolakan.max' => 'Alasan penolakan maksimal 100 karakter.',
+            'catatan_penolakan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi saja.'
+        ]);
+
+        $cuti = Cuti::findOrFail($id);
+
+        $cuti->update([
+            'status' => 'Ditolak',
+            'catatan_penolakan' => $request->catatan_penolakan
+        ]);
+
+        return back()->with('success', 'Pengajuan cuti berhasil ditolak.');
+    }
+
 }

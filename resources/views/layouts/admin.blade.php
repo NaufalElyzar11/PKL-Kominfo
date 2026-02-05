@@ -53,6 +53,7 @@
                         ['route' => 'admin.dashboard', 'icon' => 'fa-solid fa-chart-line', 'label' => 'Dashboard', 'color' => 'icon-color-dashboard'],
                         ['route' => 'admin.pegawai.index', 'icon' => 'fa-solid fa-users', 'label' => 'Data Pegawai', 'color' => 'icon-color-users'],
                         ['route' => 'admin.cuti.index', 'icon' => 'fa-solid fa-file-signature', 'label' => 'Daftar Cuti', 'color' => 'icon-color-cuti'],
+                        ['route' => 'admin.cuti.approval', 'icon' => 'fa-solid fa-clipboard-check', 'label' => 'Approval Cuti', 'color' => 'icon-color-cuti'],
                         ['route' => 'admin.profile.index', 'icon' => 'fa-solid fa-user-circle', 'label' => 'Profil Saya', 'color' => 'icon-color-profile'],
                     ];
                 @endphp

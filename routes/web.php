@@ -92,6 +92,7 @@ Route::middleware(['auth'])->group(function () {
         
         // 🔹 PINDAHKAN RUTE PDF KE SINI (DI ATAS RESOURCE) 🔹
         Route::get('/cuti/export-pdf', [AdminCutiController::class, 'exportPdf'])->name('cuti.export-pdf');
+        Route::get('/cuti/approval', [AdminCutiController::class, 'approval'])->name('cuti.approval');
         
         // Cuti Admin
         Route::resource('cuti', AdminCutiController::class);
