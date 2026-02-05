@@ -22,13 +22,14 @@
 
     // 2. GETTER UNTUK FILTER UNIT KERJA
     get filteredUnitKerja() {
-    if (this.role === 'pegawai') {
-                // Pegawai tetap tidak boleh pilih unit induk Dinas
-                return this.daftarUnit.filter(u => u !== 'Dinas Komunikasi dan Informatika');
-            }
-            // Admin, Atasan, dan Pejabat boleh melihat semua unit
-            return this.daftarUnit;
-        },
+        // Jika role adalah pegawai ATAU atasan, sembunyikan unit induk Dinas
+        if (this.role === 'pegawai' || this.role === 'atasan') {
+            return this.daftarUnit.filter(u => u !== 'Dinas Komunikasi dan Informatika');
+        }
+        
+        // Untuk role Pejabat atau Admin, tampilkan semua (termasuk Dinas)
+        return this.daftarUnit;
+    },
 
     // 3. LOGIKA OTOMATIS: Jika Atasan pilih Dinas, otomatis pilihkan Sekretaris
     // Masukkan ini ke dalam tag select Unit Kerja menggunakan @change
@@ -40,28 +41,6 @@
         }
     },
 
-handleRoleChange() {
-    this.jabatan = ''; 
-    this.atasan = '';  
-
-    if (this.role === 'pejabat') {
-        this.unit_kerja = 'Dinas Komunikasi dan Informatika';
-        this.jabatan = 'Kepala Dinas';
-        this.atasan = 'Hj. Erna Lisa Halaby'; 
-        
-        // --- TAMBAHKAN BARIS INI ---
-        // Karena Pejabat (Kadis) yang memberi cuti adalah Wali Kota
-        this.pejabat = 'Hj. Erna Lisa Halaby'; 
-    } else {
-        // --- TAMBAHKAN BARIS INI JUGA ---
-        // Kembalikan ke nama Kadis (Kanafi, S.IP, MM) untuk role selain Pejabat
-        this.pejabat = 'Kanafi, S.IP, MM'; 
-
-        if (this.unit_kerja === 'Dinas Komunikasi dan Informatika') {
-            this.unit_kerja = '';
-        }
-    }
-},
 
     // 1. DAFTAR JABATAN PER BIDANG (Khusus untuk Role Atasan)
     jabatanMap: {
@@ -170,22 +149,18 @@ get isLongEnough() {
 
     // Fungsi tambahan untuk auto-select nama
     handleRoleChange() {
-        this.jabatan = ''; 
-        this.atasan = '';  
+        this.jabatan = '';
+        this.atasan = '';
 
         if (this.role === 'pejabat') {
-            this.unit_kerja = 'Dinas Komunikasi dan Informatika';
+            this.unit_kerja = 'Dinas Komunikasi dan Informatika'; // Set otomatis
             this.jabatan = 'Kepala Dinas';
-            this.atasan = 'Hj. Erna Lisa Halaby'; 
-            
-            // --- TAMBAHKAN BARIS INI ---
-            // Agar kotak Pemberi Cuti juga berubah menjadi Wali Kota
-            this.pejabat = 'Hj. Erna Lisa Halaby'; 
+            this.atasan = 'Hj. Erna Lisa Halaby';
+            this.pejabat = 'Hj. Erna Lisa Halaby';
         } else {
-            // --- KEMBALIKAN KE NAMA KADIS ---
-            // Jika role bukan Pejabat, maka pemberi cuti kembali ke Kadis
-            this.pejabat = 'Kanafi, S.IP, MM'; 
-
+            this.pejabat = 'Kanafi, S.IP, MM';
+            
+            // Reset unit kerja jika sebelumnya memilih 'Dinas' (unit khusus Pejabat)
             if (this.unit_kerja === 'Dinas Komunikasi dan Informatika') {
                 this.unit_kerja = '';
             }
