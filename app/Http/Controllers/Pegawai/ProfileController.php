@@ -18,11 +18,18 @@ class ProfileController extends Controller
         $pegawai = $user->pegawai;
 
         if (!$pegawai) {
-            return redirect()->route('pegawai.dashboard')
+            return redirect()->route($user->role . '.dashboard')
                 ->with('error', 'Data profil pegawai tidak ditemukan.');
         }
 
-        return view('pegawai.profile.edit', [
+        // Determine view based on user role
+        $viewPath = match($user->role) {
+            'atasan' => 'atasan.profile.edit',
+            'pejabat' => 'pejabat.profile.edit',
+            default => 'pegawai.profile.edit',
+        };
+
+        return view($viewPath, [
             'user' => $user,
             'pegawai' => $pegawai,
         ]);
@@ -34,10 +41,17 @@ class ProfileController extends Controller
         $pegawai = $user->pegawai;
 
         if (!$pegawai) {
-            return redirect()->route('pegawai.dashboard')->with('error', 'Data tidak ditemukan.');
+            return redirect()->route($user->role . '.dashboard')->with('error', 'Data tidak ditemukan.');
         }
 
-        return view('pegawai.profile.profile', [
+        // Determine view based on user role
+        $viewPath = match($user->role) {
+            'atasan' => 'atasan.profile.profile',
+            'pejabat' => 'pejabat.profile.profile',
+            default => 'pegawai.profile.profile',
+        };
+
+        return view($viewPath, [
             'user' => $user,
             'pegawai' => $pegawai,
         ]);
@@ -52,7 +66,7 @@ class ProfileController extends Controller
         $pegawai = $user->pegawai;
 
         $validated = $request->validate([
-            'nama'    => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
+            'nama'    => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s.,\']+$/'],
             'email'   => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'telepon' => ['required', 'string', 'min:10', 'max:13', 'regex:/^[0-9]+$/'],
             'foto'    => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],

@@ -35,16 +35,21 @@
 
     @php
         // Tentukan rute secara dinamis berdasarkan role user yang login
-        $routeAction = Auth::user()->role === 'admin' ? route('admin.profile.update') : route('pegawai.profile.update');
+        $role = Auth::user()->role;
+        $routeAction = match($role) {
+            'admin' => route('admin.profile.update'),
+            'atasan' => route('atasan.profile.update'),
+            'pejabat' => route('pejabat.profile.update'),
+            default => route('pegawai.profile.update'),
+        };
     @endphp
-    {{-- 1. TAMBAHKAN enctype="multipart/form-data" (WAJIB UNTUK UPLOAD FILE) --}}
-  {{-- Ubah agar rutenya dinamis sesuai role --}}
+    {{-- Form dengan action dinamis sesuai role --}}
     <form method="post" 
-        action="{{ Auth::user()->role === 'admin' ? route('admin.profile.update') : route('pegawai.profile.update') }}" 
+        action="{{ $routeAction }}" 
         enctype="multipart/form-data" 
         class="space-y-6">
         @csrf
-        @method('patch') {{-- Pastikan di web.php rute admin.profile.update juga menggunakan PATCH --}}
+        @method('patch')
 
     {{-- Pastikan container utama form memiliki x-data --}}
     <div class="space-y-6">
@@ -170,9 +175,9 @@
             <input type="text" 
                 name="nama" 
                 x-model="currNama"
-                {{-- Logika filter: Hanya izinkan huruf (a-z, A-Z) dan spasi --}}
-                @input="currNama = currNama.replace(/[^a-zA-Z\s]/g, '')"
-                placeholder="Masukkan nama tanpa angka atau simbol"
+                {{-- Logika filter: Izinkan huruf, spasi, titik, koma, dan apostrof (untuk gelar) --}}
+                @input="currNama = currNama.replace(/[^a-zA-Z\s.,\']/g, '')"
+                placeholder="Masukkan nama (gelar diizinkan seperti S.Kom.)"
                 class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none" 
                 required>
             
