@@ -224,7 +224,7 @@
                             </td>
                             <td class="px-6 py-4 text-gray-500 italic">
                                 @if($r->status == 'Ditolak')
-                                    <span class="text-red-500 font-semibold">Alasan:</span> 
+                                    <span class="text-red-500 font-semibold">Alasan dari pejabat:</span> 
                                     {{ $r->catatan_penolakan ?? 'Tidak ada catatan penolakan' }}
                                 @else
                                     -
