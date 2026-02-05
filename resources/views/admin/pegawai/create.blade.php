@@ -36,139 +36,64 @@
 
         {{-- ========== FORM CONTENT ========== --}}
         <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
+            
+            {{-- PETUNJUK PENGISIAN --}}
+            <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                    <div>
+                        <p class="text-[11px] sm:text-xs font-semibold text-amber-700">Petunjuk Pengisian</p>
+                        <p class="text-[10px] sm:text-[11px] text-amber-600 mt-1">
+                            Isi data dari <strong>Nama</strong> hingga <strong>Password</strong> secara berurutan. 
+                            Field bertanda <span class="text-red-500">*</span> wajib diisi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <form action="{{ route('admin.pegawai.store') }}" method="POST">
                 @csrf
 
                 {{-- ========== 2-COLUMN LAYOUT ========== --}}
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                     
-                    {{-- ===== KOLOM KIRI: DATA PRIBADI ===== --}}
+                    {{-- ===== KOLOM KIRI ===== --}}
                     <div class="space-y-4">
-                        {{-- DATA PRIBADI SECTION --}}
-                        <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
-                            <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-id-card text-sky-600 text-sm"></i>
-                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Pribadi</span>
-                                </div>
-                            </div>
-                            <div class="p-4 space-y-3">
-                                {{-- Nama --}}
-                                <div class="space-y-1.5">
-                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                        <i class="fa-solid fa-user text-sky-500 text-[10px]"></i>
-                                        Nama Lengkap <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="text" name="nama" value="{{ old('nama') }}"
-                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                  focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                           placeholder="Masukkan nama lengkap" required>
-                                    @error('nama') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
-                                </div>
-
-                                {{-- NIP --}}
-                                <div class="space-y-1.5">
-                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                        <i class="fa-solid fa-hashtag text-sky-500 text-[10px]"></i>
-                                        NIP
-                                    </label>
-                                    <input type="text" name="nip" value="{{ old('nip') }}"
-                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                  focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                           placeholder="Masukkan NIP">
-                                    @error('nip') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
-                                </div>
-
-                                {{-- Email --}}
-                                <div class="space-y-1.5">
-                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                        <i class="fa-solid fa-envelope text-sky-500 text-[10px]"></i>
-                                        Email <span class="text-red-500">*</span>
-                                    </label>
-                                    <input type="email" name="email" value="{{ old('email') }}"
-                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                  focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                           placeholder="contoh@email.com" required>
-                                    @error('email') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
-                                </div>
-
-                                {{-- Telepon --}}
-                                <div class="space-y-1.5">
-                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                        <i class="fa-solid fa-phone text-sky-500 text-[10px]"></i>
-                                        Telepon
-                                    </label>
-                                    <input type="text" name="telepon" value="{{ old('telepon') }}"
-                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                  focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                           placeholder="08xxxxxxxxxx">
-                                    @error('telepon') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- RINGKASAN INFO (Like Ringkasan Pengajuan) --}}
-                        <div class="hidden lg:block bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
-                            <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
-                                <i class="fa-solid fa-circle-info text-sky-600 text-sm"></i>
-                                <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Informasi</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-sky-100 shadow-sm">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-                                        <i class="fa-solid fa-shield-halved text-sky-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Role Akses</p>
-                                        <p class="text-[11px] sm:text-xs font-medium text-gray-600">Hak akses sistem</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                        <i class="fa-solid fa-check-circle text-emerald-600"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[9px] sm:text-[10px] text-emerald-500 uppercase tracking-wide">Status Default</p>
-                                        <p class="text-[11px] sm:text-xs font-medium text-emerald-700">Pegawai Aktif</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ===== KOLOM KANAN: FORM INPUT ===== --}}
-                    <div class="space-y-4">
-                        {{-- JABATAN --}}
+                        {{-- 1. NAMA --}}
                         <div class="space-y-1.5">
                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                <i class="fa-solid fa-user-tie text-sky-500 text-[10px] sm:text-xs"></i>
-                                Jabatan
+                                <i class="fa-solid fa-user text-sky-500 text-[10px]"></i>
+                                Nama Lengkap <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="jabatan" value="{{ old('jabatan') }}"
+                            <input type="text" name="nama" value="{{ old('nama') }}"
                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                   placeholder="Masukkan jabatan">
-                            @error('jabatan') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                                   placeholder="Masukkan nama lengkap pegawai" required>
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Nama sesuai KTP atau data resmi
+                            </p>
+                            @error('nama') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- UNIT KERJA --}}
+                        {{-- 2. NIP --}}
                         <div class="space-y-1.5">
                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                <i class="fa-solid fa-building text-sky-500 text-[10px] sm:text-xs"></i>
-                                Unit Kerja
+                                <i class="fa-solid fa-hashtag text-sky-500 text-[10px]"></i>
+                                NIP
                             </label>
-                            <input type="text" name="unit_kerja" value="{{ old('unit_kerja') }}"
+                            <input type="text" name="nip" value="{{ old('nip') }}"
                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                   placeholder="Masukkan unit kerja">
-                            @error('unit_kerja') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                                   placeholder="Masukkan NIP (13-18 digit)">
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Nomor Induk Pegawai, kosongkan jika belum ada
+                            </p>
+                            @error('nip') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- ROLE --}}
+                        {{-- 3. ROLE --}}
                         <div class="space-y-1.5">
                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                 <i class="fa-solid fa-shield-halved text-sky-500 text-[10px] sm:text-xs"></i>
@@ -182,21 +107,25 @@
                                     <option value="" disabled selected>— Pilih Role —</option>
                                     <option value="pegawai" {{ old('role') == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
                                     <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                                    <option value="kadis" {{ old('role') == 'kadis' ? 'selected' : '' }}>Kadis</option>
-                                    <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                                    <option value="atasan" {{ old('role') == 'atasan' ? 'selected' : '' }}>Atasan Langsung</option>
+                                    <option value="pejabat" {{ old('role') == 'pejabat' ? 'selected' : '' }}>Pejabat Pemberi Cuti</option>
                                 </select>
                                 <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                     <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
                                 </div>
                             </div>
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Menentukan hak akses pengguna di sistem
+                            </p>
                             @error('role') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        {{-- STATUS --}}
+                        {{-- 4. STATUS --}}
                         <div class="space-y-1.5">
                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                 <i class="fa-solid fa-toggle-on text-sky-500 text-[10px] sm:text-xs"></i>
-                                Status
+                                Status <span class="text-red-500">*</span>
                             </label>
                             <div class="relative">
                                 <select name="status"
@@ -211,38 +140,98 @@
                                     <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
                                 </div>
                             </div>
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Pegawai nonaktif tidak dapat login
+                            </p>
                             @error('status') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
                         </div>
+                    </div>
 
-                        {{-- PASSWORD --}}
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-key text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Password <span class="text-red-500">*</span>
-                                </label>
-                                <input type="password" name="password"
-                                       class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                              focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                       placeholder="••••••••" required>
-                                @error('password') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-check-double text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Konfirmasi <span class="text-red-500">*</span>
-                                </label>
-                                <input type="password" name="password_confirmation"
-                                       class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                              focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                       placeholder="••••••••" required>
-                            </div>
+                    {{-- ===== KOLOM KANAN ===== --}}
+                    <div class="space-y-4">
+                        {{-- 5. UNIT KERJA --}}
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                <i class="fa-solid fa-building text-sky-500 text-[10px] sm:text-xs"></i>
+                                Unit Kerja <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="unit_kerja" value="{{ old('unit_kerja') }}"
+                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                   placeholder="Contoh: Bidang Aplikasi Informatika" required>
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Bagian/divisi tempat pegawai bekerja
+                            </p>
+                            @error('unit_kerja') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
                         </div>
-                        <p class="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1">
-                            <i class="fa-solid fa-circle-info"></i>
-                            Password minimal 8 karakter
-                        </p>
+
+                        {{-- 6. JABATAN --}}
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                <i class="fa-solid fa-user-tie text-sky-500 text-[10px] sm:text-xs"></i>
+                                Jabatan <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="jabatan" value="{{ old('jabatan') }}"
+                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                   placeholder="Contoh: Kepala Seksi, Staf, dll" required>
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Posisi atau jabatan pegawai dalam instansi
+                            </p>
+                            @error('jabatan') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- 7. ATASAN LANGSUNG --}}
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                <i class="fa-solid fa-user-check text-sky-500 text-[10px] sm:text-xs"></i>
+                                Atasan Langsung <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="atasan" value="{{ old('atasan') }}"
+                                   class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                          focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                   placeholder="Nama atasan langsung pegawai" required>
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Pejabat yang menyetujui cuti tahap pertama
+                            </p>
+                            @error('atasan') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        {{-- 8. PASSWORD --}}
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="space-y-1.5">
+                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                        <i class="fa-solid fa-key text-sky-500 text-[10px] sm:text-xs"></i>
+                                        Password <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="password" name="password"
+                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                  focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                           placeholder="••••••••" required>
+                                    @error('password') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                        <i class="fa-solid fa-check-double text-sky-500 text-[10px] sm:text-xs"></i>
+                                        Konfirmasi <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="password" name="password_confirmation"
+                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                  focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                           placeholder="••••••••" required>
+                                </div>
+                            </div>
+                            <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Password minimal 8 karakter, digunakan untuk login
+                            </p>
+                        </div>
                     </div>
                 </div>
 

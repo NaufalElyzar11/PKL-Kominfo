@@ -507,7 +507,7 @@ get isLongEnough() {
                     {{-- ========== 2-COLUMN LAYOUT ========== --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                         
-                        {{-- ===== KOLOM KIRI: DATA PEGAWAI ===== --}}
+                        {{-- ===== KOLOM KIRI ===== --}}
                         <div class="space-y-4">
                             {{-- DATA PEGAWAI SECTION --}}
                             <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
@@ -518,7 +518,7 @@ get isLongEnough() {
                                     </div>
                                 </div>
                                 <div class="p-4 space-y-3">
-                                    {{-- Nama Lengkap --}}
+                                    {{-- 1. NAMA LENGKAP --}}
                                     <div class="space-y-1.5">
                                         <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                             <i class="fa-solid fa-user text-sky-500 text-[10px]"></i>
@@ -530,55 +530,155 @@ get isLongEnough() {
                                                       focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
                                                placeholder="Nama Pegawai"
                                                oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')">
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Nama lengkap sesuai data resmi
+                                        </p>
                                     </div>
 
-                                    {{-- NIP --}}
+                                    {{-- 2. NIP --}}
                                     <div class="space-y-1.5">
                                         <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                             <i class="fa-solid fa-hashtag text-sky-500 text-[10px]"></i>
-                                            {{-- 1. Hapus <span class="text-red-500">*</span> agar tidak terlihat wajib secara visual --}}
                                             NIP 
                                         </label>
-                                        {{-- 2. Hapus atribut 'required' dan 'minlength="13"' agar browser mengizinkan input kosong --}}
                                         <input type="text" name="nip" x-model="nip"
                                             maxlength="18" inputmode="numeric"
                                             oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                             class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
                                                     focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                            {{-- 3. Ubah placeholder agar lebih informatif --}}
                                             placeholder="Masukkan 18 digit NIP">
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Kosongkan jika belum memiliki NIP
+                                        </p>
                                     </div>
 
-                                    {{-- Jabatan & Unit Kerja --}}
-                                    <div class="grid grid-cols-2 gap-3">
-                                        {{-- BAGIAN JABATAN --}}
-                                        <div class="space-y-1.5">
-                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-briefcase text-sky-500 text-[10px]"></i>
-                                                Jabatan <span class="text-red-500">*</span>
-                                            </label>
+                                    {{-- 3. ROLE --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-shield-halved text-sky-500 text-[10px] sm:text-xs"></i>
+                                            Role <span class="text-red-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <select name="role"
+                                            x-model="role"
+                                            @change="handleRoleChange()"
+                                            required
+                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                                <option value="" disabled selected>Pilih Role</option>
+                                                <option value="atasan">Atasan</option>
+                                                <option value="pejabat">Pejabat</option>
+                                                <option value="pegawai">Pegawai</option>
+                                            </select>
+                                        </div>
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Menentukan hak akses pengguna di sistem
+                                        </p>
+                                    </div>
 
-                                            {{-- KONDISI 1: Role Pegawai atau Role Belum Dipilih --}}
-                                            <template x-if="role === 'pegawai' || role === ''">
+                                    {{-- 4. STATUS --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-regular fa-circle-check text-sky-500 text-[10px] sm:text-xs"></i>
+                                            Status <span class="text-red-500">*</span>
+                                        </label>
+                                        <div class="relative">
+                                            <select name="status" required x-model="status"
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
+                                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                                <option value="" disabled selected>Pilih Status</option>
+                                                <option value="aktif">Aktif</option>
+                                                <option value="nonaktif">Nonaktif</option>
+                                            </select>
+                                        </div>
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Pegawai nonaktif tidak dapat login ke sistem
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ===== KOLOM KANAN ===== --}}
+                        <div class="space-y-4">
+                            {{-- DATA JABATAN SECTION --}}
+                            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                                <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-building text-sky-600 text-sm"></i>
+                                        <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Jabatan & Akses</span>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    {{-- 5. UNIT KERJA --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-building text-sky-500 text-[10px]"></i>
+                                            Unit Kerja <span class="text-red-500">*</span>
+                                        </label>
+                                        
+                                        <div class="relative">
+                                            <select :name="role !== 'pejabat' ? 'unit_kerja' : ''" 
+                                                    x-model="unit_kerja" 
+                                                    :disabled="role === 'pejabat' || !role"
+                                                    @change="handleUnitChange()"
+                                                    required
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 disabled:cursor-not-allowed focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                                
+                                                <option value="" disabled selected x-text="!role ? 'Pilih Role terlebih dahulu' : 'Pilih Unit Kerja'"></option>
+                                                
+                                                <template x-for="unit in filteredUnitKerja" :key="unit">
+                                                    <option :value="unit" x-text="unit"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+
+                                        {{-- Hidden input untuk role Pejabat --}}
+                                        <template x-if="role === 'pejabat'">
+                                            <input type="hidden" name="unit_kerja" value="Dinas Komunikasi dan Informatika">
+                                        </template>
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Isi Role terlebih dahulu untuk memilih unit
+                                        </p>
+                                    </div>
+
+                                    {{-- 6. JABATAN --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-briefcase text-sky-500 text-[10px]"></i>
+                                            Jabatan <span class="text-red-500">*</span>
+                                        </label>
+
+                                        {{-- KONDISI 1: Role Pegawai atau Role Belum Dipilih --}}
+                                        <template x-if="role === 'pegawai' || role === ''">
+                                            <div>
                                                 <input type="text" name="jabatan" x-model="jabatan" @change="handleJabatanChange()" required
-                                                    {{-- TERKUNCI JIKA ROLE KOSONG --}}
                                                     :disabled="!role || !unit_kerja"
-                                                    {{-- PLACEHOLDER DINAMIS SESUAI PERMINTAAN --}}
-                                                    :placeholder="!role ? 'Pilih Role dahulu' : 'Masukkan Nama Jabatan'"
+                                                    :placeholder="!role ? 'Pilih Role dahulu' : (!unit_kerja ? 'Pilih Unit Kerja dahulu' : 'Masukkan Nama Jabatan')"
                                                     class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed">
-                                            </template>
+                                                <p class="text-[9px] text-gray-400 flex items-center gap-1 mt-1">
+                                                    <i class="fa-solid fa-circle-info"></i>
+                                                    Isi Unit Kerja terlebih dahulu
+                                                </p>
+                                            </div>
+                                        </template>
 
-                                            {{-- KONDISI 2: Role Atasan atau Pejabat --}}
-                                            <template x-if="role === 'atasan' || role === 'pejabat'">
-                                                <div>
+                                        {{-- KONDISI 2: Role Atasan atau Pejabat --}}
+                                        <template x-if="role === 'atasan' || role === 'pejabat'">
+                                            <div>
+                                                <div class="relative">
                                                     <select :name="role !== 'pejabat' ? 'jabatan' : ''" 
                                                             x-model="jabatan" 
                                                             :disabled="role === 'pejabat' || !unit_kerja"
                                                             required
-                                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 disabled:cursor-not-allowed appearance-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
+                                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 disabled:cursor-not-allowed focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
                                                         
-                                                        {{-- PLACEHOLDER: Pilih Jabatan Bidang (Atasan) atau Kepala Dinas (Pejabat) --}}
-                                                        <option value="" disabled selected x-text="role === 'pejabat' ? 'Kepala Dinas' : 'Pilih Jabatan Bidang'"></option>
+                                                        <option value="" disabled selected x-text="role === 'pejabat' ? 'Kepala Dinas' : (!unit_kerja ? 'Pilih Unit Kerja dahulu' : 'Pilih Jabatan Bidang')"></option>
                                                         
                                                         <template x-if="role === 'atasan' && unit_kerja !== ''">
                                                             <template x-for="j in jabatanMap[unit_kerja]" :key="j">
@@ -590,55 +690,32 @@ get isLongEnough() {
                                                             <option value="Kepala Dinas" selected>Kepala Dinas</option>
                                                         </template>
                                                     </select>
-
-                                                    {{-- Hidden input agar data tetap terkirim ke database meski select-nya disabled --}}
-                                                    <template x-if="role === 'pejabat'">
-                                                        <input type="hidden" name="jabatan" value="Kepala Dinas">
-                                                    </template>
                                                 </div>
-                                            </template>
-                                        </div>
 
-                                        {{-- BAGIAN UNIT KERJA --}}
-                                        <div class="space-y-1.5">
-                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-building text-sky-500 text-[10px]"></i>
-                                                Unit Kerja <span class="text-red-500">*</span>
-                                            </label>
-                                            
-                                            <select :name="role !== 'pejabat' ? 'unit_kerja' : ''" 
-                                                    x-model="unit_kerja" 
-                                                    :disabled="role === 'pejabat' || !role"
-                                                    @change="handleUnitChange()"
-                                                    required
-                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 disabled:cursor-not-allowed focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
-                                                
-                                                <option value="" disabled selected>Pilih Unit Kerja</option>
-                                                
-                                                <template x-for="unit in filteredUnitKerja" :key="unit">
-                                                    <option :value="unit" x-text="unit"></option>
+                                                {{-- Hidden input agar data tetap terkirim ke database meski select-nya disabled --}}
+                                                <template x-if="role === 'pejabat'">
+                                                    <input type="hidden" name="jabatan" value="Kepala Dinas">
                                                 </template>
-                                            </select>
-
-                                            {{-- Hidden input untuk role Pejabat --}}
-                                            <template x-if="role === 'pejabat'">
-                                                <input type="hidden" name="unit_kerja" value="Dinas Komunikasi dan Informatika">
-                                            </template>
-                                        </div>
+                                                <p class="text-[9px] text-gray-400 flex items-center gap-1 mt-1">
+                                                    <i class="fa-solid fa-circle-info"></i>
+                                                    <span x-text="role === 'pejabat' ? 'Jabatan otomatis untuk Pejabat' : 'Isi Unit Kerja terlebih dahulu'"></span>
+                                                </p>
+                                            </div>
+                                        </template>
                                     </div>
                                     
-                                    {{-- Atasan & Pemberi Cuti --}}
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <div class="space-y-1.5">
-                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
-                                                Atasan Langsung <span class="text-red-500">*</span>
-                                            </label>
-                                            
+                                    {{-- 7. ATASAN LANGSUNG --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
+                                            Atasan Langsung <span class="text-red-500">*</span>
+                                        </label>
+                                        
+                                        <div class="relative">
                                             <select name="atasan" x-model="atasan" 
                                                     :disabled="!unit_kerja || !role || !jabatan"
                                                     required
-                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs ...">
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 disabled:cursor-not-allowed focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
                                                 
                                                 <template x-if="!jabatan">
                                                     <option value="">Pilih Jabatan dahulu</option>
@@ -657,159 +734,88 @@ get isLongEnough() {
                                                 </template>
                                             </select>
                                         </div>
-                                        
-                                        <div class="space-y-1.5">
-                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
-                                                Pemberi Cuti
-                                            </label>
-                                            <input type="text"
-                                            name="pejabat"
-                                            x-model="pejabat"
-                                            readonly
-                                            :class="role === 'pejabat' ? 'text-sky-600 font-semibold' : 'text-gray-500'"
-                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Pejabat yang menyetujui cuti tahap pertama
+                                        </p>
+                                    </div>
+
+                                    {{-- 8. PEMBERI CUTI --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
+                                            Pemberi Cuti
+                                        </label>
+                                        <input type="text"
+                                               name="pejabat"
+                                               x-model="pejabat"
+                                               readonly
+                                               :class="role === 'pejabat' ? 'text-sky-600 font-semibold' : 'text-gray-500'"
+                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs cursor-not-allowed">
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Pejabat yang memberikan persetujuan akhir cuti
+                                        </p>
+                                    </div>
+
+                                    {{-- 9. PASSWORD --}}
+                                    <div class="space-y-1.5">
+                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                            <i class="fa-solid fa-key text-sky-500 text-[10px] sm:text-xs"></i>
+                                            Password <span class="text-red-500">*</span>
+                                        </label>
+
+                                        <div class="relative">
+                                            <input :type="showPassword ? 'text' : 'password'"
+                                                name="password"
+                                                x-model="password"
+                                                required
+                                                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                                focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
+                                                placeholder="Kombinasi Minimal 8 Karakter">
+
+                                            <span @click="showPassword = !showPassword"
+                                                class="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400">
+                                                <i class="fa-solid text-xs"
+                                                :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                            </span>
                                         </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {{-- RINGKASAN INFO (Desktop only) --}}
-                            <div class="hidden lg:block bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
-                                <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
-                                    <i class="fa-solid fa-circle-info text-sky-600 text-sm"></i>
-                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Informasi</span>
-                                </div>
-                                
-                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-sky-100 shadow-sm">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-sky-100 rounded-lg flex items-center justify-center">
-                                            <i class="fa-solid fa-shield-halved text-sky-600"></i>
+                                        {{-- Password validation indicators --}}
+                                        <div class="grid grid-cols-2 gap-2 mt-2">
+                                            <div class="flex items-center gap-1.5 text-[10px]"
+                                                :class="hasUpper ? 'text-emerald-600' : 'text-gray-400'">
+                                                <i class="fa-solid"
+                                                :class="hasUpper ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                                Huruf Kapital (A-Z)
+                                            </div>
+
+                                            <div class="flex items-center gap-1.5 text-[10px]"
+                                                :class="hasNumber ? 'text-emerald-600' : 'text-gray-400'">
+                                                <i class="fa-solid"
+                                                :class="hasNumber ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                                Angka (0-9)
+                                            </div>
+
+                                            <div class="flex items-center gap-1.5 text-[10px]"
+                                                :class="hasSymbol ? 'text-emerald-600' : 'text-gray-400'">
+                                                <i class="fa-solid"
+                                                :class="hasSymbol ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                                Simbol (!@#$%^&*)
+                                            </div>
+
+                                            <div class="flex items-center gap-1.5 text-[10px]"
+                                                :class="isLongEnough ? 'text-emerald-600' : 'text-gray-400'">
+                                                <i class="fa-solid"
+                                                :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
+                                                Minimal 8 Karakter
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Role Akses</p>
-                                            <p class="text-[11px] sm:text-xs font-medium text-gray-600">Pilih role untuk pengguna</p>
-                                        </div>
+                                        <p class="text-[9px] text-gray-400 flex items-center gap-1 mt-1">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            Password kuat untuk keamanan akun
+                                        </p>
                                     </div>
-                                </div>
-
-                                <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                                            <i class="fa-solid fa-check-circle text-emerald-600"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-[9px] sm:text-[10px] text-emerald-500 uppercase tracking-wide">Status Default</p>
-                                            <p class="text-[11px] sm:text-xs font-medium text-emerald-700">Pegawai Aktif</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- ===== KOLOM KANAN: KEAMANAN AKUN ===== --}}
-                        <div class="space-y-4">
-                            {{-- ROLE & STATUS --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-shield-halved text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Role <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <select name="role"
-                                    x-model="role"
-                                    @change="handleRoleChange()" {{-- Tambahkan trigger ini --}}
-                                    required
-                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
-                                                   focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
-                                        <option value="" disabled selected>Pilih Role</option>
-                                        <option value="atasan">Atasan</option>
-                                        <option value="pejabat">Pejabat</option>
-                                        <option value="pegawai">Pegawai</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-regular fa-circle-check text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Status <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <select name="status" required x-model="status"
-                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
-                                                   focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
-                                        <option value="" disabled selected>Pilih Status</option>
-                                        <option value="aktif">Aktif</option>
-                                        <option value="nonaktif">Nonaktif</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {{-- PASSWORD DENGAN VALIDASI --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-key text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Password <span class="text-red-500">*</span>
-                                </label>
-
-                                <div class="relative">
-                                    <input :type="showPassword ? 'text' : 'password'"
-                                        name="password"
-                                        x-model="password"
-                                        required
-                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                        focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
-                                        placeholder="Kombinasi Minimal 8 Karakter">
-
-                                    <span @click="showPassword = !showPassword"
-                                        class="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400">
-                                        <i class="fa-solid text-xs"
-                                        :class="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
-                                    </span>
-                                </div>
-
-                                {{-- Password validation indicators --}}
-                                <div class="grid grid-cols-2 gap-2 mt-2">
-                                    <div class="flex items-center gap-1.5 text-[10px]"
-                                        :class="hasUpper ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid"
-                                        :class="hasUpper ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        Huruf Kapital (A-Z)
-                                    </div>
-
-                                    <div class="flex items-center gap-1.5 text-[10px]"
-                                        :class="hasNumber ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid"
-                                        :class="hasNumber ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        Angka (0-9)
-                                    </div>
-
-                                    <div class="flex items-center gap-1.5 text-[10px]"
-                                        :class="hasSymbol ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid"
-                                        :class="hasSymbol ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        Simbol (!@#$%^&*)
-                                    </div>
-
-                                    <div class="flex items-center gap-1.5 text-[10px]"
-                                        :class="isLongEnough ? 'text-emerald-600' : 'text-gray-400'">
-                                        <i class="fa-solid"
-                                        :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
-                                        Minimal 8 Karakter
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            {{-- Info Box Warning --}}
-                            <div class="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-                                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <i class="fa-solid fa-circle-info text-amber-600"></i>
-                                </div>
-                                <div class="text-[11px] sm:text-xs">
-                                    <p class="font-bold text-amber-800">Perhatian</p>
-                                    <p class="text-amber-700">Pastikan semua data telah diisi dengan benar sebelum menyimpan.</p>
                                 </div>
                             </div>
                         </div>
@@ -1042,7 +1048,7 @@ get isLongEnough() {
                                                             x-model="jabatan" 
                                                             :disabled="role === 'pejabat' || !unit_kerja"
                                                             required
-                                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 appearance-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100">
+                                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 focus:border-amber-400 focus:ring-2 focus:ring-amber-100">
                                                         
                                                         <option value="" disabled selected x-text="!unit_kerja ? 'Pilih Unit Kerja dahulu' : (role === 'pejabat' ? 'Kepala Dinas' : 'Pilih Jabatan Bidang')"></option>
                                                         
