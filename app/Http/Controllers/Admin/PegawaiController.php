@@ -95,7 +95,40 @@ class PegawaiController extends Controller
             'password'     => ['required', 'string', Password::min(8)],
         ]);
 
-        $roleForDatabase = $validated['role']; // Langsung gunakan nilai 'atasan'
+        // Validasi jabatan unik untuk Kepala Bidang, Kepala Seksi, Kepala Sub Bagian, Sekretaris, dan Kepala Dinas
+        $jabatan = $validated['jabatan'];
+        $unitKerja = $validated['unit_kerja'];
+        
+        // Daftar jabatan yang harus unik (hanya 1 per unit kerja atau 1 secara keseluruhan)
+        $jabatanUnik = [
+            'Kepala Dinas',
+            'Sekretaris Dinas',
+        ];
+        
+        // Cek jabatan yang bersifat global unik (hanya 1 di seluruh organisasi)
+        if (in_array($jabatan, $jabatanUnik)) {
+            $exists = Pegawai::where('jabatan', $jabatan)->exists();
+            if ($exists) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', "Jabatan \"{$jabatan}\" sudah terisi. Hanya boleh ada 1 orang untuk jabatan ini.");
+            }
+        }
+        
+        // Cek jabatan Kepala Bidang, Kepala Seksi, dan Kepala Sub Bagian (unik per jabatan)
+        if (str_starts_with($jabatan, 'Kepala Bidang') || 
+            str_starts_with($jabatan, 'Kepala Seksi') || 
+            str_starts_with($jabatan, 'Kepala Sub Bagian')) {
+            
+            $exists = Pegawai::where('jabatan', $jabatan)->exists();
+            if ($exists) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', "Jabatan \"{$jabatan}\" sudah terisi. Hanya boleh ada 1 orang untuk jabatan ini.");
+            }
+        }
+
+        $roleForDatabase = $validated['role'];
 
         DB::beginTransaction();
         try {
@@ -146,6 +179,35 @@ public function update(Request $request, $id)
         'unit_kerja' => 'nullable|string|max:255',
         'atasan' => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s.,]+$/'],
     ]);
+
+    // Validasi jabatan unik (jika jabatan berubah)
+    $jabatan = $validated['jabatan'] ?? null;
+    if ($jabatan && $jabatan !== $pegawai->jabatan) {
+        // Daftar jabatan yang bersifat global unik
+        $jabatanUnik = ['Kepala Dinas', 'Sekretaris Dinas'];
+        
+        if (in_array($jabatan, $jabatanUnik)) {
+            $exists = Pegawai::where('jabatan', $jabatan)->where('id', '!=', $id)->exists();
+            if ($exists) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', "Jabatan \"{$jabatan}\" sudah terisi. Hanya boleh ada 1 orang untuk jabatan ini.");
+            }
+        }
+        
+        // Cek jabatan Kepala Bidang, Kepala Seksi, dan Kepala Sub Bagian
+        if (str_starts_with($jabatan, 'Kepala Bidang') || 
+            str_starts_with($jabatan, 'Kepala Seksi') || 
+            str_starts_with($jabatan, 'Kepala Sub Bagian')) {
+            
+            $exists = Pegawai::where('jabatan', $jabatan)->where('id', '!=', $id)->exists();
+            if ($exists) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', "Jabatan \"{$jabatan}\" sudah terisi. Hanya boleh ada 1 orang untuk jabatan ini.");
+            }
+        }
+    }
 
     DB::beginTransaction();
     try {
