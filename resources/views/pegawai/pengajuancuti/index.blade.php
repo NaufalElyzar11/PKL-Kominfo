@@ -93,7 +93,7 @@
     },
 
     isHoliday(date) {
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = date.toLocaleDateString('en-CA');
         return this.holidays.some(h => h.date === dateStr);
     },
 
@@ -693,31 +693,32 @@
                                     Periode Cuti <span class="text-red-500">*</span>
                                 </label>
                                 <div class="grid grid-cols-2 gap-3">
+                                    {{-- TANGGAL MULAI --}}
                                     <div class="relative group">
                                         <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10">
                                             <i class="fa-regular fa-calendar text-gray-400 group-focus-within:text-sky-500 transition-colors text-xs"></i>
                                         </div>
                                         <input type="text"
-                                               name="tanggal_mulai"
-                                               x-model="tanggalMulaiTambah"
-                                               x-ref="tambahMulai"
-                                               placeholder="Tanggal Mulai"
-                                               class="flatpickr w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                      focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                               required>
+                                            name="tanggal_mulai"
+                                            x-model="tanggalMulaiTambah"
+                                            x-ref="tambahMulai"
+                                            placeholder="Tanggal Mulai"
+                                            class="flatpickr w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                            required>
                                     </div>
                                     <div class="relative group">
                                         <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10">
                                             <i class="fa-regular fa-calendar-check text-gray-400 group-focus-within:text-sky-500 transition-colors text-xs"></i>
                                         </div>
                                         <input type="text"
-                                               name="tanggal_selesai"
-                                               x-model="tanggalSelesaiTambah"
-                                               x-ref="tambahSelesai"
-                                               placeholder="Tanggal Selesai"
-                                               class="flatpickr w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                      focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                               required>
+                                            name="tanggal_selesai"
+                                            x-model="tanggalSelesaiTambah"
+                                            x-ref="tambahSelesai"
+                                            :disabled="!tanggalMulaiTambah" {{-- <-- INI PERUBAHANNYA: Kunci jika mulai kosong --}}
+                                            :class="!tanggalMulaiTambah ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white cursor-pointer'"
+                                            placeholder="Tanggal Selesai"
+                                            class="flatpickr w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                            required>
                                     </div>
                                 </div>
                                 <p class="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1">
@@ -729,49 +730,52 @@
                             {{-- Watcher untuk re-init Flatpickr --}}
                             <div x-effect="
                                 if(holidaysLoaded) {
+                                    // Konfigurasi dasar untuk disable (Weekend + Libur Nasional)
+                                    const disabledDates = [
+                                        function(date) { 
+                                            // Return true untuk Sabtu (6) dan Minggu (0)
+                                            return (date.getDay() === 0 || date.getDay() === 6); 
+                                        },
+                                        ...holidays.map(h => h.date) // Array string tanggal 'YYYY-MM-DD'
+                                    ];
+
+                                    const commonConfig = {
+                                        locale: 'id',
+                                        dateFormat: 'Y-m-d',
+                                        disable: disabledDates,
+                                        onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                            // Menyamakan zona waktu agar pembandingan tanggal akurat
+                                            const dateStr = dayElem.dateObj.toLocaleDateString('en-CA'); 
+                                            const holiday = holidays.find(h => h.date === dateStr);
+                                            if (holiday) {
+                                                dayElem.classList.add('holiday');
+                                                dayElem.title = holiday.desc;
+                                            }
+                                        }
+                                    };
+
+                                    // Init Kalender MULAI
                                     if($refs.tambahMulai) {
                                         flatpickr($refs.tambahMulai, {
-                                            locale: 'id',
-                                            dateFormat: 'Y-m-d',
+                                            ...commonConfig,
                                             minDate: new Date().fp_incr(3),
-                                            disable: [
-                                                function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
-                                                ...holidays.map(h => h.date)
-                                            ],
-                                            onDayCreate: (dObj, dStr, fp, dayElem) => {
-                                                const dateStr = dayElem.dateObj.toISOString().split('T')[0];
-                                                const holiday = holidays.find(h => h.date === dateStr);
-                                                if (holiday) {
-                                                    dayElem.className += ' holiday';
-                                                    dayElem.title = holiday.desc;
-                                                }
-                                            },
                                             onChange: (selectedDates, dateStr) => {
                                                 tanggalMulaiTambah = dateStr;
+                                                tanggalSelesaiTambah = ''; // Reset selesai jika mulai berubah
                                                 hitungHariTambah();
+                                                
                                                 if ($refs.tambahSelesai._flatpickr) {
                                                     $refs.tambahSelesai._flatpickr.set('minDate', dateStr);
                                                 }
                                             }
                                         });
                                     }
+
+                                    // Init Kalender SELESAI
                                     if($refs.tambahSelesai) {
                                         flatpickr($refs.tambahSelesai, {
-                                            locale: 'id',
-                                            dateFormat: 'Y-m-d',
+                                            ...commonConfig,
                                             minDate: tanggalMulaiTambah || new Date().fp_incr(3),
-                                            disable: [
-                                                function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
-                                                ...holidays.map(h => h.date)
-                                            ],
-                                            onDayCreate: (dObj, dStr, fp, dayElem) => {
-                                                const dateStr = dayElem.dateObj.toISOString().split('T')[0];
-                                                const holiday = holidays.find(h => h.date === dateStr);
-                                                if (holiday) {
-                                                    dayElem.className += ' holiday';
-                                                    dayElem.title = holiday.desc;
-                                                }
-                                            },
                                             onChange: (selectedDates, dateStr) => {
                                                 tanggalSelesaiTambah = dateStr;
                                                 hitungHariTambah();
