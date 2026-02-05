@@ -95,14 +95,26 @@
 
                                 <td class="px-2 py-1 border text-center">
                                     @php
-                                        $status_color = match ($c->status) {
-                                            'disetujui' => 'bg-green-100 text-green-700',
-                                            'ditolak'   => 'bg-red-100 text-red-700',
-                                            default     => 'bg-yellow-100 text-yellow-700',
+                                        $statusLower = strtolower($c->status);
+                                        $status_color = match (true) {
+                                            str_contains($statusLower, 'disetujui') => 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+                                            str_contains($statusLower, 'ditolak') => 'bg-rose-100 text-rose-700 border border-rose-200',
+                                            str_contains($statusLower, 'proses') || str_contains($statusLower, 'pejabat') => 'bg-sky-100 text-sky-700 border border-sky-200',
+                                            str_contains($statusLower, 'menunggu') => 'bg-amber-100 text-amber-700 border border-amber-200',
+                                            default => 'bg-gray-100 text-gray-700 border border-gray-200',
                                         };
                                     @endphp
-                                    <span class="px-2 py-[1px] text-[9px] rounded-full font-bold {{ $status_color }}">
-                                        {{ ucfirst($c->status) }}
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] rounded-full font-bold {{ $status_color }}">
+                                        @if(str_contains($statusLower, 'disetujui'))
+                                            <i class="fa-solid fa-circle-check text-[8px]"></i>
+                                        @elseif(str_contains($statusLower, 'ditolak'))
+                                            <i class="fa-solid fa-circle-xmark text-[8px]"></i>
+                                        @elseif(str_contains($statusLower, 'menunggu'))
+                                            <i class="fa-solid fa-clock text-[8px]"></i>
+                                        @elseif(str_contains($statusLower, 'proses'))
+                                            <i class="fa-solid fa-spinner text-[8px]"></i>
+                                        @endif
+                                        {{ ucwords($c->status) }}
                                     </span>
                                 </td>
 
@@ -222,9 +234,13 @@
                 this.selectedCuti = null;
             },
             statusClass(status) {
-                if (status === 'disetujui') return 'bg-green-100 text-green-700';
-                if (status === 'ditolak') return 'bg-red-100 text-red-700';
-                return 'bg-yellow-100 text-yellow-700';
+                if (!status) return 'bg-gray-100 text-gray-700';
+                const s = status.toLowerCase();
+                if (s.includes('disetujui')) return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+                if (s.includes('ditolak')) return 'bg-rose-100 text-rose-700 border border-rose-200';
+                if (s.includes('proses') || s.includes('pejabat')) return 'bg-sky-100 text-sky-700 border border-sky-200';
+                if (s.includes('menunggu')) return 'bg-amber-100 text-amber-700 border border-amber-200';
+                return 'bg-gray-100 text-gray-700 border border-gray-200';
             }
         }
     }

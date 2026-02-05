@@ -36,7 +36,11 @@ class PegawaiController extends Controller
         }
 
         // --- PERBAIKAN LOGIKA PENGURUTAN DI SINI ---
-        $pegawai = $query->orderByRaw("
+        $pegawai = $query
+        // Pegawai tanpa NIP di urutan paling bawah
+        ->orderByRaw("CASE WHEN nip IS NULL OR nip = '' THEN 1 ELSE 0 END ASC")
+        // Kemudian urutkan berdasarkan hierarki jabatan
+        ->orderByRaw("
             CASE 
                 WHEN jabatan = 'Kepala Dinas' THEN 1
                 WHEN jabatan = 'Sekretaris Dinas' THEN 2
