@@ -40,21 +40,28 @@
         }
     },
 
-    handleRoleChange() {
-        this.jabatan = '';
-        this.atasan = '';
+handleRoleChange() {
+    this.jabatan = ''; 
+    this.atasan = '';  
 
-        if (this.role === 'pejabat') {
-            this.unit_kerja = 'Dinas Komunikasi dan Informatika';
-            this.jabatan = 'Kepala Dinas';
-            this.atasan = 'Hj. Erna Lisa Halaby';
-        } else {
-            // Reset unit kerja jika role berubah dari Pejabat ke yang lain
-            if (this.unit_kerja === 'Dinas Komunikasi dan Informatika') {
-                this.unit_kerja = '';
-            }
+    if (this.role === 'pejabat') {
+        this.unit_kerja = 'Dinas Komunikasi dan Informatika';
+        this.jabatan = 'Kepala Dinas';
+        this.atasan = 'Hj. Erna Lisa Halaby'; 
+        
+        // --- TAMBAHKAN BARIS INI ---
+        // Karena Pejabat (Kadis) yang memberi cuti adalah Wali Kota
+        this.pejabat = 'Hj. Erna Lisa Halaby'; 
+    } else {
+        // --- TAMBAHKAN BARIS INI JUGA ---
+        // Kembalikan ke nama Kadis (Kanafi, S.IP, MM) untuk role selain Pejabat
+        this.pejabat = 'Kanafi, S.IP, MM'; 
+
+        if (this.unit_kerja === 'Dinas Komunikasi dan Informatika') {
+            this.unit_kerja = '';
         }
-    },
+    }
+},
 
     // 1. DAFTAR JABATAN PER BIDANG (Khusus untuk Role Atasan)
     jabatanMap: {
@@ -77,6 +84,30 @@
     pejabat: 'Kanafi, S.IP, MM',
     showPassword: false,
 
+    handleJabatanChange() {
+
+    //KADIS KE WALIKOTA
+        if (this.jabatan === 'Kepala Dinas') {
+            this.atasan = 'Hj. Erna Lisa Halaby';
+        } 
+        else if (this.jabatan.includes('Kepala Bidang') || this.jabatan === 'Sekretaris Dinas') {
+            this.atasan = this.pejabat; // Melapor ke Kepala Dinas (Kanafi, S.IP, MM)
+        }
+
+        // Jika Kabid atau Sekretaris, otomatis set atasan ke Pejabat
+        if (this.jabatan.includes('Kepala Bidang') || this.jabatan === 'Sekretaris Dinas') {
+            this.atasan = this.pejabat; 
+        } 
+        // Jika posisi di Sekretariat (dan bukan Sekretarisnya), cari nama Sekretarisnya
+        else if (this.unit_kerja === 'Bidang Sekretariat') {
+            const sekre = this.dataAtasan.find(at => at.jabatan === 'Sekretaris Dinas');
+            this.atasan = sekre ? sekre.nama : '';
+        } 
+        else {
+            this.atasan = ''; // Reset untuk pilihan manual
+        }
+    },
+
     get hasUpper() {
     return /[A-Z]/.test(this.password)
 },
@@ -97,71 +128,67 @@ get isLongEnough() {
     dataAtasan: {{ Js::from($listAtasan) }},
     dataPejabat: {{ Js::from($listPejabat) }},
 
-// Getter untuk filter daftar nama di dropdown
+    // Getter untuk filter daftar nama di dropdown
     get filteredAtasan() {
         if (!this.unit_kerja || !this.jabatan) return [];
 
-        // Logika untuk KEPALA SUB BAGIAN (Kasubbag)
-        // Atasannya WAJIB Sekretaris Dinas
+        // --- PRIORITAS 1: PUNCAK HIERARKI ---
+        if (this.jabatan === 'Kepala Dinas') {
+            return [{ id: 'wk_1', nama: 'Hj. Erna Lisa Halaby' }];
+        }
+
+        // Kabid & Sekretaris melapor ke Kepala Dinas (Pejabat)
+        if (this.jabatan.includes('Kepala Bidang') || this.jabatan === 'Sekretaris Dinas') {
+            return [{ id: 'pj_1', nama: this.pejabat }];
+        }
+
+        // --- PRIORITAS 2: LOGIKA PEGAWAI (Paling Penting) ---
+        // Dipindahkan ke atas agar tidak terlewati oleh aturan Unit Kerja
+        if (this.role === 'pegawai') {
+            return this.dataAtasan.filter(at => 
+                at.unit_kerja === this.unit_kerja && 
+                (at.jabatan.includes('Kepala Seksi') || at.jabatan.includes('Kepala Sub Bagian'))
+            );
+        }
+
+        // --- PRIORITAS 3: LOGIKA KASUBBAG ---
+        // Kasubbag di Bidang Sekretariat melapor ke Sekretaris Dinas
         if (this.jabatan.includes('Kepala Sub Bagian')) {
             return this.dataAtasan.filter(at => at.jabatan === 'Sekretaris Dinas');
         }
 
-        // KONDISI KHUSUS: Jika Jabatan adalah Sekretaris Dinas
-        // Atasannya otomatis adalah Pejabat (Kepala Dinas)
-        if (this.jabatan === 'Sekretaris Dinas') {
-        return [{ id: 'pj_1', nama: this.pejabat }];
+        // --- PRIORITAS 4: LOGIKA KEPALA SEKSI ---
+        if (this.jabatan.includes('Kepala Seksi')) {
+            return this.dataAtasan.filter(at => 
+                at.unit_kerja === this.unit_kerja && 
+                at.jabatan.includes('Kepala Bidang')
+            );
         }
 
-            // 1. Logika untuk KEPALA SEKSI (Kasi)
-            // Atasannya harus Kepala Bidang (Kabid) di bidang yang sama
-            if (this.jabatan.includes('Kepala Seksi')) {
-                return this.dataAtasan.filter(at => 
-                    at.unit_kerja === this.unit_kerja && 
-                    at.jabatan.includes('Kepala Bidang')
-                );
-            }
-
-            // 2. Logika untuk PEGAWAI
-            // Atasannya harus Kasi atau Kasubag di bidang yang sama
-            if (this.role === 'pegawai') {
-                return this.dataAtasan.filter(at => 
-                    at.unit_kerja === this.unit_kerja && 
-                    (at.jabatan.includes('Kepala Seksi') || at.jabatan.includes('Kepala Sub Bagian'))
-                );
-            }
-
-            // 3. Logika untuk KEPALA BIDANG (Kabid)
-            // Atasannya adalah Sekretaris Dinas
-            if (this.jabatan.includes('Kepala Bidang')) {
-                return this.dataAtasan.filter(at => at.jabatan.includes('Sekretaris Dinas'));
-            }
-
-            // 4. Logika untuk PEJABAT (Kepala Dinas)
-            if (this.role === 'pejabat') {
-                return [{ id: 'sp_1', nama: 'Lisa Halaby' }];
-            }
-
-            return [];
+        return [];
     },
 
     // Fungsi tambahan untuk auto-select nama
     handleRoleChange() {
-        this.jabatan = ''; // Reset jabatan setiap ganti role
-        this.atasan = '';  // Reset atasan setiap ganti role
+        this.jabatan = ''; 
+        this.atasan = '';  
 
         if (this.role === 'pejabat') {
-            // Default otomatis untuk Pejabat
             this.unit_kerja = 'Dinas Komunikasi dan Informatika';
             this.jabatan = 'Kepala Dinas';
-            this.atasan = 'Hj. Erna Lisa Halaby';
-            this.pejabat = 'Hj. Erna Lisa Halaby';
-        } else if (this.role === 'atasan') {
-            this.pejabat = 'Kanafi, S.IP, MM';
+            this.atasan = 'Hj. Erna Lisa Halaby'; 
+            
+            // --- TAMBAHKAN BARIS INI ---
+            // Agar kotak Pemberi Cuti juga berubah menjadi Wali Kota
+            this.pejabat = 'Hj. Erna Lisa Halaby'; 
         } else {
-            // Role Pegawai
-            this.unit_kerja = ''; 
-            this.pejabat = 'Kanafi, S.IP, MM';
+            // --- KEMBALIKAN KE NAMA KADIS ---
+            // Jika role bukan Pejabat, maka pemberi cuti kembali ke Kadis
+            this.pejabat = 'Kanafi, S.IP, MM'; 
+
+            if (this.unit_kerja === 'Dinas Komunikasi dan Informatika') {
+                this.unit_kerja = '';
+            }
         }
     },
 
@@ -209,6 +236,10 @@ get isLongEnough() {
     openEditModal(pegawai) {
         this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
         this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
+
+        // Pastikan ini juga sinkron
+        this.pejabat = this.role === 'pejabat' ? 'Hj. Erna Lisa Halaby' : (this.selectedPegawai.pejabat || 'Kanafi, S.IP, MM');
+        this.showEditModal = true;
 
         // 2. SINKRONISASI: Pindahkan data ke variabel yang digunakan logika dropdown
         this.role = this.selectedPegawai.role;
@@ -554,7 +585,7 @@ get isLongEnough() {
 
                                             {{-- KONDISI 1: Role Pegawai atau Role Belum Dipilih --}}
                                             <template x-if="role === 'pegawai' || role === ''">
-                                                <input type="text" name="jabatan" x-model="jabatan" required
+                                                <input type="text" name="jabatan" x-model="jabatan" @change="handleJabatanChange()" required
                                                     {{-- TERKUNCI JIKA ROLE KOSONG --}}
                                                     :disabled="!role || !unit_kerja"
                                                     {{-- PLACEHOLDER DINAMIS SESUAI PERMINTAAN --}}
