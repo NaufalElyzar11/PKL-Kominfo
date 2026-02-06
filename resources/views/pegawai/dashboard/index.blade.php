@@ -190,6 +190,7 @@
                             <th class="border px-1.5 sm:px-2 py-1 text-left hidden lg:table-cell">Selesai</th>
                             <th class="border px-1.5 sm:px-2 py-1 text-center">Hari</th>
                             <th class="border px-1.5 sm:px-2 py-1 text-center">Status</th>
+                            <th class="border px-1.5 sm:px-2 py-1 text-left">Catatan / Tindak Lanjut</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -216,6 +217,37 @@
                                     {{ ucfirst($c->status) }}
                                 </span>
                             </td>
+<td class="border px-1.5 sm:px-2 py-2">
+    @if(str_contains(strtolower($c->status), 'ditolak'))
+        <div class="flex flex-col gap-2 min-w-[200px]">
+            
+            {{-- PRIORITAS 1: JIKA DITOLAK PEJABAT (KADIS) --}}
+            @if($c->catatan_tolak_pejabat)
+                <div class="bg-rose-50 p-2 rounded-lg border border-rose-200 shadow-sm">
+                    <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Pejabat (Kadis):</p>
+                    <p class="text-[11px] text-rose-900 font-medium italic">"{{ $c->catatan_tolak_pejabat }}"</p>
+                </div>
+
+            {{-- PRIORITAS 2: JIKA DITOLAK ATASAN --}}
+            @elseif($c->catatan_tolak_atasan)
+                <div class="bg-orange-50 p-2 rounded-lg border border-orange-200 shadow-sm">
+                    <p class="text-[9px] text-orange-700 font-bold uppercase">Catatan Atasan:</p>
+                    <p class="text-[11px] text-orange-900 font-medium italic">"{{ $c->catatan_tolak_atasan }}"</p>
+                </div>
+
+            {{-- PRIORITAS 3: CATATAN UMUM (JIKA KOLOM KHUSUS DI ATAS KOSONG) --}}
+            @elseif($c->catatan_penolakan)
+                <div class="bg-gray-50 p-2 rounded-lg border border-gray-200 shadow-sm">
+                    <p class="text-[9px] text-gray-700 font-bold uppercase">Catatan Penolakan:</p>
+                    <p class="text-[11px] text-gray-900 font-medium italic">"{{ $c->catatan_penolakan }}"</p>
+                </div>
+            @endif
+
+        </div>
+    @else
+        <span class="text-gray-400 italic text-[10px]">Tidak ada catatan</span>
+    @endif
+</td>
                         </tr>
                         @empty
                         <tr>

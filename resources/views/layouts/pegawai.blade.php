@@ -121,12 +121,17 @@
     <div class="flex-1 smooth-transition" :class="sidebarOpen ? 'ml-56' : 'ml-16'">
         <header class="sticky top-0 bg-[#f4f4f4] border-b border-gray-300 flex justify-between items-center px-6 py-3 shadow-sm z-20">
             <h1 class="text-[15px] font-semibold text-gray-800">@yield('title')</h1>
-            <form action="{{ route('logout') }}" method="POST">
+            {{-- Ganti form logout lama Anda dengan ini --}}
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
                 @csrf
-                <button type="submit" class="flex items-center gap-2 text-[13px] px-4 py-1.5 text-red-600 border border-red-600 rounded-md hover:bg-red-600 hover:text-white transition">
-                    <i class="fa-solid fa-right-from-bracket"></i> Keluar
-                </button>
             </form>
+
+            <button type="button" 
+                    onclick="confirmLogout()"
+                    class="flex items-center gap-2 px-4 py-2 text-[13px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 group shadow-sm">
+                <i class="fa-solid fa-right-from-bracket group-hover:translate-x-1 transition-transform"></i>
+                <span>Keluar</span>
+            </button>
         </header>
 
         <main class="p-6 max-w-6xl mx-auto">
@@ -162,5 +167,33 @@
     @endif
 </script>
 @stack('scripts')
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Yakin ingin keluar?',
+            text: "Sesi Anda akan diakhiri dan Anda harus login kembali.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48', // Warna rose-600
+            cancelButtonColor: '#64748b',  // Warna slate-500
+            confirmButtonText: 'Ya, Keluar!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+            borderRadius: '15px',
+            customClass: {
+                popup: 'rounded-2xl shadow-xl border border-gray-100'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Jalankan submit form jika user klik 'Ya'
+                document.getElementById('logout-form').submit();
+            }
+        })
+    }
+</script>
+
 </body>
 </html>

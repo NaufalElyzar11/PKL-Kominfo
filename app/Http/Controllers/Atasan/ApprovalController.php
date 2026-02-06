@@ -9,39 +9,13 @@ use Illuminate\Support\Facades\Auth;
 
 class ApprovalController extends Controller
 {
-    public function index()
+    /**
+     * 🔹 Dashboard Atasan (URL: /atasan/dashboard)
+     */
+    public function dashboard()
     {
         $atasanName = Auth::user()->name;
 
-        // Mencari cuti yang pegawainya memiliki atasan = nama user login
-        $pengajuan = Cuti::with('pegawai')
-            ->whereHas('pegawai', function($query) use ($atasanName) {
-                $query->where('atasan', $atasanName);
-            })
-            ->where('status', 'Menunggu') // Hanya tampilkan yang butuh approval
-            ->get();
-
-        return view('atasan.approval.index', compact('pengajuan'));
-    }
-
-    public function approve($id)
-    {
-        $cuti = Cuti::findOrFail($id);
-        // Status naik ke tahap berikutnya
-        $cuti->update(['status' => 'Disetujui Atasan']);
-
-        return back()->with('success', 'Pengajuan cuti berhasil disetujui.');
-    }
-
-    // app/Http/Controllers/Atasan/ApprovalController.php
-
-// app/Http/Controllers/Atasan/ApprovalController.php
-
-    public function dashboard()
-    {
-        $atasanName = Auth::user()->name; // Mengambil nama atasan yang sedang login
-
-        // Menghitung statistik berdasarkan relasi ke tabel pegawai
         $stats = [
             'menunggu' => Cuti::whereHas('pegawai', function($q) use ($atasanName) {
                 $q->where('atasan', $atasanName);
@@ -56,9 +30,8 @@ class ApprovalController extends Controller
             })->where('status', 'Ditolak')->count(),
         ];
 
-        // Ambil daftar pengajuan cuti yang Menunggu untuk ditampilkan di tabel dashboard
-        // Ambil daftar pengajuan cuti yang Menunggu untuk ditampilkan di tabel dashboard
-        $pengajuan = Cuti::with('pegawai')
+        // PERBAIKAN: Tambahkan 'delegasi' di dalam with()
+        $pengajuan = Cuti::with(['pegawai', 'delegasi'])
             ->whereHas('pegawai', function($query) use ($atasanName) {
                 $query->where('atasan', $atasanName);
             })
@@ -66,8 +39,8 @@ class ApprovalController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Ambil riwayat pengajuan (Disetujui Atasan, Disetujui, Ditolak)
-        $riwayat = Cuti::with('pegawai')
+        // PERBAIKAN: Tambahkan 'delegasi' juga di riwayat
+        $riwayat = Cuti::with(['pegawai', 'delegasi'])
             ->whereHas('pegawai', function($query) use ($atasanName) {
                 $query->where('atasan', $atasanName);
             })
@@ -79,22 +52,82 @@ class ApprovalController extends Controller
         return view('atasan.dashboard', compact('stats', 'pengajuan', 'riwayat'));
     }
 
+    /**
+     * 🔹 1. Setujui Delegasi (Aksi Langkah 1 di Modal)
+     */
+    public function approveDelegasi($id)
+    {
+        $cuti = Cuti::findOrFail($id);
+        $cuti->update(['status_delegasi' => 'disetujui']);
+
+        if (request()->wantsJson()) {
+            return response()->json(['message' => 'Success']);
+        }
+
+        return back()->with('success', 'Delegasi berhasil disetujui.');
+    }
+
+    /**
+     * 🔹 2. Setujui Pengajuan Cuti (Aksi Langkah 2 di Modal)
+     */
+    public function approve($id)
+    {
+        $cuti = Cuti::findOrFail($id);
+        
+        // Pastikan delegasi sudah disetujui jika ingin lanjut ke persetujuan cuti
+        if ($cuti->status_delegasi !== 'disetujui') {
+            return back()->with('error', 'Silakan setujui delegasi terlebih dahulu.');
+        }
+
+        $cuti->update([
+            'status' => 'Disetujui Atasan',
+            'status_atasan' => 'disetujui'
+        ]);
+
+        return back()->with('success', 'Pengajuan cuti berhasil disetujui dan diteruskan.');
+    }
+
+    /**
+     * 🔹 3. Tolak Delegasi (Langkah 1)
+     */
+    public function tolakDelegasi(Request $request, $id)
+    {
+        $request->validate(['catatan_tolak_delegasi' => 'required|string|max:255']);
+
+        $cuti = Cuti::findOrFail($id);
+        $cuti->update([
+            'status_delegasi' => 'ditolak',
+            'status' => 'Ditolak',
+            'catatan_tolak_delegasi' => $request->catatan_tolak_delegasi
+        ]);
+
+        return back()->with('success', 'Delegasi ditolak.');
+    }
+
+    /**
+     * 🔹 4. Tolak Pengajuan Cuti secara Final (Langkah 2)
+     */
     public function reject(Request $request, $id)
     {
-        $request->validate([
-            'catatan_penolakan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
+       $request->validate([
+        'catatan_tolak_atasan' => [
+            'required',
+            'string',
+            'max:100',
+            // Regex: Hanya huruf (A-Z, a-z) dan Spasi (\s)
+            'regex:/^[a-zA-Z\s]+$/' 
+        ],
         ], [
-            'catatan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi.',
+            'catatan_tolak_atasan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi.',
         ]);
 
         $cuti = Cuti::findOrFail($id);
-
         $cuti->update([
             'status' => 'Ditolak',
-            'catatan_penolakan' => $request->catatan
+            'status_atasan' => 'ditolak',
+            'catatan_tolak_atasan' => $request->catatan_tolak_atasan
         ]);
 
         return back()->with('success', 'Pengajuan cuti telah ditolak.');
     }
-
 }
