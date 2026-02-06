@@ -117,16 +117,21 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     {{-- Avatar Initials --}}
+                                    @php
+                                        $nama = $c->pegawai->nama ?? $c->nama ?? $c->user->name ?? 'Unknown';
+                                        $nip = $c->pegawai->nip ?? $c->nip ?? '-';
+                                        $jabatan = $c->pegawai->jabatan ?? $c->jabatan ?? '-';
+                                    @endphp
                                     <div class="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
-                                        {{ strtoupper(substr($c->pegawai->nama ?? 'P', 0, 1)) }}
+                                        {{ strtoupper(substr($nama, 0, 1)) }}
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="font-bold text-[#0d141b]">{{ $c->pegawai->nama ?? 'Unknown' }}</span>
-                                        <span class="text-xs text-[#4c739a] font-mono">{{ $c->pegawai->nip ?? '-' }}</span>
+                                        <span class="font-bold text-[#0d141b]">{{ $nama }}</span>
+                                        <span class="text-xs text-[#4c739a] font-mono">{{ $nip }}</span>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 hidden md:table-cell text-[#4c739a]">{{ $c->pegawai->jabatan ?? '-' }}</td>
+                            <td class="px-6 py-4 hidden md:table-cell text-[#4c739a]">{{ $jabatan }}</td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-1.5">
                                     <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>

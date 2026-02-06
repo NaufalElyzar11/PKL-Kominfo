@@ -102,7 +102,7 @@ class PejabatApprovalController extends Controller
         $cuti->update([
             'status' => 'Disetujui Atasan',
             'catatan_tolak_pejabat' => $request->alasan_reset,
-            'status_pejabat' => null
+            'status_pejabat' => 'pending'
         ]);
 
         return back()->with('success', 'Persetujuan berhasil dibatalkan. Status dikembalikan ke "Disetujui Atasan".');
