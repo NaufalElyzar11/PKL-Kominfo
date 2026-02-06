@@ -204,10 +204,10 @@
             @csrf
 
         <div x-data="{ count: 0 }">
-            <textarea name="catatan_penolakan"
+            <textarea name="catatan_tolak_pejabat"
                 rows="4"
                 required
-                maxlength="255"
+                maxlength="100"
                 pattern="[A-Za-z\s]+"
                 oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, ''); count = this.value.length"
                 x-on:input="count = $event.target.value.length"
@@ -339,7 +339,7 @@
                                 @if($r->status == 'Ditolak')
                                     <div class="bg-red-50 border border-red-200 text-red-700 text-xs p-2 rounded-md">
                                         <span class="font-semibold">Alasan:</span>
-                                        {{ $r->catatan_penolakan ?? '-' }}
+                                        {{ $r->catatan_final }}
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>

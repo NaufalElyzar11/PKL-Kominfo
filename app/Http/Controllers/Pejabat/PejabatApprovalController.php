@@ -14,8 +14,8 @@ class PejabatApprovalController extends Controller
         $stats = [
             'menunggu'  => Cuti::where('status', 'Disetujui Atasan')->count(),
             'disetujui' => Cuti::where('status', 'Disetujui')->count(),
-            // Hitung hanya penolakan dari pejabat
-            'ditolak'   => Cuti::where('status', 'Ditolak')->where('ditolak_oleh', 'pejabat')->count(),
+            // Hitung penolakan yang ada catatan dari pejabat (berarti pejabat yang menolak)
+            'ditolak'   => Cuti::where('status', 'Ditolak')->whereNotNull('catatan_tolak_pejabat')->count(),
         ];
 
         $pengajuan = Cuti::with('pegawai', 'delegasi')
@@ -23,8 +23,16 @@ class PejabatApprovalController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Riwayat: tampilkan Disetujui ATAU Ditolak yang ada catatan dari pejabat
+        // Penolakan dari atasan/delegasi saja TIDAK ditampilkan
         $riwayat = Cuti::with('pegawai', 'delegasi')
-            ->whereIn('status', ['Disetujui', 'Ditolak'])
+            ->where(function($query) {
+                $query->where('status', 'Disetujui')
+                      ->orWhere(function($q) {
+                          $q->where('status', 'Ditolak')
+                            ->whereNotNull('catatan_tolak_pejabat');
+                      });
+            })
             ->orderBy('updated_at', 'desc')
             ->limit(10)
             ->get();
@@ -90,10 +98,11 @@ class PejabatApprovalController extends Controller
         $cuti = Cuti::findOrFail($id);
 
         // Simpan alasan reset dan kembalikan status ke 'Disetujui Atasan'
+        // Bersihkan catatan pejabat karena reset
         $cuti->update([
             'status' => 'Disetujui Atasan',
-            'catatan_penolakan' => $request->alasan_reset,
-            'ditolak_oleh' => null // Reset karena bukan penolakan
+            'catatan_tolak_pejabat' => $request->alasan_reset,
+            'status_pejabat' => null
         ]);
 
         return back()->with('success', 'Persetujuan berhasil dibatalkan. Status dikembalikan ke "Disetujui Atasan".');
