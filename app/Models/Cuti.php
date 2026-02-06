@@ -32,7 +32,18 @@ class Cuti extends Model
         'id_pejabat_pemberi_cuti',
         'atasan_nama',
         'pejabat_nama',
-    ];
+        'id_pegawai',
+        'alasan_cuti',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'jumlah_hari',
+        'status_delegasi',
+        'status_atasan',
+        'status_pejabat',
+        'catatan_tolak_delegasi',
+        'catatan_tolak_atasan',
+        'catatan_tolak_pejabat',
+        ];
 
     protected $casts = [
         'tanggal_mulai'   => 'date',
@@ -45,6 +56,12 @@ class Cuti extends Model
     // RELASI
     // ================================
 
+    public function delegasi()
+    {
+        // Parameter 'id_delegasi' penting karena nama kolom Anda custom
+        return $this->belongsTo(Pegawai::class, 'id_delegasi');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -52,14 +69,7 @@ class Cuti extends Model
 
     public function pegawai()
     {
-        return $this->hasOneThrough(
-            Pegawai::class,
-            User::class,
-            'id',           
-            'id',           
-            'user_id',      
-            'id_pegawai'    
-        );
+        return $this->belongsTo(Pegawai::class, 'id_pegawai');
     }
 
     public function atasanLangsung()
@@ -90,8 +100,15 @@ class Cuti extends Model
         };
     }
 
-    public function delegasi()
+    // app/Models/Cuti.php
+
+    public function getCatatanFinalAttribute()
     {
-        return $this->belongsTo(Pegawai::class, 'id_delegasi');
+        // Cek urutan: Pejabat -> Atasan -> Delegasi -> Catatan Umum
+        return $this->catatan_tolak_pejabat 
+            ?? $this->catatan_tolak_atasan 
+            ?? $this->catatan_tolak_delegasi 
+            ?? $this->catatan_penolakan 
+            ?? '-';
     }
 }

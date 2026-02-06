@@ -18,21 +18,13 @@ class PejabatApprovalController extends Controller
             'ditolak'   => Cuti::where('status', 'Ditolak')->where('ditolak_oleh', 'pejabat')->count(),
         ];
 
-        $pengajuan = Cuti::with('pegawai')
+        $pengajuan = Cuti::with('pegawai', 'delegasi')
             ->where('status', 'Disetujui Atasan')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Riwayat: hanya tampilkan Disetujui atau Ditolak oleh pejabat
-        // Penolakan dari atasan TIDAK ditampilkan di halaman pejabat
-        $riwayat = Cuti::with('pegawai')
-            ->where(function($query) {
-                $query->where('status', 'Disetujui')
-                      ->orWhere(function($q) {
-                          $q->where('status', 'Ditolak')
-                            ->where('ditolak_oleh', 'pejabat');
-                      });
-            })
+        $riwayat = Cuti::with('pegawai', 'delegasi')
+            ->whereIn('status', ['Disetujui', 'Ditolak'])
             ->orderBy('updated_at', 'desc')
             ->limit(10)
             ->get();
@@ -54,24 +46,23 @@ class PejabatApprovalController extends Controller
     public function cancel(Request $request, $id)
     {
         $request->validate([
-            'catatan_penolakan' => [
+            'catatan_tolak_pejabat' => [
                 'required',
                 'string',
                 'max:100',
                 'regex:/^[A-Za-z\s]+$/'
             ]
         ], [
-            'catatan_penolakan.required' => 'Alasan penolakan wajib diisi.',
-            'catatan_penolakan.max' => 'Alasan penolakan maksimal 100 karakter.',
-            'catatan_penolakan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi saja.'
+            'catatan_tolak_pejabat.required' => 'Alasan penolakan wajib diisi.',
+            'catatan_tolak_pejabat.max' => 'Alasan penolakan maksimal 100 karakter.',
+            'catatan_tolak_pejabat.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi saja.'
         ]);
 
         $cuti = Cuti::findOrFail($id);
 
         $cuti->update([
             'status' => 'Ditolak',
-            'catatan_penolakan' => $request->catatan_penolakan,
-            'ditolak_oleh' => 'pejabat'
+            'catatan_tolak_pejabat' => $request->catatan_tolak_pejabat
         ]);
 
         return back()->with('success', 'Pengajuan cuti berhasil ditolak.');

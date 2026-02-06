@@ -5,6 +5,8 @@
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script>
     tailwind.config = {
@@ -33,7 +35,50 @@
 @endpush
 
 @section('content')
-<div class="flex flex-col gap-6" x-data="{ showRejectModal: false, rejectId: null }">
+<div class="flex flex-col gap-6" 
+x-data="{ 
+    showReviewModal: false, 
+    showTolakDelegasi: false,
+    showRejectModal: false,
+    selectedCuti: null,
+    delegasiStatus: 'pending',
+    
+    openReview(data) {
+        this.selectedCuti = data;
+        this.delegasiStatus = data.status_delegasi || 'pending';
+        this.showReviewModal = true;
+    }, // <--- TAMBAHKAN KOMA DI SINI
+
+    async submitApproveDelegasi() {
+        try {
+            const response = await fetch(`/atasan/approval/${this.selectedCuti.id}/approve-delegasi`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json' // Tambahkan ini agar Laravel mengirim respon JSON
+                },
+                body: JSON.stringify({}) // Fetch POST biasanya butuh body (walaupun kosong)
+            });
+            
+            if (response.ok) {
+                this.delegasiStatus = 'disetujui';
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Delegasi telah disetujui.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            } else {
+                throw new Error('Gagal memproses');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Gagal memproses delegasi.', 'error');
+        }
+    }
+}">
+
 
     {{-- Page Heading --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -145,20 +190,12 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
-                                    {{-- Approve Button --}}
-                                    <form id="form-approve-{{ $c->id }}" action="{{ route('atasan.approval.approve', $c->id) }}" method="POST">
-                                        @csrf
-                                        <button type="button" onclick="confirmApprove('{{ $c->id }}', '{{ $c->id }}')" class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Setujui">
-                                            <span class="material-symbols-outlined text-[18px]">check</span>
-                                        </button>
-                                    </form>
-                                    
-                                    {{-- Reject Button --}}
-                                    <button type="button" @click="rejectId = {{ $c->id }}; showRejectModal = true" class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Tolak">
-                                        <span class="material-symbols-outlined text-[18px]">close</span>
-                                    </button>
-                                </div>
+                            <button type="button" 
+                                    @click="openReview(@js($c))"
+                                    class="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 mx-auto">
+                                <span class="material-symbols-outlined text-sm">visibility</span>
+                                Tinjau Pengajuan
+                            </button>
                             </td>
                         </tr>
                         @empty
@@ -223,11 +260,36 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-gray-500 italic">
-                                @if($r->status == 'Ditolak')
-                                    <span class="text-red-500 font-semibold">Alasan dari pejabat:</span> 
-                                    {{ $r->catatan_penolakan ?? 'Tidak ada catatan penolakan' }}
+                                @if($r->status == 'Ditolak' || $r->status_delegasi == 'ditolak')
+                                    <div class="flex flex-col gap-2">
+                                        {{-- Catatan Penolakan Delegasi --}}
+                                        @if($r->catatan_tolak_delegasi)
+                                            <div class="bg-amber-50 p-2 rounded-lg border border-amber-100">
+                                                <p class="text-[10px] text-amber-600 font-bold uppercase">Delegasi Ditolak:</p>
+                                                <p class="text-xs text-amber-800">{{ $r->catatan_tolak_delegasi }}</p>
+                                            </div>
+                                        @endif
+
+                                        {{-- Catatan Penolakan Atasan --}}
+                                        @if($r->catatan_tolak_atasan)
+                                            <div class="bg-rose-50 p-2 rounded-lg border border-rose-100">
+                                                <p class="text-[10px] text-rose-600 font-bold uppercase">Penolakan Atasan:</p>
+                                                <p class="text-xs text-rose-800">{{ $r->catatan_tolak_atasan }}</p>
+                                            </div>
+                                        @endif
+
+                                        {{-- Catatan Penolakan Pejabat (Sinkronisasi) --}}
+                                        @if($r->catatan_tolak_pejabat)
+                                            <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 shadow-sm">
+                                                <p class="text-[10px] text-blue-700 font-bold uppercase flex items-center gap-1">
+                                                    <i class="fa-solid fa-user-shield text-[10px]"></i> Keputusan Pejabat:
+                                                </p>
+                                                <p class="text-xs text-blue-900 font-medium">{{ $r->catatan_tolak_pejabat }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
                                 @else
-                                    -
+                                    <span class="text-gray-300">-</span>
                                 @endif
                             </td>
                         </tr>
@@ -244,37 +306,147 @@
         </div>
     </div>
 
-    {{-- Modal Reject --}}
-<div x-show="showRejectModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
-    <div class="fixed inset-0 bg-black/50" @click="showRejectModal = false"></div>
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative z-10">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Alasan Penolakan</h3>
-        
-        <form :action="'{{ url('atasan/approval') }}/' + rejectId + '/tolak'" method="POST">
-            @csrf
-            {{-- PERBAIKAN: Tag pembuka dan penutup harus menyambung rapat --}}
-            <textarea 
-                name="catatan_penolakan" 
-                rows="4" 
-                required
-                oninput="this.value = this.value.replace(/[^a-zA-Z\s]/g, '')"
-                title="Alasan penolakan hanya boleh berisi huruf dan spasi"
-                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 p-2 border"
-                placeholder="Contoh: Pekerjaan sedang menumpuk mohon tunda cuti"></textarea>
+        {{-- Modal Review Cuti (Premium Design) --}}
+        <template x-if="showReviewModal">
+            <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+                <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @click="showReviewModal = false"></div>
+                
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative z-10 border border-gray-100" 
+                    x-transition:enter="transition ease-out duration-300 transform"
+                    x-transition:enter-start="opacity-0 scale-95 translate-y-4">
+                    
+                    {{-- Header --}}
+                    <div class="bg-gradient-to-r from-primary to-blue-600 px-6 py-4 flex justify-between items-center text-white">
+                        <div>
+                            <h3 class="font-black text-lg">Tinjau Pengajuan Cuti</h3>
+                            <p class="text-xs opacity-80" x-text="'NIP: ' + selectedCuti.pegawai.nip"></p>
+                        </div>
+                        <button @click="showReviewModal = false" class="hover:rotate-90 transition-transform">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
 
-            <div class="text-right text-[10px] text-gray-400 mt-1">
-                <span :class="catatanText.length >= 100 ? 'text-red-500 font-bold' : ''" x-text="catatanText.length"></span>/100 Karakter
+                    <div class="p-6 space-y-6">
+                        {{-- STEP 1: PERSETUJUAN DELEGASI (WAJIB) --}}
+                        <div class="p-4 rounded-xl border-2 transition-all"
+                            :class="delegasiStatus === 'disetujui' ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-6 h-6 rounded-full bg-amber-500 text-white text-[10px] flex items-center justify-center font-bold">1</span>
+                                <h4 class="font-bold text-gray-700 text-sm">Persetujuan Delegasi Tugas</h4>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-amber-500">handshake</span>
+                                    </div>
+                            <div>
+                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Penerima Delegasi</p>
+                                
+                                {{-- Menampilkan Nama --}}
+                                <p class="text-sm font-bold text-gray-800" 
+                                x-text="selectedCuti.delegasi ? selectedCuti.delegasi.nama : 'Data tidak ditemukan'">
+                                </p>
+
+                                {{-- Menampilkan Jabatan & Unit Kerja --}}
+                                <div class="flex flex-col mt-0.5" x-show="selectedCuti.delegasi">
+                                    <p class="text-[10px] text-primary font-medium" 
+                                    x-text="selectedCuti.delegasi.jabatan">
+                                    </p>
+                                    <p class="text-[10px] text-gray-500 italic" 
+                                    x-text="selectedCuti.delegasi.unit_kerja">
+                                    </p>
+                                </div>
+                            </div>
+                                </div>
+                                
+                                {{-- Tombol Aksi Delegasi --}}
+                                <div class="flex gap-2" x-show="delegasiStatus === 'pending'">
+                                   <button @click="submitApproveDelegasi()" 
+                                            class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-all">
+                                        Setujui
+                                    </button>
+                                    <button @click="showTolakDelegasi = true" class="px-4 py-2 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold hover:bg-rose-600 hover:text-white transition-all">Tolak</button>
+                                </div>
+                                
+                                <div x-show="delegasiStatus === 'disetujui'" class="flex items-center gap-1 text-emerald-600 font-bold text-xs">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span> Terverifikasi
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- STEP 2: KEPUTUSAN FINAL CUTI --}}
+                        <div class="space-y-4" :class="delegasiStatus !== 'disetujui' && 'opacity-40 grayscale pointer-events-none'">
+                            <div class="flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                                <h4 class="font-bold text-gray-700 text-sm">Keputusan Akhir Atasan</h4>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <form :action="'{{ url('atasan/approval') }}/' + selectedCuti.id + '/approve'" method="POST" class="flex-1">
+                                    @csrf
+                                    <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-2">
+                                        <span class="material-symbols-outlined text-sm">check</span> Setujui Cuti
+                                    </button>
+                                </form>
+                                <button @click="showRejectModal = true" class="flex-1 py-3 border-2 border-rose-500 text-rose-500 rounded-xl font-bold hover:bg-rose-50 transition-all">
+                                    Tolak Cuti
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="mt-6 flex justify-end space-x-3">
-                <button type="button" @click="showRejectModal = false" class="text-gray-600 px-4 py-2 text-sm">Batal</button>
-                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-red-700">Kirim Penolakan</button>
+        </template>
+
+        {{-- Modal Penolakan Delegasi --}}
+<div x-show="showTolakDelegasi" class="fixed inset-0 z-[10000] flex items-center justify-center p-4" x-cloak>
+    <div class="fixed inset-0 bg-black/50" @click="showTolakDelegasi = false"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative z-10 border border-rose-100">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Alasan Tolak Delegasi</h3>
+        <p class="text-xs text-gray-500 mb-4">Berikan alasan mengapa orang yang ditunjuk tidak cocok sebagai delegasi.</p>
+        
+        <form :action="'{{ url('atasan/approval') }}/' + selectedCuti.id + '/tolak-delegasi'" method="POST">
+            @csrf
+            <textarea name="catatan_tolak_delegasi" rows="3" required
+                class="w-full border-gray-200 rounded-xl shadow-sm focus:ring-rose-500 focus:border-rose-500 p-3 border text-sm"
+                placeholder="Misal: Ybs sedang menangani proyek besar lainnya..."></textarea>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" @click="showTolakDelegasi = false" class="text-gray-500 text-sm font-bold">Batal</button>
+                <button type="submit" class="bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-700 shadow-lg shadow-rose-100">Kirim Penolakan</button>
             </div>
         </form>
     </div>
 </div>
 
+{{-- Modal Penolakan Cuti --}}
+<div x-show="showRejectModal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4" x-cloak>
+    <div class="fixed inset-0 bg-black/50" @click="showRejectModal = false"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative z-10 border border-rose-100">
+        <h3 class="text-lg font-bold text-gray-900 mb-2">Alasan Penolakan Cuti</h3>
+        <p class="text-xs text-gray-500 mb-4">Jelaskan alasan pengajuan cuti pegawai ini ditolak secara final.</p>
+        
+        <form :action="'{{ url('atasan/approval') }}/' + selectedCuti.id + '/tolak'" method="POST">
+            @csrf
+            <textarea 
+                name="catatan_tolak_atasan" 
+                rows="3" 
+                required
+                {{-- Logika Alpine.js: Hapus semua karakter yang BUKAN huruf (a-z) atau spasi (\s) --}}
+                @input="$el.value = $el.value.replace(/[^a-zA-Z\s]/g, '')"
+                class="w-full border-gray-200 rounded-xl shadow-sm focus:ring-rose-500 focus:border-rose-500 p-3 border text-sm"
+                placeholder="Misal: Mohon tunda cuti karena agenda dinas mendesak"></textarea>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button type="button" @click="showRejectModal = false" class="text-gray-500 text-sm font-bold">Batal</button>
+                <button type="submit" class="bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-700 shadow-lg shadow-rose-100">Tolak Cuti</button>
+            </div>
+        </form>
+    </div>
 </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

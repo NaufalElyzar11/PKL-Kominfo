@@ -18,11 +18,8 @@ use App\Http\Controllers\Pegawai\PengajuanCutiController as PegawaiCutiControlle
 use App\Http\Controllers\SuperAdmin\ProfileController as SuperProfileController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Pegawai\ProfileController as PegawaiProfileController;
-use App\Http\Controllers\KepalaDinas\ProfileController as KadisProfileController;
-use App\Http\Controllers\KepalaDinas\DataPegawaiController as KadisDataPegawai;
-use App\Http\Controllers\KepalaDinas\DataCutiController as KadisDataCuti;
 
-use App\Http\Controllers\Atasan\ApprovalController as AtasanApprovalController;
+use App\Http\Controllers\Atasan\ApprovalController;
 
 use App\Http\Controllers\Pejabat\PejabatApprovalController;
 
@@ -68,15 +65,22 @@ Route::get('/dashboard', function () {
 // ------------------------------------------------------------------
 Route::middleware(['auth'])->group(function () {
 
-    // --- ATASAN LANGSUNG (Approval Tahap 1) ---
-    Route::prefix('atasan')->as('atasan.')->middleware('role:atasan')->group(function () {
-    Route::get('/dashboard', [AtasanApprovalController::class, 'dashboard'])->name('dashboard');
+// --- ATASAN LANGSUNG (Approval Tahap 1) ---
+Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->group(function () {
+    
+    // Halaman Utama Dashboard Atasan
+    Route::get('/dashboard', [ApprovalController::class, 'dashboard'])->name('dashboard');
 
-        Route::prefix('approval')->as('approval.')->group(function () {
-            Route::get('/', [AtasanApprovalController::class, 'index'])->name('index');
-            Route::post('/{id}/setuju', [AtasanApprovalController::class, 'approve'])->name('approve');
-            Route::post('/{id}/tolak', [AtasanApprovalController::class, 'reject'])->name('reject');
-        });
+    Route::prefix('approval')->as('approval.')->group(function () {
+        // Langkah 1: Persetujuan Delegasi (AJAX/Post)
+        Route::post('/{id}/approve-delegasi', [ApprovalController::class, 'approveDelegasi'])->name('approveDelegasi');
+        Route::post('/{id}/tolak-delegasi', [ApprovalController::class, 'tolakDelegasi'])->name('tolakDelegasi');
+
+        // Langkah 2: Keputusan Akhir Atasan (Final)
+        // Pastikan nama ujungnya adalah 'approve' agar sinkron dengan Blade
+        Route::post('/{id}/approve', [ApprovalController::class, 'approve'])->name('approve'); 
+        Route::post('/{id}/tolak', [ApprovalController::class, 'reject'])->name('reject');
+    });
 
         Route::prefix('profile')->as('profile.')->group(function () {
             Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
@@ -103,25 +107,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [AdminProfileController::class, 'index'])->name('index');
             Route::get('/edit', [AdminProfileController::class, 'edit'])->name('edit');
             Route::patch('/update', [AdminProfileController::class, 'update'])->name('update');
-        });
-    });
-
-    // --- KEPALA DINAS (Pejabat Pemberi Cuti / Approval Tahap 2) ---
-    Route::prefix('kepaladinas')->as('kepaladinas.')->middleware('role:atasan')->group(function () {
-        Route::get('/dashboard', [KadisDashboard::class, 'index'])->name('dashboard');
-        
-        // Resource Routes untuk Menu Samping
-        Route::resource('datapegawai', KadisDataPegawai::class);
-        Route::resource('datacuti', KadisDataCuti::class);
-        
-        // Tambahkan Route Approval untuk Kadis
-        Route::post('/approval/{id}/setuju', [KadisDashboard::class, 'approve'])->name('approval.approve');
-        Route::post('/approval/{id}/tolak', [KadisDashboard::class, 'reject'])->name('approval.reject');
-
-        Route::prefix('profile')->as('profile.')->group(function () {
-            Route::get('/', [KadisProfileController::class, 'show'])->name('show');
-            Route::get('/edit', [KadisProfileController::class, 'edit'])->name('edit');
-            Route::put('/update', [KadisProfileController::class, 'update'])->name('update');
         });
     });
 
