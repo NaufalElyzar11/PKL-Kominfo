@@ -84,14 +84,15 @@ class ApprovalController extends Controller
         $request->validate([
             'catatan_penolakan' => 'required|regex:/^[a-zA-Z\s]+$/|max:100',
         ], [
-            'catatan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi.',
+            'catatan_penolakan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi.',
         ]);
 
         $cuti = Cuti::findOrFail($id);
 
         $cuti->update([
             'status' => 'Ditolak',
-            'catatan_penolakan' => $request->catatan
+            'catatan_penolakan' => $request->catatan_penolakan,
+            'ditolak_oleh' => 'atasan'
         ]);
 
         return back()->with('success', 'Pengajuan cuti telah ditolak.');

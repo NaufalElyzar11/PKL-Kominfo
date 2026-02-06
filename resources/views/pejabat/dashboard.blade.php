@@ -39,7 +39,7 @@
 @endpush
 
 @section('content')
-<div class="flex flex-col gap-6" x-data="{ showRejectModal: false, rejectId: null }">
+<div class="flex flex-col gap-6" x-data="{ showRejectModal: false, rejectId: null, showResetModal: false, resetId: null }">
 
     {{-- Page Heading --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -236,6 +236,59 @@
     </div>
 </div>
 
+{{-- Modal Reset Persetujuan --}}
+<div x-show="showResetModal" 
+    x-transition.opacity 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" 
+    x-cloak>
+    
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6" @click.away="showResetModal = false">
+        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-500">rotate_left</span>
+            Reset Persetujuan
+        </h3>
+
+        <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+            <p class="font-semibold">⚠️ Perhatian:</p>
+            <p>Status akan dikembalikan ke "Disetujui Atasan" dan akan muncul kembali di daftar persetujuan.</p>
+        </div>
+
+        <form :action="'{{ route('pejabat.approval.reset', ['id' => '_id']) }}'.replace('_id', resetId)" method="POST">
+            @csrf
+
+        <div x-data="{ count: 0 }">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Reset <span class="text-red-500">*</span></label>
+            <textarea name="alasan_reset"
+                rows="4"
+                required
+                maxlength="100"
+                pattern="[A-Za-z\s]+"
+                oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, ''); count = this.value.length"
+                x-on:input="count = $event.target.value.length"
+                class="w-full border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 p-2 border text-sm"
+                placeholder="Contoh: Data pegawai perlu diverifikasi ulang..."></textarea>
+
+            <div class="text-xs text-gray-500 text-right mt-1">
+                <span x-text="count"></span>/100 karakter
+            </div>
+        </div>
+
+            
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" 
+                    @click="showResetModal = false" 
+                    class="text-gray-600 px-4 py-2 text-sm font-medium">
+                    Batal
+                </button>
+
+                <button type="submit" 
+                    class="bg-amber-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-amber-700 shadow-md">
+                    Reset Persetujuan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
     {{-- Riwayat Section --}}
     <div>
@@ -293,18 +346,15 @@
                                 @endif
                             </td>
 
-                            {{-- TAMBAHKAN KOLOM AKSI DI SINI --}}
+                            {{-- KOLOM AKSI - Reset dengan SweetAlert & Modal --}}
                             <td class="px-6 py-4 text-center">
                                 @if($r->status === 'Disetujui')
-                                    <form action="{{ route('pejabat.approval.cancel', $r->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        <button type="submit" 
-                                            onclick="return confirm('PENTING: Membatalkan persetujuan akan mengembalikan sisa cuti pegawai. Lanjutkan?')" 
-                                            class="w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm mx-auto" 
-                                            title="Batalkan Persetujuan & Kembalikan Jatah">
-                                            <span class="material-symbols-outlined text-[18px]">rotate_left</span>
-                                        </button>
-                                    </form>
+                                    <button type="button" 
+                                        @click.stop="resetId = {{ $r->id }}; showResetModal = true" 
+                                        class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center shadow-sm mx-auto" 
+                                        title="Reset Persetujuan">
+                                        <span class="material-symbols-outlined text-[18px] pointer-events-none">rotate_left</span>
+                                    </button>
                                 @else
                                     <span class="text-gray-300">-</span>
                                 @endif

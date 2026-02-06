@@ -27,6 +27,7 @@ class Cuti extends Model
         'keterangan',
         'status',
         'catatan_penolakan',
+        'ditolak_oleh',
         'id_atasan_langsung',
         'id_pejabat_pemberi_cuti',
         'atasan_nama',

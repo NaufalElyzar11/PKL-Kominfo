@@ -178,6 +178,11 @@ Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')
         [PejabatApprovalController::class, 'cancel']
     )->name('approval.cancel');
 
+    // Reset persetujuan (mengembalikan ke status Disetujui Atasan)
+    Route::post('/approval/{id}/reset', 
+        [PejabatApprovalController::class, 'reset']
+    )->name('approval.reset');
+
     // Profile
     Route::prefix('profile')->as('profile.')->group(function () {
         Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
