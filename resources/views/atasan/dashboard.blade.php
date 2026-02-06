@@ -40,6 +40,7 @@ x-data="{
     showReviewModal: false, 
     showTolakDelegasi: false,
     showRejectModal: false,
+    showCutiModal: false,
     selectedCuti: null,
     delegasiStatus: 'pending',
     
@@ -441,6 +442,95 @@ x-data="{
             <div class="mt-6 flex justify-end gap-3">
                 <button type="button" @click="showRejectModal = false" class="text-gray-500 text-sm font-bold">Batal</button>
                 <button type="submit" class="bg-rose-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-700 shadow-lg shadow-rose-100">Tolak Cuti</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal Ajukan Cuti untuk Atasan --}}
+<div x-show="showCutiModal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4" x-cloak>
+    <div class="fixed inset-0 bg-black/50" @click="showCutiModal = false"></div>
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative z-10 border border-primary/20 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <span class="material-symbols-outlined text-primary text-2xl">beach_access</span>
+            </div>
+            <div>
+                <h3 class="text-lg font-bold text-gray-900">Ajukan Cuti</h3>
+                <p class="text-xs text-gray-500">Pengajuan Anda akan langsung diteruskan ke Pejabat</p>
+            </div>
+        </div>
+        
+        <form action="{{ route('atasan.cuti.store') }}" method="POST" class="space-y-4">
+            @csrf
+
+            {{-- Pegawai Pengganti --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Pegawai Pengganti (Delegasi) <span class="text-red-500">*</span></label>
+                <select name="id_delegasi" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
+                    <option value="">-- Pilih Pegawai Pengganti --</option>
+                    @foreach($rekanSebidang ?? [] as $rekan)
+                        <option value="{{ $rekan->id }}">{{ $rekan->nama }} - {{ $rekan->jabatan }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Jenis Cuti --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Cuti</label>
+                <select name="jenis_cuti" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
+                    <option value="Tahunan" selected>Cuti Tahunan</option>
+                </select>
+            </div>
+
+            {{-- Tanggal --}}
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai <span class="text-red-500">*</span></label>
+                    <input type="date" name="tanggal_mulai" required 
+                        min="{{ date('Y-m-d', strtotime('+3 days')) }}"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai <span class="text-red-500">*</span></label>
+                    <input type="date" name="tanggal_selesai" required 
+                        min="{{ date('Y-m-d', strtotime('+3 days')) }}"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
+                </div>
+            </div>
+
+            {{-- Alamat Selama Cuti --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Selama Cuti <span class="text-red-500">*</span></label>
+                <input type="text" name="alamat" required maxlength="255" 
+                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm"
+                    placeholder="Contoh: Jl. Merdeka No. 123, Jakarta">
+            </div>
+
+            {{-- Keterangan --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Cuti <span class="text-red-500">*</span></label>
+                <textarea name="keterangan" rows="3" required maxlength="500"
+                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm"
+                    placeholder="Contoh: Keperluan keluarga, acara pernikahan, dll..."></textarea>
+            </div>
+
+            {{-- Info Box --}}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
+                <p class="font-semibold mb-1">ℹ️ Informasi:</p>
+                <p>Pengajuan cuti Anda akan langsung masuk ke halaman Pejabat untuk approval final karena Anda adalah Atasan.</p>
+            </div>
+
+            {{-- Actions --}}
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" @click="showCutiModal = false" 
+                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+                    Batal
+                </button>
+                <button type="submit" 
+                    class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 shadow-md">
+                    Kirim Pengajuan
+                </button>
             </div>
         </form>
     </div>

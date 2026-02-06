@@ -82,6 +82,10 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
         Route::post('/{id}/tolak', [ApprovalController::class, 'reject'])->name('reject');
     });
 
+    // Atasan mengajukan cuti sendiri (langsung ke pejabat)
+    Route::get('/cuti', [ApprovalController::class, 'indexCuti'])->name('cuti.index');
+    Route::post('/cuti/store', [ApprovalController::class, 'storeCuti'])->name('cuti.store');
+
         Route::prefix('profile')->as('profile.')->group(function () {
             Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
             Route::get('/edit', [PegawaiProfileController::class, 'edit'])->name('edit');

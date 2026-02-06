@@ -65,6 +65,7 @@
                 } elseif ($user->role === 'atasan') {
                     $menus = [
                         ['route' => 'atasan.dashboard', 'icon' => 'fa-chart-line icon-dashboard', 'label' => 'Dashboard'],
+                        ['route' => 'atasan.cuti.index', 'icon' => 'fa-file-signature icon-cuti', 'label' => 'Pengajuan Cuti'],
                         ['route' => 'atasan.profile.show', 'icon' => 'fa-user-circle icon-profile', 'label' => 'Profil Saya'],
                     ];
                 } elseif ($user->role === 'pejabat') {
