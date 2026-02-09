@@ -5,11 +5,54 @@
 @section('content')
 {{-- Root x-data container (no styling) --}}
 <div x-data="{
+
+// =========================
+// Fungsi Buka Modal Edit (SINKRON)
+// =========================
+openEditModal(pegawai) {
+
+    this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
+    this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
+
+    this.role = this.selectedPegawai.role || this.selectedPegawai.user?.role;
+    this.unit_kerja = this.selectedPegawai.unit_kerja;
+    this.jabatan = this.selectedPegawai.jabatan;
+
+    // Pastikan tipe data sama
+    setTimeout(() => {
+        this.id_atasan_langsung = String(this.selectedPegawai.id_atasan_langsung);
+    }, 50);
+
+    if (this.role === 'pejabat') {
+        this.pejabat = 'Hj. Erna Lisa Halaby';
+
+        setTimeout(() => {
+            this.id_pejabat_pemberi_cuti =
+                this.pejabatList.find(p => p.nama.includes('Halaby'))?.id;
+        }, 50);
+
+    } else {
+        this.pejabat = this.selectedPegawai.pejabat_nama || 'Kanafi, S.IP, MM';
+
+        setTimeout(() => {
+            this.id_pejabat_pemberi_cuti =
+                String(this.selectedPegawai.id_pejabat_pemberi_cuti);
+        }, 50);
+    }
+
+    this.showEditModal = true;
+},
+
+
     // 1. Status Modal
     showCreateModal: {{ $errors->any() ? 'true' : 'false' }},
     showEditModal: false,
     showDetailModal: false,
     showDelete: false,
+    // State untuk edit pegawai
+    id_atasan_langsung: '',
+    id_pejabat_pemberi_cuti: '',
+
 
     // 1. DAFTAR SEMUA UNIT KERJA
     daftarUnit: [
@@ -54,6 +97,8 @@
     // 2. Variabel Form Tambah (Hanya didefinisikan satu kali agar tidak bentrok)
     nama: '',
     nip: '',
+    namaError: false, // <-- Tambahkan ini
+    nipError: false,
     atasan: '',      // Terhubung ke select atasan
     jabatan: '',
     unit_kerja: '',  
@@ -105,7 +150,7 @@ get isLongEnough() {
 
     // 3. Data dari Laravel (Hanya untuk referensi dropdown)
     dataAtasan: {{ Js::from($listAtasan) }},
-    dataPejabat: {{ Js::from($listPejabat) }},
+    pejabatList: {{ Js::from($listPejabat) }},
 
     // Getter untuk filter daftar nama di dropdown
     get filteredAtasan() {
@@ -124,11 +169,18 @@ get isLongEnough() {
         // --- PRIORITAS 2: LOGIKA PEGAWAI (Paling Penting) ---
         // Dipindahkan ke atas agar tidak terlewati oleh aturan Unit Kerja
         if (this.role === 'pegawai') {
-            return this.dataAtasan.filter(at => 
-                at.unit_kerja === this.unit_kerja && 
-                (at.jabatan.includes('Kepala Seksi') || at.jabatan.includes('Kepala Sub Bagian'))
-            );
-        }
+                return this.dataAtasan.filter(at => {
+                    // 1. Kondisi Dasar: Atasan di bidang yang sama (Kasi / Kasubbag)
+                    const isSameBidang = at.unit_kerja === this.unit_kerja && 
+                                        (at.jabatan.includes('Kepala Seksi') || at.jabatan.includes('Kepala Sub Bagian'));
+
+                    // 2. Kondisi Khusus Sekretariat: Tambahkan Sekretaris Dinas
+                    const isSekreForSekretariat = this.unit_kerja === 'Bidang Sekretariat' && 
+                                                at.jabatan === 'Sekretaris Dinas';
+
+                    return isSameBidang || isSekreForSekretariat;
+                });
+            }
 
         // --- PRIORITAS 3: LOGIKA KASUBBAG ---
         // Kasubbag di Bidang Sekretariat melapor ke Sekretaris Dinas
@@ -167,10 +219,40 @@ get isLongEnough() {
         }
     },
 
+    async checkDuplicate(field, value) {
+        if (!value || value.trim().length < 3) {
+            field === 'nama' ? this.namaError = false : this.nipError = false;
+            return;
+        }
+
+        try {
+            let response = await fetch('{{ route("admin.pegawai.checkUnique") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ 
+                    field: field, 
+                    value: value,
+                    id: this.selectedPegawai ? this.selectedPegawai.id : null 
+                })
+            });
+            let data = await response.json();
+            
+            if (field === 'nama') this.namaError = data.exists;
+            if (field === 'nip') this.nipError = data.exists;
+        } catch (error) {
+            console.error('Gagal validasi:', error);
+        }
+    },
+
 
     // 5. Logika Validasi Tombol Simpan
     isFormValid() {
         return this.nama.trim() !== '' &&
+                !this.namaError && // <-- Tambahkan ini
+               !this.nipError &&  // <-- Tambahkan ini
                this.atasan !== '' && 
                this.jabatan.trim() !== '' &&
                this.unit_kerja !== '' &&
@@ -201,30 +283,10 @@ get isLongEnough() {
         this.role = '';
         this.status = '';
         this.password = '';
+        this.namaError = false; // <-- WAJIB TAMBAHKAN INI
+        this.nipError = false;  // <-- WAJIB TAMBAHKAN INI
         
         this.showCreateModal = true;
-    },
-
-    // =========================
-    // Fungsi Buka Modal Edit
-    // =========================
-    openEditModal(pegawai) {
-        this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
-        this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
-
-        // Pastikan ini juga sinkron
-        this.pejabat = this.role === 'pejabat' ? 'Hj. Erna Lisa Halaby' : (this.selectedPegawai.pejabat || 'Kanafi, S.IP, MM');
-        this.showEditModal = true;
-
-        // 2. SINKRONISASI: Pindahkan data ke variabel yang digunakan logika dropdown
-        this.role = this.selectedPegawai.role;
-        this.unit_kerja = this.selectedPegawai.unit_kerja;
-        this.atasan = this.selectedPegawai.atasan;
-        this.jabatan = this.selectedPegawai.jabatan;
-
-        this.pejabat = this.selectedPegawai.pejabat || 'Kanafi, S.IP, MM';
-
-        this.showEditModal = true;
     },
 
     isUnchanged() {
@@ -519,40 +581,54 @@ get isLongEnough() {
                                 </div>
                                 <div class="p-4 space-y-3">
                                     {{-- 1. NAMA LENGKAP --}}
-                                    <div class="space-y-1.5">
-                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                            <i class="fa-solid fa-user text-sky-500 text-[10px]"></i>
-                                            Nama Lengkap <span class="text-red-500">*</span>
-                                        </label>
-                                        <input type="text" name="nama" required
-                                        x-model="nama"
-                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                      focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                               placeholder="Nama Pegawai"
-                                               oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')">
-                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
-                                            <i class="fa-solid fa-circle-info"></i>
-                                            Nama lengkap sesuai data resmi
+                                <div class="space-y-1.5">
+                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                        <i class="fa-solid fa-user text-sky-500 text-[10px]"></i> Nama Lengkap <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="nama" required x-model="nama"
+                                        {{-- TAMBAHKAN DUA BARIS DI BAWAH INI --}}
+                                        @input.debounce.500ms="checkDuplicate('nama', nama)"
+                                        :class="namaError ? 'border-red-500 ring-red-100' : 'border-gray-200 focus:border-sky-400'"
+                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border bg-white text-[11px] sm:text-xs outline-none transition-all duration-200"
+                                        placeholder="Nama Pegawai"
+                                        oninput="this.value = this.value.replace(/[^a-zA-Z\s.,]/g, '')">
+                                    
+                                    {{-- TAMBAHKAN TEMPLATE PESAN ERROR INI --}}
+                                    <template x-if="namaError">
+                                        <p class="text-[10px] text-red-600 font-bold flex items-center gap-1 animate-pulse">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> Nama ini sudah terdaftar di sistem!
                                         </p>
-                                    </div>
+                                    </template>
+
+                                    <p x-show="!namaError" class="text-[9px] text-gray-400 flex items-center gap-1">
+                                        <i class="fa-solid fa-circle-info"></i> Nama lengkap sesuai data resmi
+                                    </p>
+                                </div>
 
                                     {{-- 2. NIP --}}
-                                    <div class="space-y-1.5">
-                                        <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                            <i class="fa-solid fa-hashtag text-sky-500 text-[10px]"></i>
-                                            NIP 
-                                        </label>
-                                        <input type="text" name="nip" x-model="nip"
-                                            maxlength="18" inputmode="numeric"
-                                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                    focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                            placeholder="Masukkan 18 digit NIP">
-                                        <p class="text-[9px] text-gray-400 flex items-center gap-1">
-                                            <i class="fa-solid fa-circle-info"></i>
-                                            Kosongkan jika belum memiliki NIP
+                                <div class="space-y-1.5">
+                                    <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                        <i class="fa-solid fa-hashtag text-sky-500 text-[10px]"></i> NIP 
+                                    </label>
+                                    <input type="text" name="nip" x-model="nip" maxlength="18" inputmode="numeric"
+                                        {{-- TAMBAHKAN DUA BARIS DI BAWAH INI --}}
+                                        @input.debounce.500ms="checkDuplicate('nip', nip)"
+                                        :class="nipError ? 'border-red-500 ring-red-100' : 'border-gray-200 focus:border-sky-400'"
+                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border bg-white text-[11px] sm:text-xs outline-none transition-all duration-200"
+                                        placeholder="Masukkan 18 digit NIP"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                    
+                                    {{-- TAMBAHKAN TEMPLATE PESAN ERROR INI --}}
+                                    <template x-if="nipError">
+                                        <p class="text-[10px] text-red-600 font-bold flex items-center gap-1 animate-pulse">
+                                            <i class="fa-solid fa-triangle-exclamation"></i> NIP sudah digunakan oleh pegawai lain!
                                         </p>
-                                    </div>
+                                    </template>
+
+                                    <p x-show="!nipError" class="text-[9px] text-gray-400 flex items-center gap-1">
+                                        <i class="fa-solid fa-circle-info"></i> Kosongkan jika belum memiliki NIP
+                                    </p>
+                                </div>
 
                                     {{-- 3. ROLE --}}
                                     <div class="space-y-1.5">
@@ -939,7 +1015,8 @@ get isLongEnough() {
 
     </div>
 </div>
-{{-- ================= MODAL EDIT (PREMIUM DESIGN) ================= --}}
+
+{{-- ================= MODAL EDIT (PREMIUM DESIGN - FIXED) ================= --}}
 <template x-if="showEditModal">
     <div x-cloak
          class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
@@ -957,7 +1034,7 @@ get isLongEnough() {
              x-transition:enter-start="opacity-0 scale-95 translate-y-4"
              x-transition:enter-end="opacity-100 scale-100 translate-y-0">
 
-            {{-- ========== HEADER DENGAN GRADIENT ========== --}}
+            {{-- ========== HEADER DENGAN GRADIENT (AMBER) ========== --}}
             <div class="bg-gradient-to-r from-amber-500 to-yellow-600 px-4 sm:px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
@@ -981,12 +1058,10 @@ get isLongEnough() {
                     @csrf
                     @method('PUT')
 
-                    {{-- ========== 2-COLUMN LAYOUT ========== --}}
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                         
                         {{-- ===== KOLOM KIRI: DATA PEGAWAI ===== --}}
                         <div class="space-y-4">
-                            {{-- DATA PEGAWAI SECTION --}}
                             <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
                                 <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
                                     <div class="flex items-center gap-2">
@@ -995,188 +1070,112 @@ get isLongEnough() {
                                     </div>
                                 </div>
                                 <div class="p-4 space-y-3">
-                                    {{-- Nama Lengkap --}}
+                                    {{-- Nama & NIP tetap Amber --}}
                                     <div class="space-y-1.5">
                                         <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                            <i class="fa-solid fa-user text-amber-500 text-[10px]"></i>
-                                            Nama Lengkap <span class="text-red-500">*</span>
+                                            <i class="fa-solid fa-user text-amber-500 text-[10px]"></i> Nama Lengkap <span class="text-red-500">*</span>
                                         </label>
-                                        <input type="text" name="nama"
-                                               x-model="selectedPegawai.nama"
-                                               @input="selectedPegawai.nama = selectedPegawai.nama.replace(/[^a-zA-Z\s.,]/g, '')"
-                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                      focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
-                                               placeholder="Nama Pegawai">
+                                        <input type="text" name="nama" x-model="selectedPegawai.nama" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-[11px] sm:text-xs transition-all">
                                     </div>
 
-                                    {{-- NIP --}}
                                     <div class="space-y-1.5">
                                         <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                            <i class="fa-solid fa-hashtag text-amber-500 text-[10px]"></i>
-                                            NIP
+                                            <i class="fa-solid fa-hashtag text-amber-500 text-[10px]"></i> NIP
                                         </label>
-                                        <input type="text" name="nip"
-                                               x-model="selectedPegawai.nip"
-                                               maxlength="18"
-                                               @input="selectedPegawai.nip = selectedPegawai.nip.replace(/[^0-9]/g, '').slice(0,18)"
-                                               class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                                      focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
-                                               placeholder="Masukkan 18 digit NIP">
+                                        <input type="text" name="nip" x-model="selectedPegawai.nip" maxlength="18" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none text-[11px] sm:text-xs transition-all">
                                     </div>
 
-                                    {{-- Jabatan & Unit Kerja (Modal Edit) --}}
+                                    {{-- Jabatan & Unit Kerja --}}
                                     <div class="grid grid-cols-2 gap-3">
-                                        {{-- BAGIAN JABATAN --}}
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-briefcase text-amber-500 text-[10px]"></i>
-                                                Jabatan <span class="text-red-500">*</span>
+                                                <i class="fa-solid fa-briefcase text-amber-500 text-[10px]"></i> Jabatan <span class="text-red-500">*</span>
                                             </label>
-
-                                            {{-- Role Pegawai -> Input Manual --}}
-                                            <template x-if="role === 'pegawai' || role === ''">
-                                                <input type="text" name="jabatan" x-model="jabatan" required
-                                                    :disabled="!unit_kerja"
-                                                    :placeholder="!unit_kerja ? 'Pilih Unit Kerja dahulu' : 'Masukkan Nama Jabatan'"
-                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200 disabled:bg-gray-50">
+                                            {{-- Input Jabatan logic --}}
+                                            <template x-if="role === 'pegawai' || role === 'admin' || role === ''">
+                                                <input type="text" name="jabatan" x-model="jabatan" required class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none">
                                             </template>
-
-                                            {{-- Role Atasan atau Pejabat -> Dropdown --}}
                                             <template x-if="role === 'atasan' || role === 'pejabat'">
-                                                <div>
-                                                    <select :name="role !== 'pejabat' ? 'jabatan' : ''" 
-                                                            x-model="jabatan" 
-                                                            :disabled="role === 'pejabat' || !unit_kerja"
-                                                            required
-                                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 focus:border-amber-400 focus:ring-2 focus:ring-amber-100">
-                                                        
-                                                        <option value="" disabled selected x-text="!unit_kerja ? 'Pilih Unit Kerja dahulu' : (role === 'pejabat' ? 'Kepala Dinas' : 'Pilih Jabatan Bidang')"></option>
-                                                        
-                                                        <template x-if="role === 'atasan' && unit_kerja !== ''">
-                                                            <template x-for="j in jabatanMap[unit_kerja]" :key="j">
-                                                                <option :value="j" x-text="j" :selected="j === jabatan"></option>
-                                                            </template>
-                                                        </template>
-
-                                                        <template x-if="role === 'pejabat'">
-                                                            <option value="Kepala Dinas" selected>Kepala Dinas</option>
-                                                        </template>
-                                                    </select>
-                                                    <template x-if="role === 'pejabat'">
-                                                        <input type="hidden" name="jabatan" value="Kepala Dinas">
-                                                    </template>
-                                                </div>
+                                                <select name="jabatan" x-model="jabatan" :disabled="role === 'pejabat'" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none disabled:bg-gray-100">
+                                                    <template x-if="role === 'pejabat'"><option value="Kepala Dinas">Kepala Dinas</option></template>
+                                                    <template x-if="role === 'atasan'"><template x-for="j in jabatanMap[unit_kerja]" :key="j"><option :value="j" x-text="j"></option></template></template>
+                                                </select>
                                             </template>
                                         </div>
-
-                                        {{-- BAGIAN UNIT KERJA --}}
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-building text-amber-500 text-[10px]"></i>
-                                                Unit Kerja <span class="text-red-500">*</span>
+                                                <i class="fa-solid fa-building text-amber-500 text-[10px]"></i> Unit Kerja <span class="text-red-500">*</span>
                                             </label>
-                                            
-                                            <select :name="role !== 'pejabat' ? 'unit_kerja' : ''" 
-                                                    x-model="unit_kerja" 
-                                                    :disabled="role === 'pejabat' || !role"
-                                                    @change="handleUnitChange()"
-                                                    required
-                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100 focus:border-amber-400 focus:ring-2 focus:ring-amber-100">
-                                                
-                                                <option value="" disabled selected>Pilih Unit Kerja</option>
-                                                <template x-for="unit in filteredUnitKerja" :key="unit">
-                                                    <option :value="unit" x-text="unit" :selected="unit === unit_kerja"></option>
-                                                </template>
+                                            <select name="unit_kerja" x-model="unit_kerja" @change="handleUnitChange()" :disabled="role === 'pejabat'" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none disabled:bg-gray-100">
+                                                <template x-for="unit in filteredUnitKerja" :key="unit"><option :value="unit" x-text="unit"></option></template>
                                             </select>
-
-                                            <template x-if="role === 'pejabat'">
-                                                <input type="hidden" name="unit_kerja" value="Dinas Komunikasi dan Informatika">
-                                            </template>
                                         </div>
                                     </div>
 
-                                    {{-- Atasan & Pemberi Cuti (Modal Edit) --}}
+                                    {{-- FIX: ATASAN & PEMBERI CUTI (THEME AMBER) --}}
                                     <div class="grid grid-cols-2 gap-3 mt-4">
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-user-tie text-sky-500 text-[10px]"></i>
-                                                Atasan Langsung <span class="text-red-500">*</span>
+                                                <i class="fa-solid fa-user-tie text-amber-500 text-[10px]"></i> Atasan Langsung <span class="text-red-500">*</span>
                                             </label>
-                                            
-                                            <select name="atasan" x-model="atasan" 
-                                                    :disabled="!jabatan || !role"
-                                                    required
-                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs disabled:bg-gray-100">
-                                                
-                                                <template x-if="!jabatan">
-                                                    <option value="">Pilih Jabatan dahulu</option>
-                                                </template>
-                                                <template x-if="jabatan && filteredAtasan.length === 0">
-                                                    <option value="">Tidak ada atasan sesuai</option>
-                                                </template>
-                                                <template x-if="jabatan && filteredAtasan.length > 0">
-                                                    <option value="" disabled selected>Pilih Nama Atasan</option>
-                                                </template>
-
+                                            <select name="id_atasan_langsung" x-model="id_atasan_langsung" required class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200">
+                                                <option value="">Pilih Atasan</option>
                                                 <template x-for="item in filteredAtasan" :key="item.id">
-                                                    <option :value="item.nama" x-text="item.nama" :selected="item.nama === atasan"></option>
+                                                    <option :value="item.id" x-text="item.nama"></option>
                                                 </template>
                                             </select>
                                         </div>
-                                        
                                         <div class="space-y-1.5">
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-stamp text-sky-500 text-[10px]"></i>
-                                                Pemberi Cuti
+                                                <i class="fa-solid fa-stamp text-amber-500 text-[10px]"></i> Pemberi Cuti
                                             </label>
-                                            <input type="text" name="pejabat" x-model="pejabat" readonly
-                                                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed">
+                                            <select name="id_pejabat_pemberi_cuti" x-model="id_pejabat_pemberi_cuti" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed outline-none">
+                                                <template x-for="p in pejabatList" :key="p.id">
+                                                    <option :value="p.id" x-text="p.nama"></option>
+                                                </template>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- ===== KOLOM KANAN: ROLE & STATUS ===== --}}
+                        {{-- ===== KOLOM KANAN: ROLE & STATUS (FIXED TO AMBER) ===== --}}
                         <div class="space-y-4">
-                            {{-- Role --}}
+                            {{-- Role Section --}}
                             <div class="space-y-1.5">
                                 <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-shield-halved text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Role <span class="text-red-500">*</span>
+                                    <i class="fa-solid fa-shield-halved text-amber-500 text-[10px] sm:text-xs"></i> Role <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
-                                    {{-- Tambahkan x-model="role" di sini --}}
                                     <select name="role" x-model="role" @change="handleRoleChange()" required
                                             class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
-                                                focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200">
-                                        <option value="" disabled selected>Pilih Role</option>
-                                        <option value="admin">Admin</option>
+                                                focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200">
                                         <option value="atasan">Atasan</option>
                                         <option value="pejabat">Pejabat</option>
                                         <option value="pegawai">Pegawai</option>
                                     </select>
+                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                    </div>
                                 </div>
                             </div>
 
-                            {{-- Status --}}
+                            {{-- Status Section --}}
                             <div class="space-y-1.5">
                                 <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-toggle-on text-amber-500 text-[10px] sm:text-xs"></i>
-                                    Status
+                                    <i class="fa-solid fa-toggle-on text-amber-500 text-[10px] sm:text-xs"></i> Status
                                 </label>
-                                <div class="relative">
-                                    <select name="status" x-model="selectedPegawai.status"
-                                            class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
-                                                   focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200">
-                                        <option value="aktif">Aktif</option>
-                                        <option value="nonaktif">Nonaktif</option>
-                                    </select>
-                                </div>
+                                <select name="status" x-model="selectedPegawai.status"
+                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
+                                               focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all">
+                                    <option value="aktif">Aktif</option>
+                                    <option value="nonaktif">Nonaktif</option>
+                                </select>
                             </div>
 
-                            {{-- Info Box --}}
-                            <div class="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+                            {{-- Info Box Amber --}}
+                            <div class="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
                                 <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                     <i class="fa-solid fa-circle-info text-amber-600"></i>
                                 </div>
@@ -1186,43 +1185,36 @@ get isLongEnough() {
                                 </div>
                             </div>
 
-                            {{-- Ringkasan Info (Desktop only) --}}
-                            <div class="hidden lg:block bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
+                            {{-- Data Saat Ini Section Amber --}}
+                            <div class="hidden lg:block bg-slate-50 rounded-xl border border-gray-100 p-4 space-y-3">
                                 <div class="flex items-center gap-2 pb-2 border-b border-gray-100">
-                                    <i class="fa-solid fa-circle-info text-amber-600 text-sm"></i>
+                                    <i class="fa-solid fa-database text-amber-600 text-sm"></i>
                                     <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Saat Ini</span>
                                 </div>
-                                
-                                <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-amber-100 shadow-sm">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                                            <i class="fa-solid fa-id-badge text-amber-600"></i>
-                                        </div>
-                                        <div>
-                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">NIP</p>
-                                            <p class="text-[11px] sm:text-xs font-medium text-gray-600" x-text="selectedPegawai?.nip || '-'"></p>
-                                        </div>
+                                <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-amber-100 shadow-sm">
+                                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-id-badge text-amber-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] text-gray-400 uppercase tracking-wide">NIP Pegawai</p>
+                                        <p class="text-[11px] sm:text-xs font-medium text-gray-600" x-text="selectedPegawai?.nip || '-'"></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- ACTION BUTTONS --}}
+                    {{-- ACTION BUTTONS (AMBER THEME) --}}
                     <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 pt-4 mt-4 border-t border-gray-100">
                         <button type="button" @click="closeModal()"
-                                class="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-xmark"></i>
-                            Batal
+                                class="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-semibold transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-xmark"></i> Batal
                         </button>
                         <button type="submit"
-                                :disabled="(selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()"
-                                class="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
-                                :class="((selectedPegawai && selectedPegawai.nip && selectedPegawai.nip.length > 0 && selectedPegawai.nip.length < 13) || isUnchanged()) 
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
-                                    : 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white hover:from-amber-600 hover:to-yellow-700 hover:shadow-amber-200'">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                            Update Data
+                                :disabled="isUnchanged()"
+                                class="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-lg"
+                                :class="isUnchanged() ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-amber-500 to-yellow-600 text-white hover:from-amber-600 hover:to-yellow-700 hover:shadow-amber-200'">
+                            <i class="fa-solid fa-floppy-disk"></i> Update Data
                         </button>
                     </div>
                 </form>

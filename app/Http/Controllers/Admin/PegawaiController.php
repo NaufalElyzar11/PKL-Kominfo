@@ -252,4 +252,19 @@ public function update(Request $request, $id)
 
         return redirect()->route('admin.pegawai.index')->with('success', 'Data pegawai berhasil dihapus.');
     }
+
+    public function checkUnique(Request $request) {
+    // Abaikan pengecekan jika input kosong
+    if (!$request->value) return response()->json(['exists' => false]);
+
+    $query = \App\Models\Pegawai::where($request->field, $request->value);
+    
+    // Jika sedang Edit, abaikan data milik sendiri agar tidak terbaca duplikat
+    if ($request->id) {
+        $query->where('id', '!=', $request->id);
+    }
+
+    return response()->json(['exists' => $query->exists()]);
+    }
+    
 }
