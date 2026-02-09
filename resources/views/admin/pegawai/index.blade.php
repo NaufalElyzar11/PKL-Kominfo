@@ -10,26 +10,31 @@
 // Fungsi Buka Modal Edit (SINKRON)
 // =========================
 openEditModal(pegawai) {
-    // 1. Reset state ID agar tidak membawa data lama
+    // 1. Reset state agar tidak ada sisa data sebelumnya
     this.id_atasan_langsung = '';
     this.id_pejabat_pemberi_cuti = '';
 
-    // 2. Masukkan data dasar
+    // 2. Kloning data asli
     this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
     this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
 
-    // 3. Set Unit, Jabatan, dan Role SEKALIGUS
-    this.role = pegawai.role;
-    this.unit_kerja = pegawai.unit_kerja;
+    // 3. Set data dasar (Gunakan trim() untuk mencegah ketidakcocokan karakter)
+    const unitAsli = pegawai.unit_kerja ? pegawai.unit_kerja.trim() : '';
+    const roleAsli = pegawai.role || pegawai.user?.role;
+
+    // 4. Set Role dan Unit secara bersamaan
+    this.role = roleAsli;
+    this.unit_kerja = unitAsli;
     this.jabatan = pegawai.jabatan;
 
-    // 4. Gunakan $nextTick agar DOM select selesai dibuat baru diisi nilainya
+    // 5. Gunakan $nextTick untuk sinkronisasi dropdown yang bergantung pada filter unit/role
     this.$nextTick(() => {
-        // Pastikan konversi ke String agar cocok dengan value di <option>
+        // Paksa kembali unit_kerja jika sempat ter-reset oleh logika lain
+        this.unit_kerja = unitAsli;
+        
         this.id_atasan_langsung = pegawai.id_atasan_langsung ? String(pegawai.id_atasan_langsung) : '';
         this.id_pejabat_pemberi_cuti = pegawai.id_pejabat_pemberi_cuti ? String(pegawai.id_pejabat_pemberi_cuti) : '';
         
-        // Sinkronisasi nama pimpinan untuk tampilan
         this.pejabat = (this.role === 'pejabat') ? 'Hj. Erna Lisa Halaby' : (pegawai.pejabat || 'Kanafi, S.IP, MM');
     });
 
@@ -146,52 +151,50 @@ get isLongEnough() {
     pejabatList: {{ Js::from($listPejabat) }},
 
     // Getter untuk filter daftar nama di dropdown
-    get filteredAtasan() {
-        if (!this.unit_kerja || !this.jabatan) return [];
+get filteredAtasan() {
+    if (!this.unit_kerja || !this.jabatan) return [];
 
-        // --- PRIORITAS 1: PUNCAK HIERARKI ---
-        if (this.jabatan === 'Kepala Dinas') {
-            return [{ id: 'wk_1', nama: 'Hj. Erna Lisa Halaby' }];
-        }
+    // --- KADIS MELAPOR KE WALIKOTA ---
+    if (this.jabatan === 'Kepala Dinas') {
+        return [{ id: 0, nama: 'Hj. Erna Lisa Halaby' }];
+    }
 
-        // Kabid & Sekretaris melapor ke Kepala Dinas (Pejabat)
-        if (this.jabatan.includes('Kepala Bidang') || this.jabatan === 'Sekretaris Dinas') {
-            return [{ id: 'pj_1', nama: this.pejabat }];
-        }
+    // --- KABID & SEKRETARIS MELAPOR KE KADIS ---
+    if (this.jabatan.includes('Kepala Bidang') || this.jabatan === 'Sekretaris Dinas') {
+        const kadis = this.pejabatList.find(p => p.nama.includes('Kanafi'));
+        return kadis ? [{ id: kadis.id, nama: kadis.nama }] : [];
+    }
 
-        // --- PRIORITAS 2: LOGIKA PEGAWAI (Paling Penting) ---
-        // Dipindahkan ke atas agar tidak terlewati oleh aturan Unit Kerja
-        if (this.role === 'pegawai') {
-            return this.dataAtasan.filter(at => {
-                // 1. Kondisi Dasar: Atasan di bidang yang sama (Kasi / Kasubbag / KABID)
-                const isSameBidang = at.unit_kerja === this.unit_kerja && 
+    // --- PEGAWAI (STAF) ---
+    if (this.role === 'pegawai') {
+        return this.dataAtasan.filter(at => {
+            // 1. Kondisi Dasar: Atasan (Kasi/Kasubbag) di bidang yang sama
+            const isStandardAtasan = at.unit_kerja === this.unit_kerja && 
                                     (at.jabatan.includes('Kepala Seksi') || 
-                                    at.jabatan.includes('Kepala Sub Bagian'));
+                                     at.jabatan.includes('Kepala Sub Bagian'));
 
-                // 2. Kondisi Khusus Sekretariat: Tambahkan Sekretaris Dinas
-                const isSekreForSekretariat = this.unit_kerja === 'Bidang Sekretariat' && 
-                                            at.jabatan === 'Sekretaris Dinas';
+            // 2. KONDISI TAMBAHAN: Munculkan Sekretaris Dinas khusus untuk Bidang Sekretariat
+            // Kita tidak cek at.unit_kerja di sini karena Sekretaris Dinas 
+            // biasanya terdaftar di unit induk (Dinas), bukan unit Bidang.
+            const isSekreForSekretariat = this.unit_kerja === 'Bidang Sekretariat' && 
+                                          at.jabatan === 'Sekretaris Dinas';
 
-                return isSameBidang || isSekreForSekretariat;
-            });
-        }
+            return isStandardAtasan || isSekreForSekretariat;
+        });
+    }
 
-        // --- PRIORITAS 3: LOGIKA KASUBBAG ---
-        // Kasubbag di Bidang Sekretariat melapor ke Sekretaris Dinas
-        if (this.jabatan.includes('Kepala Sub Bagian')) {
+    // --- KASI / KASUBBAG MELAPOR KE KABID ---
+    if (this.role === 'atasan') {
+        if (this.unit_kerja === 'Bidang Sekretariat') {
             return this.dataAtasan.filter(at => at.jabatan === 'Sekretaris Dinas');
         }
+        return this.dataAtasan.filter(at => 
+            at.unit_kerja === this.unit_kerja && at.jabatan.includes('Kepala Bidang')
+        );
+    }
 
-        // --- PRIORITAS 4: LOGIKA KEPALA SEKSI ---
-        if (this.jabatan.includes('Kepala Seksi')) {
-            return this.dataAtasan.filter(at => 
-                at.unit_kerja === this.unit_kerja && 
-                at.jabatan.includes('Kepala Bidang')
-            );
-        }
-
-        return [];
-    },
+    return [];
+},
 
     // Fungsi tambahan untuk auto-select nama
     handleRoleChange() {
@@ -1125,8 +1128,14 @@ get isLongEnough() {
                                             <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                                 <i class="fa-solid fa-building text-amber-500 text-[10px]"></i> Unit Kerja <span class="text-red-500">*</span>
                                             </label>
-                                            <select name="unit_kerja" x-model="unit_kerja" @change="handleUnitChange()" :disabled="role === 'pejabat'" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none disabled:bg-gray-100">
-                                                <template x-for="unit in filteredUnitKerja" :key="unit"><option :value="unit" x-text="unit"></option></template>
+                                            {{-- Hapus @change pada select di modal edit agar tidak memicu reset jabatan secara otomatis saat modal baru dibuka --}}
+                                            <select name="unit_kerja" 
+                                                    x-model="unit_kerja" 
+                                                    :disabled="role === 'pejabat'" 
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 outline-none disabled:bg-gray-100">
+                                                <template x-for="unit in filteredUnitKerja" :key="unit">
+                                                    <option :value="unit" x-text="unit" :selected="unit === unit_kerja"></option>
+                                                </template>
                                             </select>
                                         </div>
                                     </div>
@@ -1143,7 +1152,12 @@ get isLongEnough() {
                                                 </template>
                                             </select>
                                             {{-- INPUT HIDDEN AGAR CONTROLLER MENERIMA NAMA --}}
-                                            <input type="hidden" name="atasan" :value="dataAtasan.find(a => a.id == id_atasan_langsung)?.nama || ''">
+                                            <input type="hidden" name="atasan" 
+                                                :value="
+                                                    id_atasan_langsung == 0 ? 'Hj. Erna Lisa Halaby' : 
+                                                    (dataAtasan.find(a => a.id == id_atasan_langsung)?.nama || 
+                                                    pejabatList.find(p => p.id == id_atasan_langsung)?.nama || '')
+                                                ">
                                         </div>
 
                                         <div class="space-y-1.5">

@@ -169,70 +169,70 @@ class PegawaiController extends Controller
     /**
      * Update data pegawai
      */
-    public function update(Request $request, $id)
-    {
-        $pegawai = Pegawai::with('user')->findOrFail($id);
+public function update(Request $request, $id)
+{
+    $pegawai = Pegawai::with('user')->findOrFail($id);
 
-        $validated = $request->validate([
-            'nama'       => 'required|string|max:255',
-            'nip'        => 'nullable|string|min:13|max:18|unique:pegawai,nip,' . $pegawai->id,
-            'role'       => 'required|in:pegawai,admin,pejabat,atasan',
-            'status'     => 'required|string',
-            'jabatan'    => 'nullable|string|max:255',
-            'unit_kerja' => 'nullable|string|max:255',
-            // Tambahkan ini agar data ID ikut divalidasi dan dikenal sistem
-            'id_atasan_langsung'      => 'nullable|exists:pegawai,id',
-            'id_pejabat_pemberi_cuti' => 'nullable|exists:pegawai,id',
-            'atasan'     => ['required', 'string', 'max:255'],
-        ]);
+    // 1. Validasi Data
+    $validated = $request->validate([
+        'nama'       => 'required|string|max:255',
+        'nip'        => 'nullable|string|min:13|max:18|unique:pegawai,nip,' . $pegawai->id,
+        'role'       => 'required|in:pegawai,admin,pejabat,atasan',
+        'status'     => 'required|string',
+        'jabatan'    => 'nullable|string|max:255',
+        'unit_kerja' => 'nullable|string|max:255',
+        'atasan'     => 'required|string|max:255', 
 
-    // Validasi jabatan unik (jika jabatan berubah)
-    $jabatan = $validated['jabatan'] ?? null;
-    if ($jabatan && $jabatan !== $pegawai->jabatan) {
-        // Daftar jabatan yang bersifat global unik
+        // Mengizinkan ID 0 untuk Walikota agar tidak "Invalid"
+        'id_atasan_langsung' => [
+            'nullable',
+            function ($attribute, $value, $fail) {
+                if ($value != 0 && $value != '' && !\App\Models\Pegawai::where('id', $value)->exists()) {
+                    $fail('Atasan yang dipilih tidak valid.');
+                }
+            },
+        ],
+        'id_pejabat_pemberi_cuti' => 'nullable|exists:pegawai,id',
+    ]);
+
+    // 2. Ambil nilai Jabatan dari Request (bukan dari $validated) untuk cek keunikan
+    // Gunakan fallback ke data lama jika input kosong (akibat disabled di UI)
+    $inputJabatan = $request->jabatan ?? $pegawai->jabatan;
+
+    if ($inputJabatan && $inputJabatan !== $pegawai->jabatan) {
         $jabatanUnik = ['Kepala Dinas', 'Sekretaris Dinas'];
-        
-        if (in_array($jabatan, $jabatanUnik)) {
-            $exists = Pegawai::where('jabatan', $jabatan)->where('id', '!=', $id)->exists();
-            if ($exists) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', "Jabatan \"{$jabatan}\" sudah terisi. Hanya boleh ada 1 orang untuk jabatan ini.");
-            }
-        }
-        
-        // Cek jabatan Kepala Bidang, Kepala Seksi, dan Kepala Sub Bagian
-        if (str_starts_with($jabatan, 'Kepala Bidang') || 
-            str_starts_with($jabatan, 'Kepala Seksi') || 
-            str_starts_with($jabatan, 'Kepala Sub Bagian')) {
+        if (in_array($inputJabatan, $jabatanUnik) || 
+            str_starts_with($inputJabatan, 'Kepala Bidang') || 
+            str_starts_with($inputJabatan, 'Kepala Seksi') || 
+            str_starts_with($inputJabatan, 'Kepala Sub Bagian')) {
             
-            $exists = Pegawai::where('jabatan', $jabatan)->where('id', '!=', $id)->exists();
+            $exists = Pegawai::where('jabatan', $inputJabatan)->where('id', '!=', $id)->exists();
             if ($exists) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', "Jabatan \"{$jabatan}\" sudah terisi. Hanya boleh ada 1 orang untuk jabatan ini.");
+                return redirect()->back()->with('error', "Jabatan \"{$inputJabatan}\" sudah terisi.");
             }
         }
     }
 
-DB::beginTransaction();
+    DB::beginTransaction();
     try {
-        // Update Akun
+        // Update Akun (Hanya yang ada di $validated)
         $pegawai->user->update([
             'name' => $validated['nama'],
             'role' => $validated['role'],
         ]);
 
-        // Update Data Pegawai
+        // 3. Update Data Pegawai
+        // Gunakan operator ?? (Null Coalescing) untuk menghindari "Undefined Array Key"
         $pegawai->update([
             'nama'                    => $validated['nama'],
             'nip'                     => $validated['nip'],
-            'jabatan'                 => $validated['jabatan'],
-            'unit_kerja'              => $validated['unit_kerja'],
             'status'                  => $validated['status'],
             'atasan'                  => $validated['atasan'], 
-            'pemberi_cuti'            => $request->pejabat, // Ambil dari input x-model pejabat
-            'id_atasan_langsung'      => $request->id_atasan_langsung, // Pastikan ID ini tersimpan
+            // Ambil langsung dari request atau gunakan data lama jika input kosong/disabled
+            'jabatan'                 => $request->jabatan ?? $pegawai->jabatan, 
+            'unit_kerja'              => $request->unit_kerja ?? $pegawai->unit_kerja,
+            'pemberi_cuti'            => $request->pejabat ?? $pegawai->pemberi_cuti, 
+            'id_atasan_langsung'      => $request->id_atasan_langsung, 
             'id_pejabat_pemberi_cuti' => $request->id_pejabat_pemberi_cuti,
         ]);
 
