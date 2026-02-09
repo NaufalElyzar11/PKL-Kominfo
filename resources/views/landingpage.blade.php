@@ -344,7 +344,7 @@
                             <span class="material-symbols-outlined">login</span>
                         </a>
                     </div>
-                    <p class="text-sm text-blue-200/80 mt-4">Butuh bantuan login? <a class="underline hover:text-white transition-colors" href="#">Hubungi Admin</a></p>
+                    <p class="text-sm text-blue-200/80 mt-4">Butuh bantuan login? <a class="underline hover:text-white transition-colors" target="_blank" href="https://wa.me/6281346425154">Hubungi Admin</a></p>
                 </div>
             </div>
         </section>
