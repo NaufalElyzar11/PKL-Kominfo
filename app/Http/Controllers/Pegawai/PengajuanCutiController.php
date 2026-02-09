@@ -137,7 +137,32 @@ class PengajuanCutiController extends Controller
             return back()->with('error', 'Pegawai pengganti tidak valid.');
         }
 
-        // 4. VALIDASI KETERSEDIAAN (Cek tabrakan jadwal cuti delegasi)
+        // 4. VALIDASI KUOTA SEKSI/BIDANG (Max 2 orang per bulan)
+        $bulanCuti = \Carbon\Carbon::parse($validated['tanggal_mulai'])->month;
+        $tahunCuti = \Carbon\Carbon::parse($validated['tanggal_mulai'])->year;
+        $unitKerja = trim($pegawai->unit_kerja); // Normalisasi nama unit kerja
+
+        $jumlahPegawaiCuti = Cuti::whereHas('pegawai', function($q) use ($unitKerja) {
+                // Filter berdasarkan unit kerja yang sama
+                $q->where('unit_kerja', $unitKerja);
+            })
+            ->where('user_id', '!=', $user->id) // Jangan hitung diri sendiri
+            ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'menunggu', 'disetujui', 'disetujui atasan'])
+            ->where(function($q) use ($bulanCuti, $tahunCuti) {
+                // Filter berdasarkan bulan dan tahun yang sama
+                $q->whereMonth('tanggal_mulai', $bulanCuti)
+                  ->whereYear('tanggal_mulai', $tahunCuti);
+            })
+            ->distinct('user_id')
+            ->count('user_id');
+
+        if ($jumlahPegawaiCuti >= 2) {
+            // Dapatkan nama bulan dalam bahasa Indonesia
+            $namaBulan = \Carbon\Carbon::create()->month($bulanCuti)->translatedFormat('F');
+            return back()->with('error', "Form terkunci! Kuota cuti untuk bidang '$unitKerja' di bulan $namaBulan sudah penuh (Maksimal 2 orang).");
+        }
+
+        // 5. VALIDASI KETERSEDIAAN (Cek tabrakan jadwal cuti delegasi)
         $isDelegateOnLeave = Cuti::where('id_pegawai', $delegasi->id)
             ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis'])
             ->where(function ($query) use ($validated) {
