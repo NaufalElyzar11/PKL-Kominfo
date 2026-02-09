@@ -74,7 +74,7 @@
                         </div>
 
                         <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
-                            <div class="h-5 rounded-full transition-all {{ $terpakai > $hakCuti ? 'bg-red-500' : 'bg-yellow-400' }}"
+                            <div class="h-5 rounded-full transition-all {{ $terpakai > $hakCutiDisplay ? 'bg-red-500' : 'bg-yellow-400' }}"
                                 style="width: {{ $persen }}%">
                             </div>
                         </div>
@@ -89,7 +89,7 @@
                     </div>
 
                     <!-- Catatan -->
-                    @if($terpakai > $hakCuti)
+                    @if($terpakai > $hakCutiDisplay)
                         <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
                             <p class="text-xs text-red-700 font-semibold">
                                 ⚠️ Peringatan: Cuti terpakai ({{ $terpakai }} hari) melebihi jatah tahunan ({{ $hakCutiDisplay }} hari).
@@ -223,25 +223,27 @@
         <div class="flex flex-col gap-2 min-w-[200px]">
             
             {{-- PRIORITAS 1: JIKA DITOLAK PEJABAT (KADIS) --}}
-            @if($c->catatan_tolak_pejabat)
+            @if(!empty(trim($c->catatan_tolak_pejabat ?? '')))
                 <div class="bg-rose-50 p-2 rounded-lg border border-rose-200 shadow-sm">
                     <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Pejabat (Kadis):</p>
                     <p class="text-[11px] text-rose-900 font-medium italic">"{{ $c->catatan_tolak_pejabat }}"</p>
                 </div>
 
             {{-- PRIORITAS 2: JIKA DITOLAK ATASAN --}}
-            @elseif($c->catatan_tolak_atasan)
+            @elseif(!empty(trim($c->catatan_tolak_atasan ?? '')))
                 <div class="bg-orange-50 p-2 rounded-lg border border-orange-200 shadow-sm">
                     <p class="text-[9px] text-orange-700 font-bold uppercase">Catatan Atasan:</p>
                     <p class="text-[11px] text-orange-900 font-medium italic">"{{ $c->catatan_tolak_atasan }}"</p>
                 </div>
 
             {{-- PRIORITAS 3: CATATAN UMUM (JIKA KOLOM KHUSUS DI ATAS KOSONG) --}}
-            @elseif($c->catatan_penolakan)
+            @elseif(!empty(trim($c->catatan_penolakan ?? '')))
                 <div class="bg-gray-50 p-2 rounded-lg border border-gray-200 shadow-sm">
                     <p class="text-[9px] text-gray-700 font-bold uppercase">Catatan Penolakan:</p>
                     <p class="text-[11px] text-gray-900 font-medium italic">"{{ $c->catatan_penolakan }}"</p>
                 </div>
+            @else
+                <span class="text-gray-400 italic text-[10px]">Tidak ada catatan</span>
             @endif
 
         </div>
