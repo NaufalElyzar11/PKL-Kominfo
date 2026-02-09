@@ -10,26 +10,27 @@
 // Fungsi Buka Modal Edit (SINKRON)
 // =========================
 openEditModal(pegawai) {
-    // 1. Masukkan data dasar
+    // 1. Reset state ID agar tidak membawa data lama
+    this.id_atasan_langsung = '';
+    this.id_pejabat_pemberi_cuti = '';
+
+    // 2. Masukkan data dasar
     this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
     this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
 
-    // 2. Set Unit dan Jabatan TERLEBIH DAHULU
-    this.role = this.selectedPegawai.role || this.selectedPegawai.user?.role;
-    this.unit_kerja = this.selectedPegawai.unit_kerja;
-    this.jabatan = this.selectedPegawai.jabatan;
+    // 3. Set Unit, Jabatan, dan Role SEKALIGUS
+    this.role = pegawai.role;
+    this.unit_kerja = pegawai.unit_kerja;
+    this.jabatan = pegawai.jabatan;
 
-    // 3. Gunakan $nextTick agar pilihan Atasan muncul dulu di list, baru dipilih nilainya
+    // 4. Gunakan $nextTick agar DOM select selesai dibuat baru diisi nilainya
     this.$nextTick(() => {
-        this.id_atasan_langsung = String(this.selectedPegawai.id_atasan_langsung || '');
-        this.id_pejabat_pemberi_cuti = String(this.selectedPegawai.id_pejabat_pemberi_cuti || '');
+        // Pastikan konversi ke String agar cocok dengan value di <option>
+        this.id_atasan_langsung = pegawai.id_atasan_langsung ? String(pegawai.id_atasan_langsung) : '';
+        this.id_pejabat_pemberi_cuti = pegawai.id_pejabat_pemberi_cuti ? String(pegawai.id_pejabat_pemberi_cuti) : '';
         
-        // Atur nama Pejabat (untuk tampilan readonly)
-        if (this.role === 'pejabat') {
-            this.pejabat = 'Hj. Erna Lisa Halaby';
-        } else {
-            this.pejabat = this.selectedPegawai.pejabat_nama || 'Kanafi, S.IP, MM';
-        }
+        // Sinkronisasi nama pimpinan untuk tampilan
+        this.pejabat = (this.role === 'pejabat') ? 'Hj. Erna Lisa Halaby' : (pegawai.pejabat || 'Kanafi, S.IP, MM');
     });
 
     this.showEditModal = true;
@@ -165,8 +166,7 @@ get isLongEnough() {
                 // 1. Kondisi Dasar: Atasan di bidang yang sama (Kasi / Kasubbag / KABID)
                 const isSameBidang = at.unit_kerja === this.unit_kerja && 
                                     (at.jabatan.includes('Kepala Seksi') || 
-                                    at.jabatan.includes('Kepala Sub Bagian') ||
-                                    at.jabatan.includes('Kepala Bidang')); // <-- TAMBAHKAN INI
+                                    at.jabatan.includes('Kepala Sub Bagian'));
 
                 // 2. Kondisi Khusus Sekretariat: Tambahkan Sekretaris Dinas
                 const isSekreForSekretariat = this.unit_kerja === 'Bidang Sekretariat' && 
@@ -284,8 +284,25 @@ get isLongEnough() {
     },
 
     isUnchanged() {
+        // Jika data belum dimuat, anggap tidak ada perubahan
         if (!this.selectedPegawai || !this.originalPegawai) return true;
-        return JSON.stringify(this.selectedPegawai) === JSON.stringify(this.originalPegawai);
+
+        // 1. Cek perubahan pada data dasar (Nama, NIP, Status)
+        const basicInfoUnchanged = JSON.stringify(this.selectedPegawai) === JSON.stringify(this.originalPegawai);
+
+        // 2. Cek perubahan pada variabel mandiri (Role, Unit, Jabatan, Atasan, Pejabat)
+        // Kita gunakan != (loose equality) karena data ID seringkali berupa angka (int) 
+        // sedangkan input select membacanya sebagai teks (string).
+        const hierarchyUnchanged = 
+            this.role == (this.originalPegawai.role || this.originalPegawai.user?.role) &&
+            this.unit_kerja == this.originalPegawai.unit_kerja &&
+            this.jabatan == this.originalPegawai.jabatan &&
+            this.id_atasan_langsung == this.originalPegawai.id_atasan_langsung &&
+            this.id_pejabat_pemberi_cuti == this.originalPegawai.id_pejabat_pemberi_cuti;
+
+        // Tombol Update hanya akan MATI (true) jika SEMUA data masih sama dengan aslinya.
+        // Jika salah satu saja berubah, maka isUnchanged menjadi false (Tombol Menyala).
+        return basicInfoUnchanged && hierarchyUnchanged;
     },
 
     openDetailModal(pegawai) {
@@ -297,7 +314,13 @@ get isLongEnough() {
         this.showCreateModal = false;
         this.showEditModal = false;
         this.showDetailModal = false;
+        
+        // Reset variabel mandiri agar tidak membekas di modal berikutnya
         this.selectedPegawai = null;
+        this.role = '';
+        this.unit_kerja = '';
+        this.id_atasan_langsung = '';
+        this.id_pejabat_pemberi_cuti = '';
     }
 }" @keydown.escape.window="closeModal()">
 
@@ -378,6 +401,8 @@ get isLongEnough() {
                             'role' => optional($p->user)->role,
                             'jabatan' => $p->jabatan,
                             'unit_kerja' => $p->unit_kerja,
+                            'id_atasan_langsung' => $p->id_atasan_langsung,
+                            'id_pejabat_pemberi_cuti' => $p->id_pejabat_pemberi_cuti,
                             'atasan' => $p->atasan, 
                             'pejabat' => $p->pemberi_cuti,
                             'telepon' => $p->telepon,
@@ -1109,26 +1134,28 @@ get isLongEnough() {
                                     {{-- FIX: ATASAN & PEMBERI CUTI (THEME AMBER) --}}
                                     <div class="grid grid-cols-2 gap-3 mt-4">
                                         <div class="space-y-1.5">
-                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-user-tie text-amber-500 text-[10px]"></i> Atasan Langsung <span class="text-red-500">*</span>
-                                            </label>
-                                            <select name="id_atasan_langsung" x-model="id_atasan_langsung" required class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200">
-                                            <option value="">Pilih Atasan</option>
+                                            <label class="text-[11px] font-semibold text-gray-600">Atasan Langsung *</label>
+                                            <select name="id_atasan_langsung" x-model="id_atasan_langsung" required 
+                                                    class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-[11px]">
+                                                <option value="">Pilih Atasan</option>
                                                 <template x-for="item in filteredAtasan" :key="item.id">
-                                                    <option :value="item.id" x-text="item.nama" :selected="item.id == id_atasan_langsung"></option>
+                                                    <option :value="item.id" x-text="item.nama"></option>
                                                 </template>
                                             </select>
-                                        </div>
-                                        <div class="space-y-1.5">
-                                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                                <i class="fa-solid fa-stamp text-amber-500 text-[10px]"></i> Pemberi Cuti
-                                            </label>
-                                            <select name="id_pejabat_pemberi_cuti" x-model="id_pejabat_pemberi_cuti" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed outline-none">
-                                                <template x-for="p in pejabatList" :key="p.id">
-                                                    <option :value="p.id" x-text="p.nama" :selected="p.id == id_pejabat_pemberi_cuti"></option>
-                                                </template>
-                                            </select>
+                                            {{-- INPUT HIDDEN AGAR CONTROLLER MENERIMA NAMA --}}
                                             <input type="hidden" name="atasan" :value="dataAtasan.find(a => a.id == id_atasan_langsung)?.nama || ''">
+                                        </div>
+
+                                        <div class="space-y-1.5">
+                                            <label class="text-[11px] font-semibold text-gray-600">Pemberi Cuti</label>
+                                            <select name="id_pejabat_pemberi_cuti" x-model="id_pejabat_pemberi_cuti" 
+                                                    class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-[11px]">
+                                                <template x-for="p in pejabatList" :key="p.id">
+                                                    <option :value="p.id" x-text="p.nama"></option>
+                                                </template>
+                                            </select>
+                                            {{-- INPUT HIDDEN AGAR CONTROLLER MENERIMA NAMA PEJABAT --}}
+                                            <input type="hidden" name="pejabat" :value="pejabatList.find(p => p.id == id_pejabat_pemberi_cuti)?.nama || 'Kanafi, S.IP, MM'">
                                         </div>
                                     </div>
                                 </div>
