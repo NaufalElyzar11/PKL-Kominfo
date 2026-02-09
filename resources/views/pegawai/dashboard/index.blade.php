@@ -53,22 +53,23 @@
                     <!-- Angka Utama -->
                     <div class="text-center">
                         <p class="text-xs sm:text-sm text-gray-500">Hak Cuti Tahunan</p>
-                        <p class="text-3xl sm:text-4xl font-extrabold text-sky-700">12 Hari</p>
+                        <p class="text-3xl sm:text-4xl font-extrabold text-sky-700">{{ $hakCuti ?? 12 }} Hari</p>
                     </div>
 
                     <!-- Progress -->
                     @php
-                        $hakCuti = 12;
+                        // Data sudah dikirim dari controller
+                        $hakCutiDisplay = $hakCuti ?? 12;
                         $terpakai = $cutiTerpakai ?? 0;
-                        $sisa = max(0, $hakCuti - $terpakai); // Tidak boleh negatif
-                        $persen = min(100, ($terpakai / $hakCuti) * 100); // Maksimal 100%
+                        $sisa = $sisaCuti ?? max(0, $hakCutiDisplay - $terpakai); // Tidak boleh negatif
+                        $persen = $hakCutiDisplay > 0 ? min(100, ($terpakai / $hakCutiDisplay) * 100) : 0; // Maksimal 100%
                     @endphp
 
                     <div>
                         <div class="flex justify-between text-sm mb-1">
                             <span class="text-gray-600">Terpakai</span>
                             <span class="font-semibold text-gray-700">
-                                {{ $terpakai }} / {{ $hakCuti }} hari
+                                {{ $terpakai }} / {{ $hakCutiDisplay }} hari
                             </span>
                         </div>
 
@@ -91,7 +92,7 @@
                     @if($terpakai > $hakCuti)
                         <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
                             <p class="text-xs text-red-700 font-semibold">
-                                ⚠️ Peringatan: Cuti terpakai ({{ $terpakai }} hari) melebihi jatah tahunan ({{ $hakCuti }} hari).
+                                ⚠️ Peringatan: Cuti terpakai ({{ $terpakai }} hari) melebihi jatah tahunan ({{ $hakCutiDisplay }} hari).
                                 Silakan hubungi admin untuk verifikasi data.
                             </p>
                         </div>
