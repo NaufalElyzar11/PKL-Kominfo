@@ -29,9 +29,9 @@ class DashboardController extends Controller
 
         // Normalisasi status (karena di beberapa bagian aplikasi ada yang pakai "Menunggu"/"Disetujui"/"Ditolak"
         // dan ada juga yang pakai lowercase seperti "pending"/"disetujui"/"ditolak")
-        $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending'];
-        // Update statusDisetujui untuk mencakup semua variasi
-        $statusDisetujui = ['Disetujui', 'disetujui', 'Disetujui Atasan', 'disetujui atasan'];
+        $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending', 'Disetujui Atasan', 'disetujui atasan'];
+        // PERBAIKAN: Hanya hitung yang sudah final approved (bukan "Disetujui Atasan")
+        $statusDisetujui = ['Disetujui', 'disetujui'];
         $statusDitolak   = ['Ditolak', 'ditolak'];
 
         $totalCuti     = (clone $cutiQuery)->count();
@@ -39,7 +39,7 @@ class DashboardController extends Controller
         $cutiDisetujui = (clone $cutiQuery)->whereIn('status', $statusDisetujui)->count();
         $cutiDitolak   = (clone $cutiQuery)->whereIn('status', $statusDitolak)->count();
         
-        // HITUNG CUTI TERPAKAI TAHUN INI
+        // HITUNG CUTI TERPAKAI TAHUN INI (hanya yang final approved)
         $cutiTerpakai = (clone $cutiQuery)
             ->where('tahun', date('Y'))
             ->whereIn('status', $statusDisetujui)
@@ -59,6 +59,10 @@ class DashboardController extends Controller
         // Total pegawai untuk statistik
         $totalPegawai = Pegawai::count();
 
+        // TAMBAHAN: Hitung hak cuti dan sisa cuti dari database
+        $hakCuti = $pegawai->kuota_cuti ?? 12; // Ambil dari database, default 12
+        $sisaCuti = max(0, $hakCuti - $cutiTerpakai);
+
         // Kirim semua data ke view
         return view('pegawai.dashboard.index', compact(
             'user',
@@ -68,10 +72,12 @@ class DashboardController extends Controller
             'cutiPending',
             'cutiDisetujui',
             'cutiDitolak',
-            'cutiTerpakai', // <--- Tambahkan ini
+            'cutiTerpakai',
             'latestCuti',
             'atasanLangsung',
-            'pejabatPemberiCuti'
+            'pejabatPemberiCuti',
+            'hakCuti',      // BARU: Kuota cuti dari database
+            'sisaCuti'      // BARU: Sisa cuti yang dihitung
         ));
     }
 }

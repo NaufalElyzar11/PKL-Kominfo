@@ -77,17 +77,16 @@ class Pegawai extends Model
 
     /**
      * Accessor untuk hitung sisa cuti secara Real-time
-     * Menghitung total cuti yang 'Disetujui' dan 'Menunggu' tahun ini
+     * Menghitung total cuti yang sudah 'Disetujui' (final approved) tahun ini
      */
     public function getSisaCutiAttribute(): int
     {
         $tahun = date('Y');
         
-        // Hitung cuti yang sudah disetujui
-        // Termasuk 'Disetujui', 'Disetujui Atasan', dan variasi besar kecil huruf
+        // PERBAIKAN: Hanya hitung cuti yang sudah final approved (bukan "Disetujui Atasan")
         $terpakai = $this->cuti()
             ->where('tahun', $tahun)
-            ->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Atasan', 'disetujui atasan']) 
+            ->whereIn('status', ['Disetujui', 'disetujui']) // Hanya yang final approved
             ->sum('jumlah_hari');
 
         // Menggunakan kuota_cuti dari database, default 12 jika kosong
