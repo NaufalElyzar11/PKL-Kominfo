@@ -97,6 +97,10 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
     Route::prefix('admin')->as('admin.')->middleware('role:admin')->group(function () {
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
         Route::resource('pegawai', AdminPegawaiController::class);
+
+        Route::post('/pegawai/check-unique', 
+        [AdminPegawaiController::class, 'checkUnique']
+        )->name('pegawai.checkUnique');
         
         // 🔹 PINDAHKAN RUTE PDF KE SINI (DI ATAS RESOURCE) 🔹
         Route::get('/cuti/export-pdf', [AdminCutiController::class, 'exportPdf'])->name('cuti.export-pdf');
@@ -180,7 +184,9 @@ Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')
     });
 
     // routes/web.php
-Route::get('/pegawai/cuti/cek-tersedia', [App\Http\Controllers\Pegawai\PengajuanCutiController::class, 'getAvailableDelegates'])
+    Route::get('/pegawai/cuti/cek-tersedia', [App\Http\Controllers\Pegawai\PengajuanCutiController::class, 'getAvailableDelegates'])
     ->name('pegawai.cuti.cek-tersedia');
+
+    Route::post('/admin/pegawai/check-unique', [App\Http\Controllers\Admin\PegawaiController::class, 'checkUnique'])->name('admin.pegawai.checkUnique');
 
 }); // <--- Penutup Grup Utama Pejabat (PASTIKAN TIDAK ADA LAGI }); DI BAWAH INI)
