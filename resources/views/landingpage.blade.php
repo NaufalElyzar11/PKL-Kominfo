@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link rel="icon" href="{{ asset('image/diskominfobjb.jpg') }}" type="image/jpg">
     <title>SIAP CUTI | Dinas Komunikasi dan Informatika Kota Banjarbaru</title>
     @vite('resources/css/app.css')
     <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
