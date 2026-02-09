@@ -353,13 +353,27 @@
 
                             {{-- KOLOM AKSI - Reset dengan SweetAlert & Modal --}}
                             <td class="px-6 py-4 text-center">
-                                @if($r->status === 'Disetujui')
+                                @php
+                                    // Cek apakah sudah lewat 8 jam sejak updated_at
+                                    $canReset = false;
+                                    if (($r->status === 'Disetujui' || $r->status === 'Ditolak') && $r->updated_at) {
+                                        $hoursSinceUpdate = $r->updated_at->diffInHours(now());
+                                        $canReset = $hoursSinceUpdate < 8;
+                                    }
+                                @endphp
+                                
+                                @if($canReset)
                                     <button type="button" 
                                         @click.stop="resetId = {{ $r->id }}; showResetModal = true" 
                                         class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center shadow-sm mx-auto" 
                                         title="Reset Persetujuan">
                                         <span class="material-symbols-outlined text-[18px] pointer-events-none">rotate_left</span>
                                     </button>
+                                @elseif($r->status === 'Disetujui' || $r->status === 'Ditolak')
+                                    {{-- Tampilkan icon disabled jika sudah lewat 8 jam --}}
+                                    <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-300 flex items-center justify-center shadow-sm mx-auto" title="Reset tidak tersedia (Sudah lewat 8 jam)">
+                                        <span class="material-symbols-outlined text-[18px]">lock</span>
+                                    </div>
                                 @else
                                     <span class="text-gray-300">-</span>
                                 @endif

@@ -79,6 +79,7 @@ class PejabatApprovalController extends Controller
     /**
      * Reset persetujuan cuti - mengembalikan status ke 'Disetujui Atasan'
      * Membutuhkan alasan reset sebelum melakukan aksi
+     * Hanya dapat dilakukan dalam 8 jam setelah approve/reject
      */
     public function reset(Request $request, $id)
     {
@@ -87,7 +88,7 @@ class PejabatApprovalController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z\s]+$/'
+                'regex:/^[A-Za-z\\s]+$/'
             ]
         ], [
             'alasan_reset.required' => 'Alasan reset wajib diisi sebelum membatalkan persetujuan.',
@@ -96,6 +97,18 @@ class PejabatApprovalController extends Controller
         ]);
 
         $cuti = Cuti::findOrFail($id);
+
+        // Validasi: Cek apakah sudah lewat 8 jam sejak update terakhir
+        $hoursSinceUpdate = $cuti->updated_at->diffInHours(now());
+        
+        if ($hoursSinceUpdate >= 8) {
+            return back()->withErrors(['error' => 'Reset tidak dapat dilakukan. Sudah lewat 8 jam sejak persetujuan/penolakan terakhir.']);
+        }
+
+        // Validasi: Hanya bisa reset jika status Disetujui atau Ditolak
+        if (!in_array($cuti->status, ['Disetujui', 'Ditolak'])) {
+            return back()->withErrors(['error' => 'Hanya pengajuan yang sudah disetujui atau ditolak yang dapat di-reset.']);
+        }
 
         // Simpan alasan reset dan kembalikan status ke 'Disetujui Atasan'
         // Bersihkan catatan pejabat karena reset
