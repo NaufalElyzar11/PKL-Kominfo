@@ -24,17 +24,18 @@ class PengajuanCutiController extends Controller
         $pegawai = $user->pegawai;
         $tahun = request('tahun', date('Y'));
 
-        // 1. Ambil Rekan Sebidang untuk Delegasi
-        // Kita pastikan data pegawai ada dan memiliki kolom 'unit_kerja'
-        $rekanSebidang = collect(); 
-        if ($pegawai && $pegawai->unit_kerja) {
-            $rekanSebidang = \App\Models\Pegawai::where('unit_kerja', 'LIKE', trim($pegawai->unit_kerja))
-            ->where('id', '!=', $pegawai->id)
+    // 1. Ambil Rekan untuk Delegasi (INDEX METHOD)
+    $rekanSebidang = collect(); 
+    if ($pegawai && $pegawai->id_atasan_langsung) {
+        $rekanSebidang = \App\Models\Pegawai::where('id_atasan_langsung', $pegawai->id_atasan_langsung)
+            ->where('id', '!=', $pegawai->id) // Jangan diri sendiri
+            ->where('status', 'aktif')       // WAJIB: Pastikan statusnya Aktif
             ->whereHas('user', function($query) {
-                $query->where('role', 'pegawai');
+                // IZINKAN role 'pegawai' DAN 'atasan' agar daftar tidak kosong
+                $query->whereIn('role', ['pegawai', 'atasan']); 
             })
             ->get();
-        }
+    }
 
         // 2. Logika Pengecekan Profil
         $warningMessage = null;
@@ -123,17 +124,17 @@ class PengajuanCutiController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
         ]);
 
-        // 3. VALIDASI DELEGASI (Unit Kerja & Role)
-        // Gunakan eager load 'user' untuk mengecek role
+        // 3. VALIDASI DELEGASI (Sinkronkan dengan Atasan Langsung)
         $delegasi = \App\Models\Pegawai::with('user')->find($validated['id_delegasi']);
 
-        if ($delegasi->unit_kerja !== $pegawai->unit_kerja || $delegasi->id === $pegawai->id) {
-            return back()->with('error', 'Pegawai pengganti harus berada di unit kerja yang sama dan bukan diri sendiri.');
+        // Cek Atasan Langsung yang sama
+        if ($delegasi->id_atasan_langsung !== $pegawai->id_atasan_langsung || $delegasi->id === $pegawai->id) {
+            return back()->with('error', 'Pegawai pengganti harus berada di bawah naungan Atasan Langsung yang sama.');
         }
 
-        // Filter agar hanya role 'pegawai' yang bisa dipilih
-        if ($delegasi->user->role !== 'pegawai') {
-            return back()->with('error', 'Pegawai pengganti harus memiliki jabatan staf (bukan Atasan/Pejabat).');
+        // Pastikan delegasi bukan Pejabat/Admin (Boleh staf atau sesama atasan selevel)
+        if (!in_array($delegasi->user->role, ['pegawai', 'atasan'])) {
+            return back()->with('error', 'Pegawai pengganti tidak valid.');
         }
 
         // 4. VALIDASI KETERSEDIAAN (Cek tabrakan jadwal cuti delegasi)

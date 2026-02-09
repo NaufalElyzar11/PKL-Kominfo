@@ -247,11 +247,10 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($cuti as $index => $c)
-                            @php
-                                $no = ($cutiCurrent - 1) * $cutiPerPage + $index + 1;
-                                $nip = $c->pegawai->nip ?? '-';
-                                $nipMasked = (strlen($nip) > 6) ? substr($nip, 0, 3) . str_repeat('*', strlen($nip)-6) . substr($nip, -3) : $nip;
-                            @endphp
+                        @php
+                            $no = ($cutiCurrent - 1) * $cutiPerPage + $index + 1;
+                            $nip = $c->pegawai->nip ?? '-';
+                        @endphp
                             <tr class="hover:bg-gray-50 text-gray-700">
                                 <td class="px-1 py-2 text-center">{{ $no }}</td>
                                 <td class="px-1 py-2">{{ $c->pegawai->nama ?? '-' }}</td>
@@ -374,7 +373,6 @@
                         $noR = ($riwayatCurrent - 1) * $riwayatPerPage + $index + 1;
                         $status = strtolower(trim($r->status ?? ''));
                         $nipR = $r->pegawai->nip ?? '-';
-                        $nipMaskedR = (strlen($nipR) > 6) ? substr($nipR, 0, 3) . '***' . substr($nipR, -3) : $nipR;
 
                         $kuotaDasar = 12;
                         $pemakaianKumulatif = \App\Models\Cuti::where('user_id', $r->user_id)
@@ -388,7 +386,7 @@
                     <tr class="hover:bg-gray-50 text-gray-700">
                         <td class="px-1 py-2 text-center">{{ $noR }}</td>
                         <td class="px-1 py-2">{{ $r->pegawai->nama ?? '-' }}</td>
-                        <td class="px-1 py-2 text-center">{{ $nipMaskedR }}</td>
+                        <td class="px-1 py-2 text-center">{{ $nipR }}</td>
                         <td class="px-1 py-2 text-center">{{ $r->jenis_cuti }}</td>
                         <td class="px-1 py-2 text-center leading-tight">
                             {{ optional($r->tanggal_mulai)->format('d/m/Y') }} <br> s/d {{ optional($r->tanggal_selesai)->format('d/m/Y') }}

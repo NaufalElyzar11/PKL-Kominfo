@@ -10,35 +10,27 @@
 // Fungsi Buka Modal Edit (SINKRON)
 // =========================
 openEditModal(pegawai) {
-
+    // 1. Masukkan data dasar
     this.selectedPegawai = JSON.parse(JSON.stringify(pegawai));
     this.originalPegawai = JSON.parse(JSON.stringify(pegawai));
 
+    // 2. Set Unit dan Jabatan TERLEBIH DAHULU
     this.role = this.selectedPegawai.role || this.selectedPegawai.user?.role;
     this.unit_kerja = this.selectedPegawai.unit_kerja;
     this.jabatan = this.selectedPegawai.jabatan;
 
-    // Pastikan tipe data sama
-    setTimeout(() => {
-        this.id_atasan_langsung = String(this.selectedPegawai.id_atasan_langsung);
-    }, 50);
-
-    if (this.role === 'pejabat') {
-        this.pejabat = 'Hj. Erna Lisa Halaby';
-
-        setTimeout(() => {
-            this.id_pejabat_pemberi_cuti =
-                this.pejabatList.find(p => p.nama.includes('Halaby'))?.id;
-        }, 50);
-
-    } else {
-        this.pejabat = this.selectedPegawai.pejabat_nama || 'Kanafi, S.IP, MM';
-
-        setTimeout(() => {
-            this.id_pejabat_pemberi_cuti =
-                String(this.selectedPegawai.id_pejabat_pemberi_cuti);
-        }, 50);
-    }
+    // 3. Gunakan $nextTick agar pilihan Atasan muncul dulu di list, baru dipilih nilainya
+    this.$nextTick(() => {
+        this.id_atasan_langsung = String(this.selectedPegawai.id_atasan_langsung || '');
+        this.id_pejabat_pemberi_cuti = String(this.selectedPegawai.id_pejabat_pemberi_cuti || '');
+        
+        // Atur nama Pejabat (untuk tampilan readonly)
+        if (this.role === 'pejabat') {
+            this.pejabat = 'Hj. Erna Lisa Halaby';
+        } else {
+            this.pejabat = this.selectedPegawai.pejabat_nama || 'Kanafi, S.IP, MM';
+        }
+    });
 
     this.showEditModal = true;
 },
@@ -169,18 +161,20 @@ get isLongEnough() {
         // --- PRIORITAS 2: LOGIKA PEGAWAI (Paling Penting) ---
         // Dipindahkan ke atas agar tidak terlewati oleh aturan Unit Kerja
         if (this.role === 'pegawai') {
-                return this.dataAtasan.filter(at => {
-                    // 1. Kondisi Dasar: Atasan di bidang yang sama (Kasi / Kasubbag)
-                    const isSameBidang = at.unit_kerja === this.unit_kerja && 
-                                        (at.jabatan.includes('Kepala Seksi') || at.jabatan.includes('Kepala Sub Bagian'));
+            return this.dataAtasan.filter(at => {
+                // 1. Kondisi Dasar: Atasan di bidang yang sama (Kasi / Kasubbag / KABID)
+                const isSameBidang = at.unit_kerja === this.unit_kerja && 
+                                    (at.jabatan.includes('Kepala Seksi') || 
+                                    at.jabatan.includes('Kepala Sub Bagian') ||
+                                    at.jabatan.includes('Kepala Bidang')); // <-- TAMBAHKAN INI
 
-                    // 2. Kondisi Khusus Sekretariat: Tambahkan Sekretaris Dinas
-                    const isSekreForSekretariat = this.unit_kerja === 'Bidang Sekretariat' && 
-                                                at.jabatan === 'Sekretaris Dinas';
+                // 2. Kondisi Khusus Sekretariat: Tambahkan Sekretaris Dinas
+                const isSekreForSekretariat = this.unit_kerja === 'Bidang Sekretariat' && 
+                                            at.jabatan === 'Sekretaris Dinas';
 
-                    return isSameBidang || isSekreForSekretariat;
-                });
-            }
+                return isSameBidang || isSekreForSekretariat;
+            });
+        }
 
         // --- PRIORITAS 3: LOGIKA KASUBBAG ---
         // Kasubbag di Bidang Sekretariat melapor ke Sekretaris Dinas
@@ -1119,9 +1113,9 @@ get isLongEnough() {
                                                 <i class="fa-solid fa-user-tie text-amber-500 text-[10px]"></i> Atasan Langsung <span class="text-red-500">*</span>
                                             </label>
                                             <select name="id_atasan_langsung" x-model="id_atasan_langsung" required class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200">
-                                                <option value="">Pilih Atasan</option>
+                                            <option value="">Pilih Atasan</option>
                                                 <template x-for="item in filteredAtasan" :key="item.id">
-                                                    <option :value="item.id" x-text="item.nama"></option>
+                                                    <option :value="item.id" x-text="item.nama" :selected="item.id == id_atasan_langsung"></option>
                                                 </template>
                                             </select>
                                         </div>
@@ -1131,9 +1125,10 @@ get isLongEnough() {
                                             </label>
                                             <select name="id_pejabat_pemberi_cuti" x-model="id_pejabat_pemberi_cuti" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50 text-[11px] sm:text-xs text-gray-500 cursor-not-allowed outline-none">
                                                 <template x-for="p in pejabatList" :key="p.id">
-                                                    <option :value="p.id" x-text="p.nama"></option>
+                                                    <option :value="p.id" x-text="p.nama" :selected="p.id == id_pejabat_pemberi_cuti"></option>
                                                 </template>
                                             </select>
+                                            <input type="hidden" name="atasan" :value="dataAtasan.find(a => a.id == id_atasan_langsung)?.nama || ''">
                                         </div>
                                     </div>
                                 </div>
