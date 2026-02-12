@@ -124,9 +124,10 @@
                         <small>NIP. {{ $item->nip }}</small>
                     </td>
                     <td class="data-cell text-center">{{ $item->jenis_cuti }}</td>
-                    <td class="data-cell text-center">
-                        {{ \Carbon\Carbon::parse($item->tanggal_mulai)->format('d/m/y') }}<br>s/d<br>
-                        {{ \Carbon\Carbon::parse($item->tanggal_selesai)->format('d/m/y') }}
+                    <td class="data-cell text-center" style="font-size: 8.5pt;">
+                        {{ \Carbon\Carbon::parse($item->tanggal_mulai)->translatedFormat('d F Y') }}
+                        <div style="font-size: 8pt; color: #555; margin: 2px 0;">s.d.</div>
+                        {{ \Carbon\Carbon::parse($item->tanggal_selesai)->translatedFormat('d F Y') }}
                     </td>
                     <td class="data-cell text-center font-bold">{{ $item->jumlah_hari }}</td>
                     <td class="data-cell">{{ Str::limit($item->alasan_cuti, 40) }}</td>
@@ -145,7 +146,7 @@
     <div class="ttd-section">
         <div class="ttd-box">
             <p>Banjarbaru, {{ now()->translatedFormat('d F Y') }}</p>
-            <p>Administrasi Kepegawaian,</p>
+            <p>Pengolah Data dan Informasi,</p>
             <div class="ttd-space"></div>
             <p><strong>Nariyati, A.Md</strong></p>
             <p>NIP. 197202062001122001</p>
