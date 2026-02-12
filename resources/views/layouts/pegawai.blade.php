@@ -127,12 +127,74 @@
                 @csrf
             </form>
 
-            <button type="button" 
-                    onclick="confirmLogout()"
-                    class="flex items-center gap-2 px-4 py-2 text-[13px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 group shadow-sm">
-                <i class="fa-solid fa-right-from-bracket group-hover:translate-x-1 transition-transform"></i>
-                <span>Keluar</span>
-            </button>
+            <div class="flex items-center gap-3">
+                {{-- NOTIFIKASI BELL --}}
+                <div x-data="{ 
+                    openNotif: false,
+                    unreadCount: {{ Auth::user()->notifications()->where('is_read', false)->count() }}
+                }" class="relative">
+                    <button @click="openNotif = !openNotif" class="relative p-2 text-gray-600 hover:text-sky-600 transition-colors">
+                        <i class="fa-solid fa-bell text-xl"></i>
+                        
+                        <span x-show="unreadCount > 0" 
+                              x-text="unreadCount"
+                              class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                        </span>
+                    </button>
+
+                    {{-- Dropdown Notifikasi --}}
+                    <div x-show="openNotif" 
+                         @click.away="openNotif = false"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+                         x-cloak>
+                        
+                        <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h3 class="text-sm font-bold text-gray-700">Notifikasi</h3>
+                            <span class="text-[10px] text-gray-500" x-text="unreadCount + ' Belum dibaca'"></span>
+                        </div>
+
+                        <div class="max-h-64 overflow-y-auto">
+                            @forelse(Auth::user()->notifications()->latest()->take(5)->get() as $n)
+                                <div class="p-3 border-b border-gray-50 hover:bg-sky-50 transition-colors {{ !$n->is_read ? 'bg-blue-50/50' : '' }}">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h4 class="text-[12px] font-bold {{ !$n->is_read ? 'text-sky-700' : 'text-gray-700' }}">{{ $n->title }}</h4>
+                                        <span class="text-[9px] text-gray-400 whitespace-nowrap">{{ $n->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-600 leading-tight mb-2">{{ Str::limit($n->message, 80) }}</p>
+                                    
+                                    @if(!$n->is_read)
+                                    <form action="{{ route('pegawai.notif.read', $n->id) }}" method="POST" class="text-right">
+                                        @csrf
+                                        <button type="submit" class="text-[10px] text-sky-600 hover:underline font-medium">
+                                            Tandai dibaca
+                                        </button>
+                                    </form>
+                                    @endif
+                                </div>
+                            @empty
+                                <div class="p-4 text-center text-gray-500 italic text-xs">
+                                    Tidak ada notifikasi baru
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <a href="{{ route('pegawai.dashboard') }}#notifikasi-section" class="block py-2 text-center text-[11px] font-bold text-sky-600 hover:bg-gray-50 transition border-t border-gray-100">
+                            Lihat Semua di Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <button type="button" 
+                        onclick="confirmLogout()"
+                        class="flex items-center gap-2 px-4 py-2 text-[13px] font-bold text-rose-600 bg-rose-50 border border-rose-100 rounded-xl hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 group shadow-sm">
+                    <i class="fa-solid fa-right-from-bracket group-hover:translate-x-1 transition-transform"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+
         </header>
 
         <main class="p-6 max-w-6xl mx-auto">

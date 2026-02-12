@@ -56,6 +56,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Relasi Custom Notification (Bukan bawaan Laravel)
+     */
+    public function notifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class, 'user_id');
+    }
+
+    /**
      * Relasi: User sebagai atasan langsung
      */
     public function cutiSebagaiAtasanLangsung()

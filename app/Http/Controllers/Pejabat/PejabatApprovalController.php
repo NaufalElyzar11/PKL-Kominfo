@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cuti;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\Notification;
 
 class PejabatApprovalController extends Controller
 {
@@ -48,6 +49,14 @@ class PejabatApprovalController extends Controller
         // Jatah cuti akan otomatis berkurang karena fungsi Accessor di Model Pegawai
         $cuti->update(['status' => 'Disetujui']);
 
+        // Notify User
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Cuti Disetujui',
+            'message' => 'Selamat! Pengajuan cuti Anda telah disetujui sepenuhnya oleh pejabat berwenang.',
+            'is_read' => false,
+        ]);
+
         return back()->with('success', 'Pengajuan cuti telah disetujui secara final.');
     }
 
@@ -71,6 +80,14 @@ class PejabatApprovalController extends Controller
         $cuti->update([
             'status' => 'Ditolak',
             'catatan_tolak_pejabat' => $request->catatan_tolak_pejabat
+        ]);
+
+        // Notify User
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Cuti Ditolak Pejabat',
+            'message' => 'Pengajuan cuti Anda ditolak oleh pejabat berwenang. Alasan: ' . $request->catatan_tolak_pejabat,
+            'is_read' => false,
         ]);
 
         return back()->with('success', 'Pengajuan cuti berhasil ditolak.');
@@ -116,6 +133,14 @@ class PejabatApprovalController extends Controller
             'status' => 'Disetujui Atasan',
             'catatan_tolak_pejabat' => $request->alasan_reset,
             'status_pejabat' => 'pending'
+        ]);
+
+        // Notify User
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Status Cuti Direset',
+            'message' => 'Status pengajuan cuti Anda dikembalikan ke "Disetujui Atasan". Alasan: ' . $request->alasan_reset,
+            'is_read' => false,
         ]);
 
         return back()->with('success', 'Persetujuan berhasil dibatalkan. Status dikembalikan ke "Disetujui Atasan".');

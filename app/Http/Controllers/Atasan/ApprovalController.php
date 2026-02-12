@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cuti;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Notification;
 
 class ApprovalController extends Controller
 {
@@ -134,6 +135,14 @@ class ApprovalController extends Controller
             return response()->json(['message' => 'Success']);
         }
 
+        // Notify User
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Delegasi Disetujui',
+            'message' => 'Permintaan delegasi tugas Anda kepada ' . ($cuti->delegasi->nama ?? 'Rekan') . ' telah disetujui.',
+            'is_read' => false,
+        ]);
+
         return back()->with('success', 'Delegasi berhasil disetujui.');
     }
 
@@ -154,6 +163,33 @@ class ApprovalController extends Controller
             'status_atasan' => 'disetujui'
         ]);
 
+        // Notify User (Pemohon)
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Cuti Disetujui Atasan',
+            'message' => 'Pengajuan cuti Anda telah disetujui oleh atasan langsung dan diteruskan ke pejabat berwenang.',
+            'is_read' => false,
+        ]);
+
+        // ==================================================================================
+        // 🔔 NOTIFIKASI UNTUK SEMUA PEJABAT (Authorize Role: Pejabat)
+        // ==================================================================================
+        try {
+            // Ambil semua user dengan role 'pejabat'
+            $pejabatUsers = \App\Models\User::where('role', 'pejabat')->get();
+
+            foreach ($pejabatUsers as $pejabat) {
+                \App\Models\Notification::create([
+                    'user_id' => $pejabat->id,
+                    'title'   => 'Approval Cuti Diperlukan',
+                    'message' => "Pengajuan cuti pegawai {$cuti->pegawai->nama} menunggu persetujuan akhir Anda.",
+                    'is_read' => false,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Gagal mengirim notifikasi ke pejabat: ' . $e->getMessage());
+        }
+
         return back()->with('success', 'Pengajuan cuti berhasil disetujui dan diteruskan.');
     }
 
@@ -169,6 +205,14 @@ class ApprovalController extends Controller
             'status_delegasi' => 'ditolak',
             'status' => 'Ditolak',
             'catatan_tolak_delegasi' => $request->catatan_tolak_delegasi
+        ]);
+
+        // Notify User
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Delegasi Ditolak',
+            'message' => 'Permintaan delegasi cuti Anda ditolak. Alasan: ' . $request->catatan_tolak_delegasi,
+            'is_read' => false,
         ]);
 
         return back()->with('success', 'Delegasi ditolak.');
@@ -196,6 +240,14 @@ class ApprovalController extends Controller
             'status' => 'Ditolak',
             'status_atasan' => 'ditolak',
             'catatan_tolak_atasan' => $request->catatan_tolak_atasan
+        ]);
+
+        // Notify User
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Cuti Ditolak Atasan',
+            'message' => 'Pengajuan cuti Anda ditolak oleh atasan langsung. Alasan: ' . $request->catatan_tolak_atasan,
+            'is_read' => false,
         ]);
 
         return back()->with('success', 'Pengajuan cuti telah ditolak.');

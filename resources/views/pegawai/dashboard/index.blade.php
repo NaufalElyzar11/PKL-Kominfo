@@ -20,90 +20,140 @@
         </div>
     </div>
 
-    {{-- 🔔 PEMBERITAHUAN (BACKEND FIX) --}}
-    @if(isset($notif) && $notif->count() > 0)
-        <div class="mt-4 space-y-3">
-            @foreach($notif as $n)
-            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl shadow-sm flex justify-between items-center">
-                <div>
-                    <h4 class="font-bold text-blue-800 text-sm">{{ $n->title }}</h4>
-                    <p class="text-xs text-blue-700">{{ $n->message }}</p>
-                </div>
-                <form action="{{ route('pegawai.notif.read', $n->id) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="text-blue-400 hover:text-blue-600"><i class="fa-solid fa-xmark"></i></button>
-                </form>
-            </div>
-            @endforeach
-        </div>
-    @endif
+    {{-- 🧩 GRID STATISTIK & NOTIFIKASI --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
 
-    {{-- 🧩 GRID STATISTIK (RESPONSIVE) --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+        {{-- ⬅️ STATISTIK & NOTIFIKASI (GABUNGAN) --}}
+        <div class="lg:col-span-8 bg-white rounded-xl shadow border border-gray-200 overflow-hidden lg:h-[28rem] h-full flex flex-col">
+            <div class="flex flex-col h-full divide-y divide-gray-100">
+                
+                {{-- BAGIAN ATAS: STATISTIK --}}
+                <div class="p-4 sm:p-6 flex flex-col justify-center flex-1">
+                    <h2 class="text-sm font-semibold text-sky-700 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie"></i> Statistik Sisa Cuti
+                    </h2>
 
-        {{-- ⬅️ STATISTIK SISA CUTI --}}
-        <div class="lg:col-span-8 bg-white rounded-xl p-4 sm:p-6 flex flex-col shadow border border-gray-200">
-            <h2 class="text-sm font-semibold text-sky-700 mb-4">
-                Statistik Sisa Cuti
-            </h2>
+                    <div class="space-y-6">
+                        @php
+                            $hakCutiDisplay = $hakCuti ?? 12;
+                            $terpakai = $cutiTerpakai ?? 0;
+                            $sisa = $sisaCuti ?? max(0, $hakCutiDisplay - $terpakai);
+                            $persenTerpakai = $hakCutiDisplay > 0 ? min(100, ($terpakai / $hakCutiDisplay) * 100) : 0;
+                        @endphp
 
-            <div class="h-auto lg:h-[362px] min-h-[220px]">
-                <div class="space-y-4 sm:space-y-6">
-
-                    <!-- Angka Utama -->
-                    <div class="text-center">
-                        <p class="text-xs sm:text-sm text-gray-500">Hak Cuti Tahunan</p>
-                        <p class="text-3xl sm:text-4xl font-extrabold text-sky-700">{{ $hakCuti ?? 12 }} Hari</p>
-                    </div>
-
-                    <!-- Progress -->
-                    @php
-                        // Data sudah dikirim dari controller
-                        $hakCutiDisplay = $hakCuti ?? 12;
-                        $terpakai = $cutiTerpakai ?? 0;
-                        $sisa = $sisaCuti ?? max(0, $hakCutiDisplay - $terpakai); // Tidak boleh negatif
-                        $persen = $hakCutiDisplay > 0 ? min(100, ($terpakai / $hakCutiDisplay) * 100) : 0; // Maksimal 100%
-                    @endphp
-
-                    <div>
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="text-gray-600">Terpakai</span>
-                            <span class="font-semibold text-gray-700">
-                                {{ $terpakai }} / {{ $hakCutiDisplay }} hari
-                            </span>
+                        {{-- Main Number --}}
+                        <div class="text-center space-y-2">
+                            <div>
+                                <p class="text-4xs text-gray-400 uppercase tracking-widest font-semibold">Sisa Cuti</p>
+                                <p class="text-6xl font-black {{ $sisa > 0 ? 'text-sky-600' : 'text-red-500' }} tracking-tight">
+                                    {{ $sisa }}
+                                    <span class="text-3xl font-medium text-gray-400">Hari</span>
+                                </p>
+                            </div>
                         </div>
 
-                        <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
-                            <div class="h-5 rounded-full transition-all {{ $terpakai > $hakCutiDisplay ? 'bg-red-500' : 'bg-yellow-400' }}"
-                                style="width: {{ $persen }}%">
+                        {{-- Progress --}}
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <div class="flex justify-between text-[10px] items-center mb-1.5 uppercase font-bold text-gray-400">
+                                <span>Terpakai</span>
+                                <span>Total Hak</span>
+                            </div>
+                            <div class="flex justify-between text-xs font-bold text-gray-700 mb-2">
+                                <span>{{ $terpakai }} Hari</span>
+                                <span>{{ $hakCutiDisplay }} Hari</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                <div class="h-full rounded-full transition-all duration-1000 ease-out 
+                                            {{ $sisa == 0 ? 'bg-red-500' : ($sisa <= 3 ? 'bg-orange-400' : 'bg-gradient-to-r from-sky-400 to-blue-500') }}"
+                                     style="width: {{ $persenTerpakai }}%">
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Sisa -->
-                    <div class="flex justify-between items-center bg-sky-50 rounded-lg p-3 sm:p-4">
-                        <span class="text-sm sm:text-base text-gray-700 font-medium">Sisa Cuti</span>
-                        <span class="text-2xl sm:text-3xl font-extrabold {{ $sisa > 0 ? 'text-sky-700' : 'text-red-600' }}">
-                            {{ $sisa }} Hari
-                        </span>
-                    </div>
-
-                    <!-- Catatan -->
-                    @if($terpakai > $hakCutiDisplay)
-                        <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                            <p class="text-xs text-red-700 font-semibold">
-                                ⚠️ Peringatan: Cuti terpakai ({{ $terpakai }} hari) melebihi jatah tahunan ({{ $hakCutiDisplay }} hari).
-                                Silakan hubungi admin untuk verifikasi data.
-                            </p>
-                        </div>
-                    @endif
-                    
-                    <p class="text-xs text-gray-500 text-center">
-                        * Perhitungan berdasarkan cuti yang sudah <b>disetujui</b>
-                    </p>
-
                 </div>
 
+                {{-- BAGIAN BAWAH: NOTIFIKASI --}}
+                <div class="p-4 sm:p-6 bg-gray-50/50 flex flex-col flex-1 overflow-hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <i class="fa-solid fa-bell text-yellow-500"></i> Pemberitahuan
+                        </h2>
+                        @if(isset($notif) && $notif->count() > 0)
+                            <span class="bg-red-100 text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                {{ $notif->count() }} Baru
+                            </span>
+                        @endif
+                    </div>
+
+                    <div id="notifikasi-list" class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-3 custom-scrollbar">
+                        {{-- Notifikasi dari DB --}}
+                        @php 
+                            // Gabung notif unread ($notif) dengan 5 notif terakhir read untuk history? 
+                            // Untuk sekarang pakai $notif (unread) saja sesuai request, atau ambil latest mixed
+                            // User request: "menampilkan notifikasi... supaya terlihat"
+                            // Kita pakai logic: Tampilkan $notif (unread) dahulu. Jika kosong, tampilkan placeholder.
+                            // Agar lebih robust, kita ambil latest 5 notifications via Auth user langsung di View atau controller.
+                            // Di controller sudah ada $notif (unread only). Kita pakai itu dulu.
+                            // UPDATE: User ingin "tanpa klik ikon". 
+                        @endphp
+
+                        @forelse($notif as $n)
+                            <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group relative">
+                                <form action="{{ route('pegawai.notif.read', $n->id) }}" method="POST" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    @csrf
+                                    <button type="submit" class="text-gray-300 hover:text-sky-500" title="Tandai dibaca">
+                                        <i class="fa-solid fa-check-double"></i>
+                                    </button>
+                                </form>
+                                
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0 mt-1">
+                                        @if(Str::contains(strtolower($n->title), 'setuju'))
+                                            <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-green-600 text-xs">
+                                                <i class="fa-solid fa-check"></i>
+                                            </div>
+                                        @elseif(Str::contains(strtolower($n->title), 'tolak'))
+                                            <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-600 text-xs">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </div>
+                                        @elseif(Str::contains(strtolower($n->title), 'delegasi'))
+                                            <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 text-xs">
+                                                <i class="fa-solid fa-user-friends"></i>
+                                            </div>
+                                        @else
+                                            <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xs">
+                                                <i class="fa-solid fa-info"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-[11px] font-bold text-gray-800 mb-0.5 truncate">{{ $n->title }}</h4>
+                                        <p class="text-[10px] text-gray-500 leading-relaxed line-clamp-2">
+                                            {{ $n->message }}
+                                        </p>
+                                        <p class="text-[9px] text-gray-400 mt-1.5 flex items-center gap-1">
+                                            <i class="fa-regular fa-clock"></i> {{ $n->created_at->diffForHumans() }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="h-full flex flex-col items-center justify-center text-center py-8 opacity-50">
+                                <i class="fa-regular fa-bell-slash text-2xl text-gray-300 mb-2"></i>
+                                <p class="text-xs text-gray-400">Tidak ada notifikasi baru</p>
+                            </div>
+                        @endforelse
+                    </div>
+
+                    {{-- Footer Notif --}}
+                    @if(isset($notif) && $notif->count() > 0)
+                    <div class="mt-3 text-center border-t border-gray-200/50 pt-2">
+                        <button class="text-[10px] text-sky-600 hover:text-sky-700 font-semibold transition-colors">
+                            Lihat Semua Riwayat
+                        </button>
+                    </div>
+                    @endif
+                </div>
             </div>
         </div>
 

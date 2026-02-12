@@ -8,6 +8,7 @@ use App\Models\Cuti;
 use App\Models\Pegawai;
 use App\Models\AtasanLangsung;
 use App\Models\PejabatPemberiCuti;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -203,6 +204,34 @@ class PengajuanCutiController extends Controller
             'id_atasan_langsung'      => $pegawai->id_atasan_langsung,
             'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
         ]);
+
+        // ==================================================================================
+        // 🔔 NOTIFIKASI UNTUK ATASAN LANGSUNG
+        // ==================================================================================
+        try {
+            // 1. Ambil NIP Atasan dari relasi
+            $nipAtasan = $pegawai->atasanLangsung->nip ?? null;
+
+            if ($nipAtasan) {
+                // 2. Cari User yang terhubung dengan Pegawai pemilik NIP tersebut
+                $atasanUser = \App\Models\User::whereHas('pegawai', function($q) use ($nipAtasan) {
+                    $q->where('nip', $nipAtasan);
+                })->first();
+
+                // 3. Buat Notifikasi jika User ditemukan
+                if ($atasanUser) {
+                    \App\Models\Notification::create([
+                        'user_id' => $atasanUser->id,
+                        'title'   => 'Pengajuan Cuti Baru',
+                        'message' => "Pegawai {$pegawai->nama} telah mengajukan cuti. Mohon segera ditinjau.",
+                        'is_read' => false,
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            // Silent fail agar tidak mengganggu flow utama jika ada error notifikasi
+            \Log::error('Gagal mengirim notifikasi ke atasan: ' . $e->getMessage());
+        }
 
         return redirect()->route('pegawai.cuti.index')->with('success', 'Pengajuan cuti berhasil dikirim.');
     }
