@@ -154,65 +154,127 @@
             </div>
         </div>
 
-        {{-- ===================== MODAL DETAIL (COMPACT VERSION) ===================== --}}
+        {{-- ===================== MODAL DETAIL (PREMIUM DESIGN) ===================== --}}
         <div x-show="showDetail" x-cloak 
-            class="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4" 
-            x-transition.opacity> 
+             class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
         
-            <div @click.away="closeModal()" class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 text-sm max-h-[90vh] overflow-y-auto border border-gray-100"> 
+            <div @click.away="closeModal()" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100"> 
                 
-                <div class="flex justify-between items-center mb-5 border-b pb-3">
-                    <h2 class="text-lg font-bold text-sky-700 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-info text-sky-500"></i> Detail Pengajuan Cuti
-                    </h2>
-                    <button @click="closeModal()" class="text-gray-400 hover:text-gray-600">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
+                {{-- ========== HEADER DENGAN GRADIENT (BLUE) ========== --}}
+                <div class="bg-gradient-to-r from-blue-700 to-blue-900 px-4 sm:px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                <i class="fa-solid fa-file-contract text-white text-lg sm:text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-bold text-base sm:text-lg tracking-wide">Detail Pengajuan Cuti</h3>
+                                <p class="text-blue-100 text-[10px] sm:text-xs">Informasi lengkap pengajuan cuti pegawai</p>
+                            </div>
+                        </div>
+                        <button @click="closeModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                            <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                        </button>
+                    </div>
                 </div>
 
-                <div x-show="selectedCuti" class="grid grid-cols-2 gap-3 text-gray-700">
-                    {{-- Box Informasi --}}
-                    <div class="p-2.5 border border-gray-100 rounded-xl bg-gray-50/50 shadow-sm">
-                        <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider mb-0.5">Nama Pegawai</p>
-                        <p x-text="selectedCuti?.nama" class="font-bold text-gray-800"></p>
-                    </div>
-                    <div class="p-2.5 border border-gray-100 rounded-xl bg-gray-50/50 shadow-sm">
-                        <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider mb-0.5">NIP</p>
-                        <p x-text="selectedCuti?.nip" class="font-medium text-gray-700"></p>
-                    </div>
-                    <div class="p-2.5 border border-gray-100 rounded-xl bg-gray-50/50 shadow-sm">
-                        <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider mb-0.5">Jenis Cuti</p>
-                        <p x-text="selectedCuti?.jenis_cuti" class="font-bold text-sky-600"></p>
-                    </div>
-                    <div class="p-2.5 border border-gray-100 rounded-xl bg-gray-50/50 shadow-sm">
-                        <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider mb-0.5">Durasi</p>
-                        <p class="font-bold text-gray-800"><span x-text="selectedCuti?.jumlah_hari"></span> Hari</p>
-                    </div>
-                    <div class="col-span-2 p-2.5 border border-gray-100 rounded-xl bg-gray-50/50 shadow-sm">
-                        <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider mb-0.5">Periode Tanggal</p>
-                        <p class="font-medium"><span x-text="selectedCuti?.tanggal_mulai"></span> s/d <span x-text="selectedCuti?.tanggal_selesai"></span></p>
-                    </div>
-                    <div class="col-span-2 p-2.5 border border-gray-100 rounded-xl bg-gray-50/50 shadow-sm">
-                        <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider mb-0.5">Alasan Cuti</p>
-                        <p x-text="selectedCuti?.alasan_cuti" class="italic text-gray-600 leading-relaxed"></p>
-                    </div>
-                    <div class="col-span-2 p-2.5 border border-gray-100 rounded-xl bg-gray-50/50 shadow-sm flex items-center justify-between">
-                        <p class="font-bold text-gray-400 text-[10px] uppercase tracking-wider">Status Saat Ini</p>
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-tighter"
-                            :class="statusClass(selectedCuti?.status)"
-                            x-text="selectedCuti?.status">
+                {{-- ========== CONTENT ========== --}}
+                <div class="p-4 sm:p-6 max-h-[85vh] overflow-y-auto">
+                    
+                    {{-- Status Badge Large --}}
+                    <div class="flex justify-center mb-6">
+                        <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm"
+                              :class="statusClass(selectedCuti?.status)">
+                            <i class="fa-solid" 
+                               :class="{
+                                   'fa-circle-check': selectedCuti?.status.toLowerCase().includes('disetujui'),
+                                   'fa-circle-xmark': selectedCuti?.status.toLowerCase().includes('ditolak'),
+                                   'fa-clock': selectedCuti?.status.toLowerCase().includes('menunggu'),
+                                   'fa-spinner fa-spin': selectedCuti?.status.toLowerCase().includes('proses')
+                               }"></i>
+                            <span x-text="selectedCuti?.status"></span>
                         </span>
                     </div>
-                </div>
 
-                <div class="text-right mt-6 pt-4 border-t border-gray-50">
-                    <button @click="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg text-xs font-bold transition shadow-md active:scale-95">
-                        Tutup
-                    </button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {{-- Data Pegawai Box --}}
+                        <div class="bg-slate-50 rounded-xl p-4 border border-gray-100 sm:col-span-2">
+                            <div class="flex items-center gap-2 mb-3 border-b border-gray-200 pb-2">
+                                <i class="fa-solid fa-user text-blue-600 text-xs"></i>
+                                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Identitas Pegawai</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase">Nama Pegawai</p>
+                                    <p class="text-sm font-bold text-gray-800" x-text="selectedCuti?.nama"></p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase">NIP</p>
+                                    <p class="text-sm font-mono text-gray-700" x-text="selectedCuti?.nip"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Jenis Cuti Box --}}
+                        <div class="bg-blue-50/50 rounded-xl p-3 border border-blue-100">
+                             <p class="text-[10px] text-blue-400 font-bold uppercase mb-1">Jenis Cuti</p>
+                             <div class="flex items-center gap-2">
+                                 <i class="fa-solid fa-layer-group text-blue-600"></i>
+                                 <p class="text-sm font-bold text-blue-800" x-text="selectedCuti?.jenis_cuti"></p>
+                             </div>
+                        </div>
+
+                        {{-- Durasi Box --}}
+                        <div class="bg-amber-50/50 rounded-xl p-3 border border-amber-100">
+                             <p class="text-[10px] text-amber-400 font-bold uppercase mb-1">Durasi Cuti</p>
+                             <div class="flex items-center gap-2">
+                                 <i class="fa-regular fa-clock text-amber-600"></i>
+                                 <p class="text-sm font-bold text-amber-800"><span x-text="selectedCuti?.jumlah_hari"></span> Hari</p>
+                             </div>
+                        </div>
+
+                        {{-- Tanggal Box --}}
+                        <div class="sm:col-span-2 bg-gray-50 rounded-xl p-3 border border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase">Mulai Tanggal</p>
+                                <p class="text-xs font-bold text-gray-700" x-text="selectedCuti?.tanggal_mulai"></p>
+                            </div>
+                            <div class="text-gray-300"><i class="fa-solid fa-arrow-right-long"></i></div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase">Sampai Tanggal</p>
+                                <p class="text-xs font-bold text-gray-700" x-text="selectedCuti?.tanggal_selesai"></p>
+                            </div>
+                        </div>
+
+                        {{-- Alasan Box --}}
+                        <div class="sm:col-span-2 bg-white rounded-xl p-4 border border-gray-200">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase mb-2">
+                                <i class="fa-solid fa-quote-left mr-1 text-gray-300"></i> Alasan Cuti
+                            </p>
+                            <p class="text-sm text-gray-600 italic leading-relaxed pl-3 border-l-2 border-blue-200" x-text="selectedCuti?.alasan_cuti"></p>
+                        </div>
+                    </div>
+
+                    {{-- FOOTER --}}
+                    <div class="flex justify-end pt-4 mt-6 border-t border-gray-100">
+                        <button @click="closeModal()" 
+                                class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-xmark"></i> Tutup
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div> {{-- end Alpine x-data --}}
 </div>
 
@@ -231,7 +293,9 @@
             },
             closeModal() {
                 this.showDetail = false;
-                this.selectedCuti = null;
+                setTimeout(() => {
+                    this.selectedCuti = null;
+                }, 300); // Tunggu animasi selesai
             },
             statusClass(status) {
                 if (!status) return 'bg-gray-100 text-gray-700';

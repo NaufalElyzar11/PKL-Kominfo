@@ -358,11 +358,13 @@ get filteredAtasan() {
         this.showDetailModal = false;
         
         // Reset variabel mandiri agar tidak membekas di modal berikutnya
-        this.selectedPegawai = null;
-        this.role = '';
-        this.unit_kerja = '';
-        this.id_atasan_langsung = '';
-        this.id_pejabat_pemberi_cuti = '';
+        setTimeout(() => {
+            this.selectedPegawai = null;
+            this.role = '';
+            this.unit_kerja = '';
+            this.id_atasan_langsung = '';
+            this.id_pejabat_pemberi_cuti = '';
+        }, 300);
     }
 }" @keydown.escape.window="closeModal()">
 
@@ -996,100 +998,174 @@ get filteredAtasan() {
     </div>
 </template>
 
-{{-- ================= MODAL DETAIL (COMPACT VERSION) ================= --}}
-<div x-show="showDetailModal" x-cloak @click.self="closeModal()" 
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+{{-- ================= MODAL DETAIL (PREMIUM DESIGN) ================= --}}
+<template x-if="showDetailModal">
+    <div x-cloak
+         class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
+         @click.self="closeModal()"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
 
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-4 max-h-[85vh] overflow-y-auto"
-         @click.away="closeModal()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md lg:max-w-3xl overflow-hidden border border-gray-100"
+             @click.stop
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0">
 
-        <div class="flex justify-between items-center mb-3 border-b pb-2">
-            <h3 class="text-sm font-bold text-sky-700 flex items-center gap-2">
-                <i class="fa-solid fa-user-gear"></i>
-                Detail Pegawai
-            </h3>
-            <button @click="closeModal()" class="text-gray-500 hover:text-gray-700 text-sm">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            {{-- ========== HEADER DENGAN GRADIENT (BLUE) ========== --}}
+            <div class="bg-gradient-to-r from-blue-700 to-blue-900 px-4 sm:px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                            <i class="fa-solid fa-user-tag text-white text-lg sm:text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-bold text-base sm:text-lg tracking-wide">Detail Data Pegawai</h3>
+                            <p class="text-blue-100 text-[10px] sm:text-xs">Informasi lengkap data pegawai</p>
+                        </div>
+                    </div>
+                    <button @click="closeModal()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                        <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- ========== CONTENT ========== --}}
+            <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
+                {{-- Grid Layout --}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                    
+                    {{-- ===== KOLOM KIRI: DATA UTAMA ===== --}}
+                    <div class="space-y-4">
+                        <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                            <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-user-tie text-blue-700 text-sm"></i>
+                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Data Pribadi</span>
+                                </div>
+                            </div>
+                            <div class="p-4 space-y-3">
+                                {{-- Nama --}}
+                                <div class="space-y-1">
+                                    <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Nama Lengkap</p>
+                                    <p class="text-sm font-bold text-gray-800" x-text="selectedPegawai?.nama || '-'"></p>
+                                </div>
+                                {{-- NIP --}}
+                                <div class="space-y-1">
+                                    <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">NIP</p>
+                                    <p class="text-sm font-mono text-gray-700" x-text="selectedPegawai?.nip || '-'"></p>
+                                </div>
+                                {{-- Email --}}
+                                <div class="space-y-1">
+                                    <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Email</p>
+                                    <p class="text-sm text-gray-700" x-text="selectedPegawai?.email || '-'"></p>
+                                </div>
+                                {{-- Telepon --}}
+                                <div class="space-y-1">
+                                    <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Telepon</p>
+                                    <p class="text-sm text-gray-700" x-text="selectedPegawai?.telepon || '-'"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Role & Status --}}
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="bg-slate-50 p-3 rounded-xl border border-gray-100">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Role Akun</p>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700 capitalize" 
+                                      x-text="selectedPegawai?.role || '-'"></span>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-xl border border-gray-100">
+                                <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Status Akun</p>
+                                <span class="px-2 py-1 rounded-md text-[10px] font-bold capitalize"
+                                      :class="selectedPegawai?.status === 'aktif' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'"
+                                      x-text="selectedPegawai?.status || '-'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ===== KOLOM KANAN: JABATAN & HIERARKI ===== --}}
+                    <div class="space-y-4">
+                        <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                            <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-briefcase text-blue-700 text-sm"></i>
+                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Jabatan & Unit Kerja</span>
+                                </div>
+                            </div>
+                            <div class="p-4 space-y-4">
+                                {{-- Unit Kerja --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-building text-blue-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Unit Kerja</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="selectedPegawai?.unit_kerja || '-'"></p>
+                                    </div>
+                                </div>
+                                {{-- Jabatan --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-id-card-clip text-blue-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Jabatan</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="selectedPegawai?.jabatan || '-'"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                            <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-sitemap text-blue-700 text-sm"></i>
+                                    <span class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-wider">Hierarki Persetujuan</span>
+                                </div>
+                            </div>
+                            <div class="p-4 space-y-4">
+                                {{-- Atasan Langsung --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-user-check text-amber-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Atasan Langsung</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="selectedPegawai?.atasan || '-'"></p>
+                                    </div>
+                                </div>
+                                {{-- Pemberi Cuti --}}
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-stamp text-green-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Pejabat Pemberi Cuti</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="selectedPegawai?.pejabat || '-'"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                {{-- FOOTER --}}
+                <div class="flex justify-end pt-4 mt-6 border-t border-gray-100">
+                    <button @click="closeModal()" 
+                            class="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-xmark"></i> Tutup
+                    </button>
+                </div>
+            </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-2 text-[11px] text-gray-700">
-
-            {{-- Nama --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Nama</p>
-                <p x-text="selectedPegawai?.nama" class="font-medium"></p>
-            </div>
-
-            {{-- NIP --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">NIP</p>
-                <p x-text="selectedPegawai?.nip || '-'" class="font-medium"></p>
-            </div>
-
-            {{-- Email --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Email</p>
-                <p x-text="selectedPegawai?.email || '-'" class="font-medium break-all"></p>
-            </div>
-
-            {{-- Role --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Role Akun</p>
-                <p x-text="selectedPegawai?.role || '-'" class="font-medium capitalize"></p>
-            </div>
-
-            {{-- Jabatan --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Jabatan</p>
-                <p x-text="selectedPegawai?.jabatan || '-'" class="font-medium"></p>
-            </div>
-
-            {{-- Unit Kerja --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Unit Kerja</p>
-                <p x-text="selectedPegawai?.unit_kerja || '-'" class="font-medium"></p>
-            </div>
-
-            {{-- Atasan Langsung --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Atasan Langsung</p>
-                <p x-text="selectedPegawai?.atasan || '-'" class="font-medium"></p>
-            </div>
-
-            {{-- Pejabat Pemberi Cuti --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Pejabat Pemberi Cuti</p>
-                <p x-text="selectedPegawai?.pejabat || '-'" class="font-medium"></p>
-            </div>
-
-            {{-- Telepon --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Telepon</p>
-                <p x-text="selectedPegawai?.telepon || '-'" class="font-medium"></p>
-            </div>
-
-            {{-- Status --}}
-            <div class="p-1.5 border border-gray-200 rounded-md">
-                <p class="font-semibold text-[10px] text-gray-500">Status</p>
-                <span x-text="selectedPegawai?.status || '-'"
-                      class="font-medium capitalize px-2 py-0.5 rounded-full text-[10px]"
-                      :class="selectedPegawai?.status === 'aktif'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'">
-                </span>
-            </div>
-        </div>
-
-        <div class="mt-4 text-right border-t pt-3">
-            <button @click="closeModal()" 
-                    class="px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700">
-                Tutup
-            </button>
-        </div>
-
     </div>
-</div>
+</template>
 
 {{-- ================= MODAL EDIT (PREMIUM DESIGN - FIXED) ================= --}}
 <template x-if="showEditModal">
