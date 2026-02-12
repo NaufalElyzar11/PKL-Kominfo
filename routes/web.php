@@ -98,9 +98,11 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
         Route::resource('pegawai', AdminPegawaiController::class);
 
-        Route::post('/pegawai/check-unique', 
-        [AdminPegawaiController::class, 'checkUnique']
-        )->name('pegawai.checkUnique');
+        // Rute untuk cek Nama & NIP Unik (Sudah ada di kode Anda)
+        Route::post('/pegawai/check-unique', [AdminPegawaiController::class, 'checkUnique'])->name('pegawai.checkUnique');
+        
+        // --- TAMBAHKAN RUTE INI ---
+        Route::post('/pegawai/check-password', [AdminPegawaiController::class, 'checkPasswordUsage'])->name('pegawai.checkPassword');
         
         // 🔹 PINDAHKAN RUTE PDF KE SINI (DI ATAS RESOURCE) 🔹
         Route::get('/cuti/export-pdf', [AdminCutiController::class, 'exportPdf'])->name('cuti.export-pdf');
