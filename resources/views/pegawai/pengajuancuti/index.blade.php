@@ -327,8 +327,30 @@
             @endif
         </div>
 
-{{-- ================= TAB RIWAYAT (12 KOLOM SINKRON) ================= --}}
-<div x-show="tab === 'riwayat'" x-cloak class="space-y-2">
+    {{-- ================= TAB RIWAYAT (12 KOLOM SINKRON) ================= --}}
+    <div x-show="tab === 'riwayat'" x-cloak class="space-y-4"> {{-- Ubah space-y-2 jadi 4 agar ada jarak --}}
+        
+        {{-- HEADER TAB RIWAYAT DENGAN TOMBOL EXPORT --}}
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-clock-rotate-left text-sky-600 text-sm"></i>
+                </div>
+                <h2 class="text-sm font-bold text-gray-700">Data Riwayat Cuti</h2>
+            </div>
+
+            {{-- FORM EXPORT EXCEL --}}
+            <form action="{{ route('pegawai.cuti.export-excel') }}" method="GET" class="w-full sm:w-auto">
+                {{-- Mengambil tahun dari dropdown filter yang ada di atas --}}
+                <input type="hidden" name="tahun" value="{{ request('tahun', date('Y')) }}">
+                
+                <button type="submit" 
+                    class="w-full sm:w-auto px-4 py-2 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 font-bold">
+                    <i class="fa-solid fa-file-excel text-xs"></i> 
+                    <span>Export Laporan ({{ request('tahun') == 'semua' ? 'Semua Tahun' : request('tahun', date('Y')) }})</span>
+                </button>
+            </form>
+        </div>
     <div class="overflow-x-auto rounded border border-gray-300 shadow-sm">
         <table class="min-w-full divide-y divide-gray-200 text-[11px]">
             <thead class="bg-sky-600 text-white">
@@ -1127,16 +1149,6 @@
             <h3 class="text-sm font-bold text-sky-600">
                 <i class="fa-solid fa-circle-info text-xs"></i> Detail Riwayat Cuti
             </h3>
-            <form :action="'{{ route('pegawai.cuti.export-excel') }}'" method="GET" x-show="detailRiwayat.id">
-                {{-- Input hidden untuk mengirim tahun ke Controller --}}
-                <input type="hidden" name="tahun" :value="detailRiwayat.tahun">
-                
-                <button type="submit" 
-                    class="px-3 py-1.5 text-[11px] bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2 shadow-sm transition-all active:scale-95 font-bold">
-                    <i class="fa-solid fa-file-excel text-xs"></i> 
-                    <span>Export Laporan <span x-text="detailRiwayat.tahun"></span></span>
-                </button>
-            </form>
         </div>
 
         <div class="bg-gray-50 p-3 rounded-lg text-[11px] border border-gray-200 space-y-1.5 text-gray-700">

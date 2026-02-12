@@ -7,17 +7,20 @@
     initNama: '{{ $user->name }}',
     initEmail: '{{ $user->email }}',
     initTelepon: '{{ $pegawai->telepon ?? '' }}',
+    initAlamat: '{{ $pegawai->alamat ?? '' }}',
 
     {{-- Nilai yang Sedang Diedit --}}
     currNama: '{{ $user->name }}',
     currEmail: '{{ $user->email }}',
     currTelepon: '{{ $pegawai->telepon ?? '' }}',
+    currAlamat: '{{ $pegawai->alamat ?? '' }}',
 
     {{-- Fungsi Cek Perubahan --}}
     hasChanges() {
         return this.currNama !== this.initNama || 
                this.currEmail !== this.initEmail || 
                this.currTelepon !== this.initTelepon || 
+               this.currAlamat !== this.initAlamat ||
                this.photoPreview !== null || 
                this.isDeleted === true;
     }
@@ -204,6 +207,17 @@
                     minlength="12" maxlength="13"
                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none">
                 <x-input-error :messages="$errors->get('telepon')" />
+            </div>
+
+            {{-- Letakkan di bawah input Nomor Telepon --}}
+            <div class="mt-4">
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
+                    <span class="material-symbols-outlined text-blue-500 text-lg">location_on</span>
+                    Alamat Rumah
+                </label>
+                <textarea name="alamat" rows="3" x-model="currAlamat"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none text-sm"
+                        placeholder="Masukkan alamat lengkap Anda...">{{ old('alamat', $pegawai->alamat) }}</textarea>
             </div>
         </div>
 
