@@ -270,5 +270,24 @@ public function update(Request $request, $id)
 
     return response()->json(['exists' => $query->exists()]);
     }
+
+    // app/Http/Controllers/Admin/PegawaiController.php
+
+    public function checkPasswordUsage(Request $request)
+    {
+        $newPassword = $request->password;
+        
+        // Ambil semua user (atau bisa difilter role pegawai saja)
+        $users = User::all();
+
+        foreach ($users as $user) {
+            // Karena password di DB di-hash, kita cek kecocokan dengan Hash::check
+            if (Hash::check($newPassword, $user->password)) {
+                return response()->json(['exists' => true]);
+            }
+        }
+
+        return response()->json(['exists' => false]);
+    }
     
 }

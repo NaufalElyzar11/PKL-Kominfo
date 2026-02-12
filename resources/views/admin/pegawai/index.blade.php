@@ -9,6 +9,7 @@
 // =========================
 // Fungsi Buka Modal Edit (SINKRON)
 // =========================
+
 openEditModal(pegawai) {
     // 1. Reset state agar tidak ada sisa data sebelumnya
     this.id_atasan_langsung = '';
@@ -104,7 +105,11 @@ openEditModal(pegawai) {
     status: '',
     password: '',
     pejabat: 'Kanafi, S.IP, MM',
+
+
     showPassword: false,
+    passwordError: false, // Untuk melacak apakah password sudah pernah digunakan
+    isCheckingPassword: false,
 
     handleJabatanChange() {
 
@@ -244,22 +249,55 @@ get filteredAtasan() {
         }
     },
 
+    async verifyPassword() {
+    // Hanya cek jika password sudah minimal 8 karakter agar tidak membebani server
+    if (this.password.length < 8) {
+        this.passwordError = false;
+        return;
+    }
+
+    this.isCheckingPassword = true;
+
+    try {
+        let response = await fetch('{{ route("admin.pegawai.checkPassword") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ password: this.password })
+        });
+        let data = await response.json();
+        
+        // Jika data.exists bernilai true, berarti ada user lain yang pakai password ini
+        this.passwordError = data.exists;
+    } catch (error) {
+        console.error('Gagal verifikasi password:', error);
+    } finally {
+        // --- TAMBAHKAN BARIS INI ---
+        this.isCheckingPassword = false; // Tombol terbuka kembali
+    }
+},
+
 
     // 5. Logika Validasi Tombol Simpan
     isFormValid() {
         return this.nama.trim() !== '' &&
                 !this.namaError && // <-- Tambahkan ini
                !this.nipError &&  // <-- Tambahkan ini
+               !this.passwordError &&
+               !this.isCheckingPassword && // <-- JANGAN BOLEH SIMPAN JIKA SEDANG CEK
                this.atasan !== '' && 
                this.jabatan.trim() !== '' &&
                this.unit_kerja !== '' &&
                this.role !== '' &&
                this.status !== '' &&
                this.password.length >= 8 &&
-               (/[A-Z]/.test(this.password)) && 
-               (/[0-9]/.test(this.password)) && 
-               (/[!@#$%^&*]/.test(this.password)) && 
-               (this.nip.length === 0 || this.nip.length >= 13);
+            (/[A-Z]/.test(this.password)) && 
+           (/[0-9]/.test(this.password)) && 
+           // SAMAKAN REGEX INI DENGAN hasSymbol
+           (/[!@#$%^&*(),.?':{}|<>]/.test(this.password)) && 
+           (this.nip.length === 0 || this.nip.length >= 13);
     }, // <-- PENTING: Koma di sini tadi hilang, sekarang sudah ada.
 
     // 6. Data Pegawai terpilih (Edit/Detail)
@@ -282,6 +320,7 @@ get filteredAtasan() {
         this.password = '';
         this.namaError = false; // <-- WAJIB TAMBAHKAN INI
         this.nipError = false;  // <-- WAJIB TAMBAHKAN INI
+        this.passwordError = false;
         
         this.showCreateModal = true;
     },
@@ -573,7 +612,11 @@ get filteredAtasan() {
 
             {{-- ========== FORM CONTENT ========== --}}
             <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
-                <form action="{{ route('admin.pegawai.store') }}" method="POST" autocomplete="off">
+                <form action="{{ route('admin.pegawai.store') }}" 
+                method="POST" 
+                autocomplete="off"
+                {{-- Tambahkan ini: Mencegah submit jika masih loading atau ada error --}}
+                @submit="if(!isFormValid() || isCheckingPassword) { $event.preventDefault(); return false; }">
                     @csrf
 
                     {{-- PESAN ERROR --}}
@@ -868,6 +911,7 @@ get filteredAtasan() {
                                             <input :type="showPassword ? 'text' : 'password'"
                                                 name="password"
                                                 x-model="password"
+                                                @input.debounce.800ms="verifyPassword()"
                                                 required
                                                 class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
                                                 focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200"
@@ -908,6 +952,14 @@ get filteredAtasan() {
                                                 <i class="fa-solid"
                                                 :class="isLongEnough ? 'fa-circle-check' : 'fa-circle-dot'"></i>
                                                 Minimal 8 Karakter
+                                            </div>
+
+                                            {{-- TAMBAHKAN INDIKATOR KEUNIKAN INI --}}
+                                            <div class="flex items-center gap-1.5 text-[10px] col-span-2 mt-1"
+                                                :class="password.length >= 8 && !passwordError ? 'text-emerald-600' : (passwordError ? 'text-red-600' : 'text-gray-400')">
+                                                <i class="fa-solid" 
+                                                :class="password.length >= 8 && !passwordError ? 'fa-circle-check' : (passwordError ? 'fa-circle-xmark animate-bounce' : 'fa-circle-dot')"></i>
+                                                <span x-text="passwordError ? 'Password sudah pernah digunakan!' : 'Belum pernah digunakan'"></span>
                                             </div>
                                         </div>
                                         <p class="text-[9px] text-gray-400 flex items-center gap-1 mt-1">
