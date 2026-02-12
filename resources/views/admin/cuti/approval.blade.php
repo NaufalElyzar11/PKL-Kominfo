@@ -259,7 +259,7 @@
                                 @if($r->status == 'Ditolak')
                                     <div class="bg-red-50 border border-red-200 text-red-700 text-[10px] p-2 rounded-md">
                                         <span class="font-semibold">Alasan:</span>
-                                        {{ $r->catatan_penolakan ?? '-' }}
+                                        {{ $r->catatan_final }}
                                     </div>
                                 @else
                                     <span class="text-gray-400">-</span>
