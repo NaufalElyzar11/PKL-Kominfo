@@ -86,7 +86,7 @@ class PegawaiController extends Controller
         $validated = $request->validate([
             'nama'         => 'required|string|max:255',
             'nip'          => 'nullable|numeric|digits_between:13,18|unique:pegawai,nip',
-            'jabatan'      => 'required|string|max:100',
+            'jabatan'      => 'required|string|regex:/^[a-zA-Z\s&]+$/',
             'unit_kerja'   => 'required|string|max:100',
             'role'         => 'required|in:pegawai,admin,pejabat,atasan',
             'status'       => 'required|string',
@@ -179,7 +179,7 @@ public function update(Request $request, $id)
         'nip'        => 'nullable|string|min:13|max:18|unique:pegawai,nip,' . $pegawai->id,
         'role'       => 'required|in:pegawai,admin,pejabat,atasan',
         'status'     => 'required|string',
-        'jabatan'    => 'nullable|string|max:255',
+        'jabatan'    => 'required|string|regex:/^[a-zA-Z\s&]+$/',
         'unit_kerja' => 'nullable|string|max:255',
         'atasan'     => 'required|string|max:255', 
 

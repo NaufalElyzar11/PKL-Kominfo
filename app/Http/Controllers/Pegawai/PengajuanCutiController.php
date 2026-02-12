@@ -110,8 +110,7 @@ class PengajuanCutiController extends Controller
         // 2. VALIDASI FORM
         $validated = $request->validate([
             'id_delegasi'     => 'required|exists:pegawai,id',
-            'jenis_cuti'      => 'required|in:Tahunan',
-            'alamat'          => 'required|string|max:255',
+            'jenis_cuti'      => 'required|in:Tahunan,Alasan Penting',
             'keterangan'      => 'required|string|max:500',
             'tanggal_mulai'   => [
                 'required', 'date',
@@ -191,7 +190,6 @@ class PengajuanCutiController extends Controller
             'nama'            => $pegawai->nama,
             'nip'             => $pegawai->nip ?? '-',
             'jabatan'         => $pegawai->jabatan,
-            'alamat'          => $validated['alamat'],
             'jenis_cuti'      => $validated['jenis_cuti'],
             'tanggal_mulai'   => $validated['tanggal_mulai'],
             'tanggal_selesai' => $validated['tanggal_selesai'],
@@ -235,7 +233,6 @@ class PengajuanCutiController extends Controller
             ],
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'keterangan'      => 'required|string|max:500',
-            'alamat'          => 'nullable|string|max:255',
         ]);
 
         // 4. HITUNG DURASI (Hari Kerja)
@@ -247,7 +244,6 @@ class PengajuanCutiController extends Controller
             'tanggal_selesai' => $request->tanggal_selesai,
             'jumlah_hari'     => $jumlahHari,
             'keterangan'      => $request->keterangan,
-            'alamat'          => $request->alamat,
         ]);
 
         return redirect()->route('pegawai.cuti.index')

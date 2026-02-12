@@ -18,7 +18,6 @@ class Cuti extends Model
         'nama',
         'nip',
         'jabatan',
-        'alamat',
         'jenis_cuti',
         'tanggal_mulai',
         'tanggal_selesai',

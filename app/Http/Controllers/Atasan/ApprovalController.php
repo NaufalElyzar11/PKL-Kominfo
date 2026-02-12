@@ -205,76 +205,79 @@ class ApprovalController extends Controller
      * 🔹 5. Atasan Mengajukan Cuti Sendiri
      * Status langsung 'Disetujui Atasan' karena tidak perlu approval dari diri sendiri
      */
-    public function storeCuti(Request $request)
-    {
-        $user = Auth::user();
-        $pegawai = $user->pegawai;
+public function storeCuti(Request $request)
+{
+    $user = Auth::user();
+    $pegawai = $user->pegawai;
 
-        if (!$pegawai) {
-            return back()->with('error', 'Data pegawai belum ditemukan. Hubungi admin.');
-        }
-
-        // Cek pengajuan pending
-        $hasPending = Cuti::where('user_id', $user->id)
-                        ->where('status', 'Menunggu')
-                        ->exists();
-        
-        if ($hasPending) {
-            return back()->with('error', 'Anda masih memiliki pengajuan cuti yang menunggu persetujuan.');
-        }
-
-        // Validasi form
-        $validated = $request->validate([
-            'id_delegasi'     => 'required|exists:pegawai,id',
-            'jenis_cuti'      => 'required|in:Tahunan',
-            'alamat'          => 'required|string|max:255',
-            'keterangan'      => 'required|string|max:500',
-            'tanggal_mulai'   => [
-                'required', 'date',
-                function ($attribute, $value, $fail) {
-                    if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
-                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
-                    }
-                },
-            ],
-            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-        ]);
-
-        // Hitung jumlah hari (sederhana, tanpa skip weekend)
-        $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
-        $end = \Carbon\Carbon::parse($validated['tanggal_selesai']);
-        $jumlah_hari = $start->diffInDays($end) + 1;
-
-        // Cek sisa cuti
-        if ($pegawai->sisa_cuti < $jumlah_hari) {
-            return back()->with('error', 'Sisa cuti Anda tidak mencukupi.');
-        }
-
-        // Simpan cuti dengan status langsung 'Disetujui Atasan'
-        Cuti::create([
-            'user_id'         => $user->id,
-            'id_pegawai'      => $pegawai->id,
-            'id_delegasi'     => $validated['id_delegasi'],
-            'nama'            => $pegawai->nama,
-            'nip'             => $pegawai->nip ?? '-',
-            'jabatan'         => $pegawai->jabatan,
-            'alamat'          => $validated['alamat'],
-            'jenis_cuti'      => $validated['jenis_cuti'],
-            'tanggal_mulai'   => $validated['tanggal_mulai'],
-            'tanggal_selesai' => $validated['tanggal_selesai'],
-            'jumlah_hari'     => $jumlah_hari,
-            'tahun'           => date('Y'),
-            'keterangan'      => $validated['keterangan'],
-            // Status langsung 'Disetujui Atasan' karena atasan tidak perlu approval dari diri sendiri
-            'status'          => 'Disetujui Atasan',
-            'status_delegasi' => 'disetujui', // Auto approve delegasi karena atasan
-            'status_atasan'   => 'disetujui', // Auto approve karena diri sendiri atasan
-            
-            'atasan_nama'     => $pegawai->nama, // Atasan = diri sendiri
-            'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
-            'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
-        ]);
-
-        return back()->with('success', 'Pengajuan cuti berhasil dikirim ke Pejabat untuk approval.');
+    if (!$pegawai) {
+        return back()->with('error', 'Data pegawai belum ditemukan. Hubungi admin.');
     }
+
+    // Cek pengajuan pending
+    $hasPending = Cuti::where('user_id', $user->id)
+                    ->where('status', 'Menunggu')
+                    ->exists();
+    
+    if ($hasPending) {
+        return back()->with('error', 'Anda masih memiliki pengajuan cuti yang menunggu persetujuan.');
+    }
+
+    // --- PERBAIKAN VALIDASI ---
+    $validated = $request->validate([
+        'jenis_cuti'      => 'required|in:Tahunan,Alasan Penting',
+        'keterangan'      => [
+            'required',
+            'string',
+            'max:500',
+            'regex:/^[a-zA-Z\s]+$/', // Filter: Hanya huruf (A-Z, a-z) dan Spasi
+        ], // <--- PENTING: Menutup array keterangan sebelum pindah ke field lain
+        'tanggal_mulai'   => [
+            'required', 'date',
+            function ($attribute, $value, $fail) {
+                if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
+                    $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                }
+            },
+        ],
+        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+    ], [
+        // Memberikan pesan error yang jelas jika user mengetik angka/simbol
+        'keterangan.regex' => 'Alasan cuti hanya boleh berisi huruf dan spasi, tidak boleh angka atau simbol.',
+    ]);
+
+    // Hitung jumlah hari (sederhana)
+    $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
+    $end = \Carbon\Carbon::parse($validated['tanggal_selesai']);
+    $jumlah_hari = $start->diffInDays($end) + 1;
+
+    // Cek sisa cuti
+    if ($pegawai->sisa_cuti < $jumlah_hari) {
+        return back()->with('error', 'Sisa cuti Anda tidak mencukupi.');
+    }
+
+    // Simpan cuti dengan status langsung 'Disetujui Atasan'
+    Cuti::create([
+        'user_id'         => $user->id,
+        'id_pegawai'      => $pegawai->id,
+        'nama'            => $pegawai->nama,
+        'nip'             => $pegawai->nip ?? '-',
+        'jabatan'         => $pegawai->jabatan,
+        'jenis_cuti'      => $validated['jenis_cuti'],
+        'tanggal_mulai'   => $validated['tanggal_mulai'],
+        'tanggal_selesai' => $validated['tanggal_selesai'],
+        'jumlah_hari'     => $jumlah_hari,
+        'tahun'           => date('Y'),
+        'keterangan'      => $validated['keterangan'],
+        'status'          => 'Disetujui Atasan',
+        'status_delegasi' => 'disetujui',
+        'status_atasan'   => 'disetujui',
+        'atasan_nama'     => $pegawai->nama, 
+        'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
+        'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
+        'id_delegasi'     => null, // Atasan tidak perlu delegasi
+    ]);
+
+    return back()->with('success', 'Pengajuan cuti berhasil dikirim ke Pejabat untuk approval.');
+}
 }

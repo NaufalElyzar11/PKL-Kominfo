@@ -51,6 +51,8 @@
     showDetailRiwayat: false, 
     openCatatanKadis: false,
     catatanContent: '',
+
+    jenisCutiTambah: '',
     
     // Inisialisasi Objek (WAJIB ADA AGAR TIDAK ERROR)
     detailPending: {}, 
@@ -153,7 +155,6 @@
             alasan_cuti: data.alasan_cuti,
             status: data.status,
             jumlah_hari: data.jumlah_hari,
-            alamat: data.alamat
         };
         this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
         this.isChanged = false;
@@ -240,7 +241,6 @@
                             <th class="px-1 py-1 font-semibold text-left">Tanggal</th>
                             <th class="px-1 py-1 text-center font-semibold">Hari</th>
                             <th class="px-1 py-1 font-semibold text-left">Alasan</th>
-                            <th class="px-1 py-1 font-semibold text-left">Alamat</th>
                             <th class="px-1 py-1 text-center font-semibold">Status</th>
                             <th class="px-1 py-1 text-center font-semibold">Aksi</th>
                         </tr>
@@ -262,7 +262,6 @@
                                 </td>
                                 <td class="px-1 py-2 text-center font-bold">{{ $c->jumlah_hari }}</td>
                                 <td class="px-1 py-2">{{ Str::limit($c->alasan_cuti, 20) }}</td>
-                                <td class="px-1 py-2">{{ $c->alamat ?? '-' }}</td>
                                 <td class="px-1 py-2 text-center">
                                     @if($c->status == 'Menunggu')
                                         <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
@@ -299,25 +298,6 @@
                                     <i class="fa-solid fa-eye text-[12px]"></i>
                                 </button>
                                     
-                                    {{-- Tambahkan data alamat di bagian paling bawah parameter @click --}}
-                                    <button @click="openEditModal({
-                                        id: {{ $c->id }},
-                                        nama: @js($c->pegawai->nama),
-                                        nip: @js($c->pegawai->nip),
-                                        jabatan: @js($c->pegawai->jabatan),
-                                        jenis_cuti: @js($c->jenis_cuti),
-                                        sisa_cuti: @js($c->sisa_cuti ?? 0),
-                                        tanggal_mulai_raw: @js($c->tanggal_mulai->format('Y-m-d')),
-                                        tanggal_selesai_raw: @js($c->tanggal_selesai->format('Y-m-d')),
-                                        alasan_cuti: @js($c->keterangan ?? $c->alasan_cuti),
-                                        jumlah_hari: @js($c->jumlah_hari),
-                                        alamat: @js($c->alamat) {{-- <-- BARIS INI WAJIB ADA --}}
-                                    })"
-                                    class="p-1 text-yellow-600 hover:bg-yellow-50 rounded">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-
-
                                     <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
                                         method="POST"
                                         class="form-delete inline">
@@ -360,7 +340,6 @@
                     <th class="px-1 py-1 text-center font-semibold">Tanggal</th>
                     <th class="px-1 py-1 text-center font-semibold">Hari</th>
                     <th class="px-1 py-1 text-center font-semibold">Sisa</th>
-                    <th class="px-1 py-1 font-semibold text-left">Alamat</th>
                     <th class="px-1 py-1 font-semibold text-left">Alasan</th>
                     <th class="px-1 py-1 text-center font-semibold">Status</th>
                     <th class="px-1 py-1 text-center font-semibold">Aksi</th>
@@ -395,7 +374,6 @@
                         <td class="px-1 py-2 text-center font-bold">
                             <span class="{{ $sisa_final <= 3 ? 'text-red-600' : 'text-sky-600' }}">{{ $sisa_final }}</span>
                         </td>
-                        <td class="px-1 py-2">{{ Str::limit($r->alamat, 15) }}</td>
                         <td class="px-1 py-2">{{ Str::limit($r->alasan_cuti, 15) }}</td>
                         
                         {{-- STATUS WARNA OTOMATIS --}}
@@ -430,7 +408,6 @@
                                 atasan: {{ Js::from($r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-') }},
                                 pejabat: {{ Js::from($r->pejabatPemberiCuti->nama_pejabat ?? $r->pejabat_nama ?? '-') }},
                                 alasan_cuti: {{ Js::from($r->alasan_cuti ?? '') }},
-                                alamat: {{ Js::from($r->alamat ?? '') }},
                                 tahun: {{ Js::from($r->tahun ?? date('Y')) }}
                             };
                             showDetailRiwayat = true;
@@ -668,21 +645,27 @@
 
                         {{-- ===== KOLOM KANAN: FORM INPUT ===== --}}
                         <fieldset :disabled="hasPendingCuti" class="space-y-4">
-                            {{-- JENIS CUTI --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-tag text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Jenis Cuti
-                                </label>
-                                <div class="relative">
-                                    <input type="text" value="Cuti Tahunan" disabled
-                                           class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-50 text-[12px] sm:text-sm font-medium text-gray-600 cursor-not-allowed">
-                                    <div class="absolute right-3 top-1/2 -translate-y-1/2">
-                                        <span class="px-2 py-0.5 bg-sky-100 text-sky-700 text-[9px] sm:text-[10px] font-bold rounded-full uppercase">Default</span>
-                                    </div>
+                        {{-- JENIS CUTI --}}
+                        <div class="space-y-1.5">
+                            <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
+                                <i class="fa-solid fa-tag text-sky-500 text-[10px] sm:text-xs"></i>
+                                Jenis Cuti <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select name="jenis_cuti" 
+                                        x-model="jenisCutiTambah" 
+                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[12px] sm:text-sm font-medium text-gray-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all appearance-none"
+                                        required>
+                                    <option value="" disabled selected>— Pilih jenis cuti —</option>
+                                    <option value="Tahunan">Cuti Tahunan</option>
+                                    <option value="Alasan Penting">Cuti Alasan Penting</option>
+                                </select>
+                                {{-- Ikon panah dropdown --}}
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                    <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
                                 </div>
-                                <input type="hidden" name="jenis_cuti" value="Tahunan">
                             </div>
+                        </div>
 
                             {{-- TANGGAL --}}
                             <div class="space-y-1.5">
@@ -782,22 +765,6 @@
                                     }
                                 }
                             "></div>
-
-                            {{-- ALAMAT --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-location-dot text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Alamat <span class="text-red-500">*</span>
-                                </label>
-                                <textarea 
-                                    name="alamat"
-                                    rows="2"
-                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 resize-none"
-                                    placeholder="Masukkan alamat lengkap selama Anda menjalani cuti..."
-                                    required
-                                    oninput="this.value = this.value.replace(/[^A-Za-z0-9\s]/g,'')"></textarea>
-                            </div>
 
                             {{-- ALASAN --}}
                             <div class="space-y-1.5">
@@ -1124,17 +1091,6 @@
                 </div>
 
                 <div>
-                    <label class="font-bold text-gray-500 block mb-0.5 text-[10px]">Alamat:</label>
-                    <textarea 
-                        name="alamat" 
-                        x-model="selectedCuti.alamat"
-                        @input="isChanged = true"
-                        required
-                        class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none resize-none italic min-h-[40px] text-[10px] focus:ring-1 focus:ring-sky-400"
-                        placeholder="Masukkan alamat lengkap..."></textarea>
-                </div>
-
-                <div>
                     <label class="font-bold text-gray-500 block mb-0.5">Alasan Cuti:</label>
                     <textarea 
                         name="keterangan" {{-- WAJIB: Sama dengan Controller dan Database --}}
@@ -1201,11 +1157,6 @@
                 <span class="font-bold text-sky-700" x-text="detailRiwayat.jenis_cuti || '-'"></span>
             </p>
             
-            <p class="flex justify-between border-b border-gray-100 pb-0.5">
-                <span class="font-semibold text-gray-500">Alamat:</span> 
-                <span class="text-right" x-text="detailRiwayat.alamat || '-'"></span>
-            </p>
-
             <p class="flex justify-between border-b border-gray-100 pb-0.5">
                 <span class="font-semibold text-gray-500">Status:</span>
                 <span :class="{

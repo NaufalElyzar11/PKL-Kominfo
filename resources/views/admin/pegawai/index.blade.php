@@ -758,6 +758,7 @@ get filteredAtasan() {
                                                 <input type="text" name="jabatan" x-model="jabatan" @change="handleJabatanChange()" required
                                                     :disabled="!role || !unit_kerja"
                                                     :placeholder="!role ? 'Pilih Role dahulu' : (!unit_kerja ? 'Pilih Unit Kerja dahulu' : 'Masukkan Nama Jabatan')"
+                                                    oninput="this.value = this.value.replace(/[^A-Za-z\s&]/g, '')"
                                                     class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 disabled:bg-gray-50 disabled:cursor-not-allowed">
                                                 <p class="text-[9px] text-gray-400 flex items-center gap-1 mt-1">
                                                     <i class="fa-solid fa-circle-info"></i>
@@ -1115,7 +1116,13 @@ get filteredAtasan() {
                                             </label>
                                             {{-- Input Jabatan logic --}}
                                             <template x-if="role === 'pegawai' || role === 'admin' || role === ''">
-                                                <input type="text" name="jabatan" x-model="jabatan" required class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none">
+                                                <input type="text" 
+                                                    name="jabatan" 
+                                                    x-model="jabatan" 
+                                                    required 
+                                                    {{-- TAMBAHKAN BARIS DI BAWAH INI --}}
+                                                    oninput="this.value = this.value.replace(/[^A-Za-z\s&]/g, '')"
+                                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none">
                                             </template>
                                             <template x-if="role === 'atasan' || role === 'pejabat'">
                                                 <select name="jabatan" x-model="jabatan" :disabled="role === 'pejabat'" class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none disabled:bg-gray-100">

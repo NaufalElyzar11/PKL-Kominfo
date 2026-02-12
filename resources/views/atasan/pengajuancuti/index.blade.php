@@ -27,6 +27,8 @@
     showModal: false, 
     showDetailPending: false, 
     showDetailRiwayat: false, 
+
+    jenisCutiTambah: '',
     
     detailPending: {}, 
     detailRiwayat: {},
@@ -113,7 +115,6 @@
                             <th class="px-1 py-1 font-semibold text-left">Tanggal</th>
                             <th class="px-1 py-1 text-center font-semibold">Hari</th>
                             <th class="px-1 py-1 font-semibold text-left">Alasan</th>
-                            <th class="px-1 py-1 font-semibold text-left">Alamat</th>
                             <th class="px-1 py-1 text-center font-semibold">Status</th>
                             <th class="px-1 py-1 text-center font-semibold">Aksi</th>
                         </tr>
@@ -134,7 +135,6 @@
                                 </td>
                                 <td class="px-1 py-2 text-center font-bold">{{ $c->jumlah_hari }}</td>
                                 <td class="px-1 py-2">{{ Str::limit($c->keterangan ?? $c->alasan_cuti, 20) }}</td>
-                                <td class="px-1 py-2">{{ $c->alamat ?? '-' }}</td>
                                 <td class="px-1 py-2 text-center">
                                     @if($c->status == 'Menunggu')
                                         <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
@@ -151,14 +151,12 @@
                                         nama: {{ Js::from($c->pegawai->nama ?? '-') }}, 
                                         nip: {{ Js::from($c->pegawai->nip ?? '-') }}, 
                                         jabatan: {{ Js::from($c->pegawai->jabatan ?? '-') }},
-                                        pengganti_nama: {{ Js::from($c->delegasi->nama ?? '-') }}, 
                                         pengganti_jabatan: {{ Js::from($c->delegasi->jabatan ?? '') }}, 
                                         jenis_cuti: {{ Js::from($c->jenis_cuti ?? '') }}, 
                                         tanggal_mulai: {{ Js::from($c->tanggal_mulai ? $c->tanggal_mulai->translatedFormat('d M Y') : '-') }},
                                         tanggal_selesai: {{ Js::from($c->tanggal_selesai ? $c->tanggal_selesai->translatedFormat('d M Y') : '-') }}, 
                                         jumlah_hari: {{ Js::from($c->jumlah_hari ?? 0) }},
                                         alasan_cuti: {{ Js::from($c->keterangan ?? $c->alasan_cuti ?? '') }},
-                                        alamat: {{ Js::from($c->alamat ?? '') }},
                                         status: {{ Js::from($c->status ?? '') }}
                                     })" class="p-1 text-sky-600 hover:bg-sky-50 rounded">
                                         <i class="fa-solid fa-eye text-[12px]"></i>
@@ -191,11 +189,9 @@
                             <th class="px-1 py-1 text-center font-semibold">Jenis</th>
                             <th class="px-1 py-1 text-center font-semibold">Tanggal</th>
                             <th class="px-1 py-1 text-center font-semibold">Hari</th>
-                            <th class="px-1 py-1 font-semibold text-left">Alamat</th>
                             <th class="px-1 py-1 font-semibold text-left">Alasan</th>
                             <th class="px-1 py-1 text-center font-semibold">Status</th>
                             <th class="px-1 py-1 text-center font-semibold">Aksi</th>
-                            <th class="px-1 py-1 text-center font-semibold">Pengganti</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -213,7 +209,6 @@
                                     {{ optional($r->tanggal_mulai)->format('d/m/Y') }} <br> s/d {{ optional($r->tanggal_selesai)->format('d/m/Y') }}
                                 </td>
                                 <td class="px-1 py-2 text-center font-bold">{{ $r->jumlah_hari }}</td>
-                                <td class="px-1 py-2">{{ Str::limit($r->alamat, 15) }}</td>
                                 <td class="px-1 py-2">{{ Str::limit($r->keterangan ?? $r->alasan_cuti, 15) }}</td>
                                 
                                 <td class="px-1 py-2 text-center">
@@ -231,7 +226,6 @@
                                         nama: {{ Js::from($r->pegawai->nama ?? '-') }},
                                         nip: {{ Js::from($r->pegawai->nip ?? '-') }},
                                         jabatan: {{ Js::from($r->pegawai->jabatan ?? '-') }},
-                                        pengganti_nama: {{ Js::from($r->delegasi->nama ?? '-') }},
                                         pengganti_jabatan: {{ Js::from($r->delegasi->jabatan ?? '') }},
                                         jenis_cuti: {{ Js::from($r->jenis_cuti ?? '') }},
                                         status: {{ Js::from($r->status ?? '') }},
@@ -239,7 +233,6 @@
                                         tanggal_selesai: {{ Js::from($r->tanggal_selesai ? $r->tanggal_selesai->format('d/m/Y') : '-') }},
                                         jumlah_hari: {{ Js::from($r->jumlah_hari ?? 0) }},
                                         alasan_cuti: {{ Js::from($r->keterangan ?? $r->alasan_cuti ?? '') }},
-                                        alamat: {{ Js::from($r->alamat ?? '') }},
                                         catatan: {{ Js::from($r->catatan_final ?? '') }}
                                     })" class="p-1 text-sky-600 hover:bg-sky-100 rounded">
                                         <i class="fa-solid fa-eye text-[12px]"></i>
@@ -315,14 +308,6 @@
                     </div>
                 </div>
                 <div>
-                    <p class="text-[10px] text-gray-400 uppercase">Pengganti (Delegasi)</p>
-                    <p class="font-semibold" x-text="detailPending.pengganti_nama + ' - ' + detailPending.pengganti_jabatan"></p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 uppercase">Alamat Selama Cuti</p>
-                    <p class="font-semibold" x-text="detailPending.alamat"></p>
-                </div>
-                <div>
                     <p class="text-[10px] text-gray-400 uppercase">Alasan Cuti</p>
                     <p class="font-semibold" x-text="detailPending.alasan_cuti"></p>
                 </div>
@@ -381,14 +366,6 @@
                         <p class="text-[10px] text-gray-400 uppercase">Tanggal Selesai</p>
                         <p class="font-semibold" x-text="detailRiwayat.tanggal_selesai"></p>
                     </div>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 uppercase">Pengganti</p>
-                    <p class="font-semibold" x-text="detailRiwayat.pengganti_nama"></p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 uppercase">Alamat</p>
-                    <p class="font-semibold" x-text="detailRiwayat.alamat"></p>
                 </div>
                 <div>
                     <p class="text-[10px] text-gray-400 uppercase">Alasan</p>
@@ -486,29 +463,27 @@
                                 </div>
                             </div>
 
-                            {{-- DELEGASI --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] font-semibold text-gray-600">
-                                    <i class="fa-solid fa-user-group text-sky-500 text-[10px]"></i>
-                                    Pegawai Pengganti (Delegasi) <span class="text-red-500">*</span>
-                                </label>
-                                <select name="id_delegasi" required class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none">
-                                    <option value="">-- Pilih Pegawai Pengganti --</option>
-                                    @foreach($rekanSebidang ?? [] as $rekan)
-                                        <option value="{{ $rekan->id }}">{{ $rekan->nama }} - {{ $rekan->jabatan }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
                             {{-- JENIS CUTI --}}
                             <div class="space-y-1.5">
                                 <label class="flex items-center gap-2 text-[11px] font-semibold text-gray-600">
                                     <i class="fa-solid fa-tag text-sky-500 text-[10px]"></i>
-                                    Jenis Cuti
+                                    Jenis Cuti <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" value="Cuti Tahunan" disabled
-                                       class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-[11px] font-medium text-gray-600 cursor-not-allowed">
-                                <input type="hidden" name="jenis_cuti" value="Tahunan">
+                                <div class="relative">
+                                    <select name="jenis_cuti" 
+                                            x-model="jenisCutiTambah" 
+                                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] font-medium text-gray-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all appearance-none"
+                                            required>
+                                        <option value="" disabled selected>— Pilih jenis cuti —</option>
+                                        <option value="Tahunan">Cuti Tahunan</option>
+                                        <option value="Alasan Penting">Cuti Alasan Penting</option>
+                                    </select>
+                                    
+                                    {{-- Ikon Panah Kecil --}}
+                                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                        <i class="fa-solid fa-chevron-down text-[9px]"></i>
+                                    </div>
+                                </div>
                             </div>
 
                             {{-- TANGGAL --}}
@@ -539,24 +514,18 @@
                                 </p>
                             </div>
 
-                            {{-- ALAMAT --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] font-semibold text-gray-600">
-                                    <i class="fa-solid fa-location-dot text-sky-500 text-[10px]"></i>
-                                    Alamat Selama Cuti <span class="text-red-500">*</span>
-                                </label>
-                                <textarea name="alamat" rows="2" required
-                                    class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none resize-none"
-                                    placeholder="Masukkan alamat lengkap selama cuti..."></textarea>
-                            </div>
-
                             {{-- ALASAN --}}
                             <div class="space-y-1.5">
                                 <label class="flex items-center gap-2 text-[11px] font-semibold text-gray-600">
                                     <i class="fa-solid fa-pen text-sky-500 text-[10px]"></i>
                                     Alasan Cuti <span class="text-red-500">*</span>
                                 </label>
-                                <textarea name="keterangan" rows="2" required
+                                <textarea 
+                                    name="keterangan" 
+                                    rows="2" 
+                                    required
+                                    {{-- Logika agar hanya huruf dan spasi yang diizinkan --}}
+                                    oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
                                     class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none resize-none"
                                     placeholder="Jelaskan alasan pengajuan cuti..."></textarea>
                             </div>
