@@ -213,6 +213,12 @@
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Telepon</label>
                             <p class="font-bold text-slate-800 text-sm">{{ $pegawai->telepon ?? '-' }}</p>
                         </div>
+                        {{-- ========== TAMBAHKAN BLOK ALAMAT DI SINI ========== --}}
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Alamat Rumah</label>
+                            <p class="font-bold text-slate-800 text-sm leading-relaxed">{{ $pegawai->alamat ?? '-' }}</p>
+                        </div>
+                        {{-- ================================================= --}}
                     </div>
                     <div class="pt-6 mt-auto">
                         <a href="{{ route('pegawai.profile.edit') }}" class="w-full py-3 border-2 border-slate-100 rounded-xl font-bold text-slate-500 hover:border-soft-orange hover:text-soft-orange transition-all flex items-center justify-center gap-2 text-sm group">

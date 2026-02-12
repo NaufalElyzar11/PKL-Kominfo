@@ -70,6 +70,7 @@ class ProfileController extends Controller
             'email'   => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'telepon' => ['required', 'string', 'min:10', 'max:13', 'regex:/^[0-9]+$/'],
             'foto'    => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'alamat'  => ['nullable', 'string', 'max:500'],
         ]);
 
         DB::beginTransaction();
@@ -105,6 +106,7 @@ class ProfileController extends Controller
                 'email'   => $validated['email'],
                 'telepon' => $validated['telepon'],
                 'foto'    => $fotoPath,
+                'alamat'  => $request->alamat,
             ]);
 
             DB::commit();
