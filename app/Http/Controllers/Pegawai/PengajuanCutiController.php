@@ -183,8 +183,22 @@ class PengajuanCutiController extends Controller
             return back()->with('error', 'Gagal! Sisa cuti Anda tidak mencukupi.');
         }
 
-        // 6. SIMPAN DATA
-        Cuti::create([
+        // 6. VALIDASI: Cek apakah USER INI (pemohon) sedang menjadi delegasi untuk orang lain di tanggal yang sama?
+        // Jika user ini sedang jadi pengganti si A dari tgl X-Y, maka user ini GABOLEH mengajukan cuti di tgl X-Y.
+        $isUserActingAsDelegate = Cuti::where('id_delegasi', $pegawai->id)
+            ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis'])
+            ->where(function ($query) use ($validated) {
+                $query->where('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+                      ->where('tanggal_selesai', '>=', $validated['tanggal_mulai']);
+            })
+            ->first();
+
+        if ($isUserActingAsDelegate) {
+            return back()->with('error', "Gagal! Anda tercatat sebagai petugas pengganti untuk pegawai '{$isUserActingAsDelegate->nama}' pada periode tersebut. Anda tidak dapat mengajukan cuti di waktu yang sama.");
+        }
+
+        // 7. SIMPAN DATA
+        $cutiBaru = Cuti::create([
             'user_id'         => $user->id,
             'id_pegawai'      => $pegawai->id,
             'id_delegasi'     => $validated['id_delegasi'],
@@ -206,19 +220,16 @@ class PengajuanCutiController extends Controller
         ]);
 
         // ==================================================================================
-        // 🔔 NOTIFIKASI UNTUK ATASAN LANGSUNG
+        // 🔔 NOTIFIKASI
         // ==================================================================================
         try {
-            // 1. Ambil NIP Atasan dari relasi
+            // A. NOTIFIKASI UNTUK ATASAN LANGSUNG
             $nipAtasan = $pegawai->atasanLangsung->nip ?? null;
-
             if ($nipAtasan) {
-                // 2. Cari User yang terhubung dengan Pegawai pemilik NIP tersebut
                 $atasanUser = \App\Models\User::whereHas('pegawai', function($q) use ($nipAtasan) {
                     $q->where('nip', $nipAtasan);
                 })->first();
 
-                // 3. Buat Notifikasi jika User ditemukan
                 if ($atasanUser) {
                     \App\Models\Notification::create([
                         'user_id' => $atasanUser->id,
@@ -228,9 +239,23 @@ class PengajuanCutiController extends Controller
                     ]);
                 }
             }
+
+            // B. NOTIFIKASI UNTUK DELEGASI (PEGAWAI PENGGANTI)
+            // $delegasi sudah di-query di atas (validasi no. 3)
+            if ($delegasi && $delegasi->user) {
+                $tglMulaiIndo   = \Carbon\Carbon::parse($validated['tanggal_mulai'])->translatedFormat('d F Y');
+                $tglSelesaiIndo = \Carbon\Carbon::parse($validated['tanggal_selesai'])->translatedFormat('d F Y');
+
+                \App\Models\Notification::create([
+                    'user_id' => $delegasi->user->id, // Asumsi relasi pegawai->user ada
+                    'title'   => 'Permintaan Delegasi Tugas',
+                    'message' => "Halo {$delegasi->nama}, Anda ditunjuk sebagai pengganti untuk cuti {$pegawai->nama} dari tanggal {$tglMulaiIndo} s/d {$tglSelesaiIndo}.",
+                    'is_read' => false,
+                ]);
+            }
+
         } catch (\Exception $e) {
-            // Silent fail agar tidak mengganggu flow utama jika ada error notifikasi
-            \Log::error('Gagal mengirim notifikasi ke atasan: ' . $e->getMessage());
+            \Log::error('Gagal mengirim notifikasi: ' . $e->getMessage());
         }
 
         return redirect()->route('pegawai.cuti.index')->with('success', 'Pengajuan cuti berhasil dikirim.');
