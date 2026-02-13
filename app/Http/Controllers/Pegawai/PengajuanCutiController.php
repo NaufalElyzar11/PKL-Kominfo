@@ -237,25 +237,34 @@ class PengajuanCutiController extends Controller
                         'message' => "Pegawai {$pegawai->nama} telah mengajukan cuti. Mohon segera ditinjau.",
                         'is_read' => false,
                     ]);
+                } else {
+                    \Log::warning("Notification Warning: Atasan with NIP {$nipAtasan} not found in Users table.");
                 }
             }
 
             // B. NOTIFIKASI UNTUK DELEGASI (PEGAWAI PENGGANTI)
             // $delegasi sudah di-query di atas (validasi no. 3)
-            if ($delegasi && $delegasi->user) {
-                $tglMulaiIndo   = \Carbon\Carbon::parse($validated['tanggal_mulai'])->translatedFormat('d F Y');
-                $tglSelesaiIndo = \Carbon\Carbon::parse($validated['tanggal_selesai'])->translatedFormat('d F Y');
+            if ($delegasi) {
+                if ($delegasi->user) {
+                    $tglMulaiIndo   = \Carbon\Carbon::parse($validated['tanggal_mulai'])->translatedFormat('d F Y');
+                    $tglSelesaiIndo = \Carbon\Carbon::parse($validated['tanggal_selesai'])->translatedFormat('d F Y');
 
-                \App\Models\Notification::create([
-                    'user_id' => $delegasi->user->id, // Asumsi relasi pegawai->user ada
-                    'title'   => 'Permintaan Delegasi Tugas',
-                    'message' => "Halo {$delegasi->nama}, Anda ditunjuk sebagai pengganti untuk cuti {$pegawai->nama} dari tanggal {$tglMulaiIndo} s/d {$tglSelesaiIndo}.",
-                    'is_read' => false,
-                ]);
+                    \App\Models\Notification::create([
+                        'user_id' => $delegasi->user->id, 
+                        'title'   => 'Permintaan Delegasi Tugas',
+                        'message' => "Halo {$delegasi->nama}, Anda ditunjuk sebagai pengganti untuk cuti {$pegawai->nama} dari tanggal {$tglMulaiIndo} s/d {$tglSelesaiIndo}.",
+                        'is_read' => false,
+                    ]);
+                    \Log::info("Notification Success: Delegasi {$delegasi->nama} notified.");
+                } else {
+                    \Log::error("Notification Error: Delegasi {$delegasi->nama} (ID: {$delegasi->id}) does not have a linked User account.");
+                }
+            } else {
+                \Log::error("Notification Error: Variable \$delegasi is null.");
             }
 
         } catch (\Exception $e) {
-            \Log::error('Gagal mengirim notifikasi: ' . $e->getMessage());
+            \Log::error('Gagal mengirim notifikasi: ' . $e->getMessage() . ' | Line: ' . $e->getLine());
         }
 
         return redirect()->route('pegawai.cuti.index')->with('success', 'Pengajuan cuti berhasil dikirim.');
