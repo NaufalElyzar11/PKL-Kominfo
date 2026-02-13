@@ -186,7 +186,7 @@ class PengajuanCutiController extends Controller
         // 6. VALIDASI: Cek apakah USER INI (pemohon) sedang menjadi delegasi untuk orang lain di tanggal yang sama?
         // Jika user ini sedang jadi pengganti si A dari tgl X-Y, maka user ini GABOLEH mengajukan cuti di tgl X-Y.
         $isUserActingAsDelegate = Cuti::where('id_delegasi', $pegawai->id)
-            ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis'])
+            ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Disetujui Kadis']) // Tambahkan 'Menunggu'
             ->where(function ($query) use ($validated) {
                 $query->where('tanggal_mulai', '<=', $validated['tanggal_selesai'])
                       ->where('tanggal_selesai', '>=', $validated['tanggal_mulai']);
