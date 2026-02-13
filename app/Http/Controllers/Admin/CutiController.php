@@ -230,13 +230,21 @@ public function update(Request $request, $id)
     /**
      * 🔹 Setujui pengajuan cuti
      */
-    public function approve($id)
+    public function approve(Request $request, $id) // Tambahkan Request $request
     {
-        $cuti = Cuti::findOrFail($id);
-        
-        $cuti->update(['status' => 'Disetujui']);
+        // Cek apakah checkbox konfirmasi di Blade sudah dicentang
+        if (!$request->pejabat_confirmed) {
+            return back()->with('error', 'Gagal! Anda harus memberikan konfirmasi izin dari Pejabat (Kadis/Sekre) terlebih dahulu.');
+        }
 
-        return back()->with('success', 'Pengajuan cuti telah disetujui.');
+        $cuti = Cuti::findOrFail($id);
+        $cuti->update([
+            'status' => 'Disetujui',
+            // Jika Anda sudah menambah kolom di database (Langkah 1), aktifkan baris bawah ini:
+            // 'is_pejabat_confirmed' => true 
+        ]);
+
+        return back()->with('success', 'Pengajuan cuti telah disetujui atas izin Pejabat.');
     }
 
     /**
@@ -244,6 +252,12 @@ public function update(Request $request, $id)
      */
     public function reject(Request $request, $id)
     {
+        // 1. Cek Konfirmasi Pejabat
+        if (!$request->pejabat_confirmed) {
+            return back()->with('error', 'Gagal! Anda harus mengonfirmasi bahwa pimpinan sudah menginstruksikan penolakan ini.');
+        }
+
+        // 2. Validasi Alasan (Tetap gunakan kode Anda)
         $request->validate([
             'catatan_penolakan' => [
                 'required',
@@ -253,8 +267,6 @@ public function update(Request $request, $id)
             ]
         ], [
             'catatan_penolakan.required' => 'Alasan penolakan wajib diisi.',
-            'catatan_penolakan.max' => 'Alasan penolakan maksimal 100 karakter.',
-            'catatan_penolakan.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi saja.'
         ]);
 
         $cuti = Cuti::findOrFail($id);
@@ -264,7 +276,7 @@ public function update(Request $request, $id)
             'catatan_penolakan' => $request->catatan_penolakan
         ]);
 
-        return back()->with('success', 'Pengajuan cuti berhasil ditolak.');
+        return back()->with('success', 'Pengajuan cuti berhasil ditolak berdasarkan arahan Pejabat.');
     }
 
 }
