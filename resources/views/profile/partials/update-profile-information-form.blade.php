@@ -209,15 +209,20 @@
                 <x-input-error :messages="$errors->get('telepon')" />
             </div>
 
-            {{-- Letakkan di bawah input Nomor Telepon --}}
+            {{-- Input Alamat Rumah --}}
             <div class="mt-4">
                 <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1">
                     <span class="material-symbols-outlined text-blue-500 text-lg">location_on</span>
                     Alamat Rumah
                 </label>
-                <textarea name="alamat" rows="3" x-model="currAlamat"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none text-sm"
-                        placeholder="Masukkan alamat lengkap Anda...">{{ old('alamat', $pegawai->alamat) }}</textarea>
+                <textarea 
+                    name="alamat" 
+                    rows="3" 
+                    x-model="currAlamat"
+                    {{-- LOGIKA BARU: Menghapus selain huruf (a-z), angka (0-9), dan spasi (\s) --}}
+                    @input="currAlamat = currAlamat.replace(/[^a-zA-Z0-9\s]/g, '')"
+                    class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all resize-none text-sm"
+                    placeholder="Masukkan alamat lengkap anda...">{{ $pegawai->alamat }}</textarea>
             </div>
         </div>
 

@@ -26,7 +26,25 @@ use App\Http\Controllers\Pejabat\PejabatApprovalController;
 // ------------------------------------------------------------------
 // 1. GUEST & AUTH CORE
 // ------------------------------------------------------------------
-Route::view('/', 'landingpage')->name('landingpage');
+
+// MODIFIKASI: Gunakan rute dinamis untuk '/' (Langkah sebelumnya)
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return view('landingpage');
+})->name('landingpage');
+
+// TAMBAHKAN MIDDLEWARE GUEST DI SINI
+Route::middleware(['guest'])->group(function () {
+    Route::controller(LoginController::class)->group(function () {
+        Route::get('/login', 'showLoginForm')->name('login');
+        Route::post('/login', 'login')->name('login.post');
+    });
+});
+
+// PINDAHKAN LOGOUT KE LUAR (Karena logout butuh status sudah login)
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::controller(LoginController::class)->group(function () {
     Route::get('/login', 'showLoginForm')->name('login');

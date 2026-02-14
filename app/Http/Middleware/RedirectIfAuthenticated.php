@@ -16,19 +16,22 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 $user = Auth::guard($guard)->user();
 
-                // Redirect berdasarkan role dari database
+                // PERBAIKAN: Sesuaikan Case dengan role yang ada di web.php
                 switch ($user->role) {
                     case 'super_admin':
                         return redirect()->route('super.dashboard');
                     case 'admin':
                         return redirect()->route('admin.dashboard');
-                    case 'kepala_dinas':
-                        return redirect()->route('kepaladinas.dashboard');
+                    case 'atasan': // Tambahkan ini
+                        return redirect()->route('atasan.dashboard');
+                    case 'pejabat': // Tambahkan ini
+                        return redirect()->route('pejabat.dashboard');
                     case 'pegawai':
                         return redirect()->route('pegawai.dashboard');
                     default:
+                        // Jika role tidak dikenal, amankan dengan logout
                         Auth::logout();
-                        return redirect()->route('login');
+                        return redirect()->route('login')->with('error', 'Role tidak dikenali.');
                 }
             }
         }
