@@ -143,6 +143,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
         Route::get('/dashboard', [PegawaiDashboard::class, 'index'])->name('dashboard');
         Route::get('/cuti/export-excel', [PegawaiCutiController::class, 'exportExcel'])->name('cuti.export-excel');
         Route::resource('cuti', PegawaiCutiController::class)->except(['show']);
+        Route::get('/cuti/available-delegates', [PegawaiCutiController::class, 'getAvailableDelegates'])->name('cuti.available-delegates');
         Route::post('/cuti/ajax-store', [PegawaiCutiController::class, 'ajaxStore'])->name('cuti.ajax-store');
 
         Route::prefix('profile')->as('profile.')->group(function () {
@@ -204,8 +205,7 @@ Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')
     });
 
     // routes/web.php
-    Route::get('/pegawai/cuti/cek-tersedia', [App\Http\Controllers\Pegawai\PengajuanCutiController::class, 'getAvailableDelegates'])
-    ->name('pegawai.cuti.cek-tersedia');
+
 
     Route::post('/admin/pegawai/check-unique', [App\Http\Controllers\Admin\PegawaiController::class, 'checkUnique'])->name('admin.pegawai.checkUnique');
 

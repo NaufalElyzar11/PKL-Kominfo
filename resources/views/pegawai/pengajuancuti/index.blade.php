@@ -63,6 +63,8 @@
     // Data libur nasional
     holidays: [],
     holidaysLoaded: false,
+    availableDelegates: [], // List delegasi tersedia
+
 
     // FORM TAMBAH
     tanggalMulaiTambah: '',
@@ -114,6 +116,33 @@
         return count;
     },
 
+    async loadDelegates(start, end) {
+        if (!start || !end) return;
+        
+        // Cek validitas tanggal
+        const d1 = new Date(start);
+        const d2 = new Date(end);
+        if (isNaN(d1) || isNaN(d2) || d1 > d2) {
+            this.availableDelegates = [];
+            return;
+        }
+
+        try {
+            // Kirim request ke backend
+            const s = d1.toISOString().split('T')[0];
+            const e = d2.toISOString().split('T')[0];
+            const response = await fetch(`{{ route('pegawai.cuti.available-delegates') }}?tanggal_mulai=${s}&tanggal_selesai=${e}`);
+            this.availableDelegates = await response.json();
+            
+            // Debugging
+            console.log('Delegates loaded:', this.availableDelegates);
+        } catch (error) {
+            console.error('Gagal load delegasi:', error);
+            this.availableDelegates = [];
+        }
+    },
+
+
     async hitungHariTambah() {
         if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { 
             this.jumlahHariTambah = 0; 
@@ -135,7 +164,11 @@
 
         // Hitung hari kerja
         this.jumlahHariTambah = this.calculateWorkingDays(mulai, selesai);
+        
+        // Load Delegasi Tersedia
+        this.loadDelegates(this.tanggalMulaiTambah, this.tanggalSelesaiTambah);
     },
+
 
     selectedCuti: {},
 
@@ -155,11 +188,17 @@
             alasan_cuti: data.alasan_cuti,
             status: data.status,
             jumlah_hari: data.jumlah_hari,
+            id_delegasi: data.delegasi ? data.delegasi.id : '', // Tambahkan ID Delegasi
         };
         this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
+        
+        // Load delegasi berdasarkan tanggal yang ada
+        this.loadDelegates(data.tanggal_mulai_raw, data.tanggal_selesai_raw);
+        
         this.isChanged = false;
         this.showEditModal = true;
     },
+
 
     async hitungHariEdit() {
         if (!this.selectedCuti.tanggal_mulai || !this.selectedCuti.tanggal_selesai) return;
@@ -178,7 +217,11 @@
         }
 
         this.selectedCuti.jumlah_hari = this.calculateWorkingDays(mulai, selesai);
+        
+        // Load ulang delegasi saat tanggal edit berubah
+        this.loadDelegates(this.selectedCuti.tanggal_mulai, this.selectedCuti.tanggal_selesai);
     },
+
 
     checkChange() {
         this.isChanged = JSON.stringify(this.selectedCuti) !== JSON.stringify(this.originalCuti);
@@ -430,9 +473,14 @@
                                 atasan: {{ Js::from($r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-') }},
                                 pejabat: {{ Js::from($r->pejabatPemberiCuti->nama_pejabat ?? $r->pejabat_nama ?? '-') }},
                                 alasan_cuti: {{ Js::from($r->alasan_cuti ?? '') }},
-                                tahun: {{ Js::from($r->tahun ?? date('Y')) }}
+                                alasan_cuti: {{ Js::from($r->alasan_cuti ?? '') }},
+                                tahun: {{ Js::from($r->tahun ?? date('Y')) }},
+                                catatan_tolak_atasan: {{ Js::from($r->catatan_tolak_atasan ?? '-') }},
+                                catatan_tolak_delegasi: {{ Js::from($r->catatan_tolak_delegasi ?? '-') }},
+                                delegasi: {{ Js::from($r->delegasi ?? null) }}
                             };
                             showDetailRiwayat = true;
+
                         " class="p-1 text-sky-600 hover:bg-sky-100 rounded">
                             <i class="fa-solid fa-eye text-[12px]"></i>
                         </button>
@@ -817,11 +865,11 @@
                                                focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
                                         required>
                                         <option value="" disabled selected>— Pilih pegawai pengganti —</option>
-                                        @forelse($rekanSebidang as $rekan)
-                                            <option value="{{ $rekan->id }}">{{ $rekan->nama }} — {{ $rekan->jabatan }}</option>
-                                        @empty
-                                            <option value="" disabled>Tidak ada rekan tersedia</option>
-                                        @endforelse
+                                        <template x-for="delegate in availableDelegates" :key="delegate.id">
+                                            <option :value="delegate.id" x-text="delegate.nama + ' — ' + delegate.jabatan"></option>
+                                        </template>
+                                        <option x-show="availableDelegates.length === 0" value="" disabled>--- Pilih tanggal dulu / Tidak ada rekan tersedia ---</option>
+
                                     </select>
                                     <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                         <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
@@ -1112,6 +1160,29 @@
                     "></div>
                 </div>
 
+                {{-- DELEGASI EDIT (NEW) --}}
+                <div class="mt-2">
+                    <label class="font-bold text-gray-500 block mb-0.5">Pegawai Pengganti:</label>
+                    <div class="relative">
+                        <select name="id_delegasi" 
+                                x-model="selectedCuti.id_delegasi"
+                                @change="isChanged = true"
+                                class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none text-[10px] focus:ring-1 focus:ring-sky-400 appearance-none">
+                            <option value="" disabled>— Pilih Pegawai Pengganti —</option>
+                            <template x-for="delegate in availableDelegates" :key="delegate.id">
+                                <option :value="delegate.id" 
+                                        x-text="delegate.nama + ' — ' + delegate.jabatan"
+                                        :selected="selectedCuti.id_delegasi == delegate.id"></option>
+                            </template>
+                             <option x-show="availableDelegates.length === 0" value="" disabled>Tidak ada rekan tersedia pada tanggal ini</option>
+                        </select>
+                        <div class="absolute right-2 top-1.5 pointer-events-none text-gray-400">
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+
                 <div>
                     <label class="font-bold text-gray-500 block mb-0.5">Alasan Cuti:</label>
                     <textarea 
@@ -1177,6 +1248,28 @@
                         'text-yellow-600 font-bold': detailRiwayat.status?.toLowerCase() === 'menunggu'
                     }" x-text="detailRiwayat.status"></span>
             </p>
+
+            {{-- BLOK UNTUK MENAMPILKAN ALASAN PENOLAKAN --}}
+            <template x-if="detailRiwayat.status?.toLowerCase() === 'ditolak'">
+                <div class="bg-red-50 p-2 rounded border border-red-100 mt-1">
+                    <p class="font-bold text-red-600 text-[10px] uppercase mb-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Alasan Penolakan:
+                    </p>
+                    <ul class="list-disc list-inside text-red-800 italic ml-1">
+                        <template x-if="detailRiwayat.catatan_tolak_delegasi && detailRiwayat.catatan_tolak_delegasi !== '-'">
+                            <li>Delegasi: <span x-text="detailRiwayat.catatan_tolak_delegasi"></span></li>
+                        </template>
+                        <template x-if="detailRiwayat.catatan_tolak_atasan && detailRiwayat.catatan_tolak_atasan !== '-'">
+                            <li>Atasan: <span x-text="detailRiwayat.catatan_tolak_atasan"></span></li>
+                        </template>
+                        {{-- Fallback jika tidak ada catatan spesifik --}}
+                        <template x-if="(!detailRiwayat.catatan_tolak_delegasi || detailRiwayat.catatan_tolak_delegasi === '-') && (!detailRiwayat.catatan_tolak_atasan || detailRiwayat.catatan_tolak_atasan === '-')">
+                            <li>- Tidak ada catatan spesifik -</li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
             <p class="flex justify-between border-b border-gray-100 pb-0.5">
                 <span class="font-semibold text-gray-500">Mulai:</span> 
                 <span x-text="detailRiwayat.tanggal_mulai || '-'"></span>

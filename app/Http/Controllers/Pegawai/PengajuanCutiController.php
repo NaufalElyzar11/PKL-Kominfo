@@ -282,8 +282,8 @@ class PengajuanCutiController extends Controller
                 ->with('error', 'Gagal! Pengajuan sudah diproses oleh atasan dan tidak dapat diubah lagi.');
         }
 
-        // 3. VALIDASI (Tetap menggunakan aturan 3 hari lead time)
-        $request->validate([
+        // 3. VALIDASI
+        $validated = $request->validate([
             'tanggal_mulai' => [
                 'required',
                 'date',
@@ -296,21 +296,104 @@ class PengajuanCutiController extends Controller
             ],
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'keterangan'      => 'required|string|max:500',
+            'id_delegasi'     => 'nullable|exists:pegawai,id', // Validasi delegasi
         ]);
 
-        // 4. HITUNG DURASI (Hari Kerja)
+        $pegawai = Auth::user()->pegawai;
+
+        // 4. VALIDASI DELEGASI BARU (Jika ada perubahan)
+        if ($request->filled('id_delegasi') && $request->id_delegasi != $cuti->id_delegasi) {
+            $delegasi = \App\Models\Pegawai::with('user')->find($request->id_delegasi);
+
+            // Cek Atasan Langsung yang sama
+            if ($delegasi->id_atasan_langsung !== $pegawai->id_atasan_langsung || $delegasi->id === $pegawai->id) {
+                return back()->with('error', 'Pegawai pengganti harus berada di bawah naungan Atasan Langsung yang sama.');
+            }
+
+            // Pastikan delegasi bukan Pejabat/Admin
+            if (!in_array($delegasi->user->role, ['pegawai', 'atasan'])) {
+                return back()->with('error', 'Pegawai pengganti tidak valid.');
+            }
+
+            // Cek ketersediaan delegasi (tabrakan jadwal)
+            $isDelegateOnLeave = Cuti::where('id_pegawai', $delegasi->id)
+                ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis'])
+                ->where(function ($query) use ($validated) {
+                    $query->where('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+                        ->where('tanggal_selesai', '>=', $validated['tanggal_mulai']);
+                })
+                ->exists();
+
+            if ($isDelegateOnLeave) {
+                return back()->with('error', 'Gagal! Pegawai pengganti (' . $delegasi->nama . ') sudah memiliki jadwal cuti disetujui pada periode tersebut.');
+            }
+            
+            // Simpan perubahan delegasi
+            $cuti->id_delegasi = $request->id_delegasi;
+        }
+
+        // 5. HITUNG DURASI (Hari Kerja)
         $jumlahHari = $this->calculateWorkingDays($request->tanggal_mulai, $request->tanggal_selesai);
 
-        // 5. EKSEKUSI UPDATE
-        $cuti->update([
-            'tanggal_mulai'   => $request->tanggal_mulai,
-            'tanggal_selesai' => $request->tanggal_selesai,
-            'jumlah_hari'     => $jumlahHari,
-            'keterangan'      => $request->keterangan,
-        ]);
+        // 6. UPDATE DATA UTAMA
+        $cuti->tanggal_mulai   = $request->tanggal_mulai;
+        $cuti->tanggal_selesai = $request->tanggal_selesai;
+        $cuti->jumlah_hari     = $jumlahHari;
+        $cuti->keterangan      = $request->keterangan;
+        $cuti->save();
 
         return redirect()->route('pegawai.cuti.index')
             ->with('success', 'Data pengajuan cuti berhasil diperbarui.');
+    }
+
+    /** ========================== 🔄 GET AVAILABLE DELEGATES ============================= */
+    public function getAvailableDelegates(Request $request)
+    {
+        $request->validate([
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        ]);
+
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+
+        if (!$pegawai || !$pegawai->id_atasan_langsung) {
+            return response()->json([]);
+        }
+
+        // 1. Ambil rekan sebidang (sama atasan langsung)
+        $candidates = \App\Models\Pegawai::where('id_atasan_langsung', $pegawai->id_atasan_langsung)
+            ->where('id', '!=', $pegawai->id) // Jangan diri sendiri
+            ->where('status', 'aktif')
+            ->whereHas('user', function($query) {
+                $query->whereIn('role', ['pegawai', 'atasan']);
+            })
+            ->get();
+
+        // 2. Filter kandidat yang sedang cuti pada tanggal tersebut
+        $availableDelegates = $candidates->filter(function ($candidate) use ($request) {
+            // Cek apakah kandidat punya cuti DISETUJUI yang bertabrakan
+            $isOnLeave = Cuti::where('id_pegawai', $candidate->id)
+                ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis'])
+                ->where(function ($query) use ($request) {
+                    $query->where('tanggal_mulai', '<=', $request->tanggal_selesai)
+                          ->where('tanggal_selesai', '>=', $request->tanggal_mulai);
+                })
+                ->exists();
+
+            return !$isOnLeave;
+        });
+
+        // 3. Format response untuk dropdown
+        $data = $availableDelegates->map(function ($p) {
+            return [
+                'id' => $p->id,
+                'nama' => $p->nama,
+                'jabatan' => $p->jabatan
+            ];
+        })->values();
+
+        return response()->json($data);
     }
 
     /** ========================== 🔍 DETAIL CUTI ============================ */
