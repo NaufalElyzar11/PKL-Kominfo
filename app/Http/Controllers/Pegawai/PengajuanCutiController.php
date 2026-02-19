@@ -116,8 +116,9 @@ class PengajuanCutiController extends Controller
             'tanggal_mulai'   => [
                 'required', 'date',
                 function ($attribute, $value, $fail) {
-                    if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
-                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                    // HAPUS ATAU UBAH BAGIAN INI
+                    if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today())) {
+                        $fail('Tanggal mulai cuti tidak boleh di masa lalu.');
                     }
                 },
             ],
@@ -285,12 +286,11 @@ class PengajuanCutiController extends Controller
         // 3. VALIDASI
         $validated = $request->validate([
             'tanggal_mulai' => [
-                'required',
-                'date',
+                'required', 'date',
                 function ($attribute, $value, $fail) {
-                    $minDate = \Carbon\Carbon::today()->addDays(3);
-                    if (\Carbon\Carbon::parse($value)->lt($minDate)) {
-                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                    // HAPUS ATAU UBAH BAGIAN INI
+                    if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today())) {
+                        $fail('Tanggal mulai cuti tidak boleh di masa lalu.');
                     }
                 },
             ],

@@ -130,7 +130,18 @@
                         {{ \Carbon\Carbon::parse($item->tanggal_selesai)->translatedFormat('d F Y') }}
                     </td>
                     <td class="data-cell text-center font-bold">{{ $item->jumlah_hari }}</td>
-                    <td class="data-cell">{{ Str::limit($item->alasan_cuti, 40) }}</td>
+                    <td class="data-cell">
+                        @if($item->jenis_cuti == 'Tahunan')
+                            {{-- Jika Cuti Tahunan, abaikan isi database dan paksa muncul hak ASN --}}
+                            Hak ASN
+                        @elseif($item->jenis_cuti == 'Alasan Penting')
+                            {{-- Jika Alasan Penting, tambahkan prefix 'cuti penting:' --}}
+                            Cuti Penting: {{ $item->alasan_cuti }}
+                        @else
+                            {{-- Default untuk jenis lainnya jika ada --}}
+                            {{ $item->alasan_cuti }}
+                        @endif
+                    </td>
                     <td class="data-cell">
                         <div class="font-bold" >{{ $item->delegasi->nama ?? '-' }}</div>
                         <div style="font-size: 8pt; color: #666;">{{ $item->delegasi->jabatan ?? '' }}</div>

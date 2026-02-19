@@ -44,6 +44,9 @@
 @endpush
 
 <div x-data="{
+    showAddModal: false, 
+    jenisCutiTambah: '',   {{-- WAJIB ADA --}}
+    alasanCutiTambah: '',
     tab: 'menunggu',
     showModal: false, 
     showEditModal: false, 
@@ -51,8 +54,6 @@
     showDetailRiwayat: false, 
     openCatatanKadis: false,
     catatanContent: '',
-
-    jenisCutiTambah: '',
     
     // Inisialisasi Objek (WAJIB ADA AGAR TIDAK ERROR)
     detailPending: {}, 
@@ -724,6 +725,8 @@
                             <div class="relative">
                                 <select name="jenis_cuti" 
                                         x-model="jenisCutiTambah" 
+                                        {{-- LOGIKA BARU: Jika pilih Tahunan, set alasan otomatis --}}
+                                        @change="if(jenisCutiTambah === 'Tahunan') { alasanCutiTambah = 'Hak ASN' } else { alasanCutiTambah = '' }"
                                         class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[12px] sm:text-sm font-medium text-gray-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all appearance-none"
                                         required>
                                     <option value="" disabled selected>— Pilih jenis cuti —</option>
@@ -809,7 +812,7 @@
                                     if($refs.tambahMulai) {
                                         flatpickr($refs.tambahMulai, {
                                             ...commonConfig,
-                                            minDate: new Date().fp_incr(3),
+                                            minDate: 'today',
                                             onChange: (selectedDates, dateStr) => {
                                                 tanggalMulaiTambah = dateStr;
                                                 tanggalSelesaiTambah = ''; // Reset selesai jika mulai berubah
@@ -826,7 +829,7 @@
                                     if($refs.tambahSelesai) {
                                         flatpickr($refs.tambahSelesai, {
                                             ...commonConfig,
-                                            minDate: tanggalMulaiTambah || new Date().fp_incr(3),
+                                            minDate: tanggalMulaiTambah || 'today',
                                             onChange: (selectedDates, dateStr) => {
                                                 tanggalSelesaiTambah = dateStr;
                                                 hitungHariTambah();
@@ -845,11 +848,17 @@
                                 <textarea 
                                     name="keterangan" 
                                     rows="2" 
-                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
-                                           focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 resize-none" 
+                                    {{-- 1. Tambahkan x-model agar bisa diisi otomatis oleh Select --}}
+                                    x-model="alasanCutiTambah"
+                                    {{-- 2. Kunci input jika jenis cuti adalah Tahunan --}}
+                                    :readonly="jenisCutiTambah === 'Tahunan'"
+                                    {{-- 3. Beri warna abu-abu jika terkunci (readonly) --}}
+                                    :class="jenisCutiTambah === 'Tahunan' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'"
+                                    class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs
+                                        focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 resize-none" 
                                     placeholder="Jelaskan alasan pengajuan cuti Anda..." 
                                     required
-                                    oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"></textarea>
+                                    @input="alasanCutiTambah = $event.target.value.replace(/[^A-Za-z\s]/g, '')"></textarea>
                             </div>
 
                             {{-- DELEGASI --}}
