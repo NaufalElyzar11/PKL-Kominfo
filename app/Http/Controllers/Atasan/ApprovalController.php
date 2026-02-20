@@ -321,8 +321,8 @@ public function storeCuti(Request $request)
         'jumlah_hari'     => $jumlah_hari,
         'tahun'           => date('Y'),
         'keterangan'      => $validated['keterangan'],
-        'status'          => 'Disetujui Atasan',
-        'status_delegasi' => 'disetujui',
+        'status'          => 'Menunggu', 
+        'status_delegasi' => 'disetujui', // Atasan otomatis menyetujui diri sendiri
         'status_atasan'   => 'disetujui',
         'atasan_nama'     => $pegawai->nama, 
         'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',

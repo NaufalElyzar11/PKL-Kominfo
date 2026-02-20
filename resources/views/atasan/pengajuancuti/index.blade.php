@@ -29,6 +29,7 @@
     showDetailRiwayat: false, 
 
     jenisCutiTambah: '',
+    alasanCutiTambah: '',
     
     detailPending: {}, 
     detailRiwayat: {},
@@ -470,14 +471,16 @@
                                     Jenis Cuti <span class="text-red-500">*</span>
                                 </label>
                                 <div class="relative">
-                                    <select name="jenis_cuti" 
-                                            x-model="jenisCutiTambah" 
-                                            class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] font-medium text-gray-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all appearance-none"
-                                            required>
-                                        <option value="" disabled selected>— Pilih jenis cuti —</option>
-                                        <option value="Tahunan">Cuti Tahunan</option>
-                                        <option value="Alasan Penting">Cuti Alasan Penting</option>
-                                    </select>
+                                <select name="jenis_cuti" 
+                                        x-model="jenisCutiTambah" 
+                                        {{-- LOGIKA: Jika pilih Tahunan, set alasan otomatis ke 'Hak ASN' --}}
+                                        @change="if(jenisCutiTambah === 'Tahunan') { alasanCutiTambah = 'Hak ASN' } else { alasanCutiTambah = '' }"
+                                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] font-medium text-gray-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all appearance-none"
+                                        required>
+                                    <option value="" disabled selected>— Pilih jenis cuti —</option>
+                                    <option value="Tahunan">Cuti Tahunan</option>
+                                    <option value="Alasan Penting">Cuti Alasan Penting</option>
+                                </select>
                                     
                                     {{-- Ikon Panah Kecil --}}
                                     <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
@@ -524,9 +527,15 @@
                                     name="keterangan" 
                                     rows="2" 
                                     required
-                                    {{-- Logika agar hanya huruf dan spasi yang diizinkan --}}
-                                    oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                                    class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none resize-none"
+                                    {{-- 1. Hubungkan ke variabel Alpine --}}
+                                    x-model="alasanCutiTambah"
+                                    {{-- 2. Kunci input jika jenis cuti adalah Tahunan --}}
+                                    :readonly="jenisCutiTambah === 'Tahunan'"
+                                    {{-- 3. Beri warna abu-abu jika terkunci --}}
+                                    :class="jenisCutiTambah === 'Tahunan' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'"
+                                    {{-- 4. Filter hanya huruf dan spasi --}}
+                                    @input="alasanCutiTambah = $event.target.value.replace(/[^A-Za-z\s]/g, '')"
+                                    class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-[11px] focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none resize-none"
                                     placeholder="Jelaskan alasan pengajuan cuti..."></textarea>
                             </div>
                         </fieldset>

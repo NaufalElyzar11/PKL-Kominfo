@@ -12,15 +12,26 @@ class PejabatApprovalController extends Controller
 {
     public function dashboard()
     {
+        // Kueri dasar untuk mengambil pengajuan yang harus diproses Pejabat
+        $queryPejabat = Cuti::where(function($query) {
+            // 1. Ambil pengajuan Pegawai yang sudah lolos tahap Atasan
+            $query->where('status', 'Disetujui Atasan')
+            // 2. ATAU ambil pengajuan Atasan yang berstatus 'Menunggu'
+                ->orWhere(function($q) {
+                    $q->where('status', 'Menunggu')
+                        ->whereHas('pegawai.user', function($u) {
+                            $u->where('role', 'atasan');
+                        });
+                });
+        });
+
         $stats = [
-            'menunggu'  => Cuti::where('status', 'Disetujui Atasan')->count(),
+            'menunggu'  => (clone $queryPejabat)->count(),
             'disetujui' => Cuti::where('status', 'Disetujui')->count(),
-            // Hitung penolakan yang ada catatan dari pejabat (berarti pejabat yang menolak)
             'ditolak'   => Cuti::where('status', 'Ditolak')->whereNotNull('catatan_tolak_pejabat')->count(),
         ];
 
-        $pengajuan = Cuti::with('pegawai', 'delegasi')
-            ->where('status', 'Disetujui Atasan')
+        $pengajuan = (clone $queryPejabat)->with('pegawai', 'delegasi')
             ->orderBy('created_at', 'desc')
             ->get();
 

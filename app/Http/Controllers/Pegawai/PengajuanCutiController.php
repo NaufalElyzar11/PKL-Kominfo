@@ -361,7 +361,7 @@ class PengajuanCutiController extends Controller
             return response()->json([]);
         }
 
-        // 1. Ambil rekan sebidang (sama atasan langsung)
+        // 1. Ambil semua kandidat rekan sebidang yang aktif
         $candidates = \App\Models\Pegawai::where('id_atasan_langsung', $pegawai->id_atasan_langsung)
             ->where('id', '!=', $pegawai->id) // Jangan diri sendiri
             ->where('status', 'aktif')
@@ -370,30 +370,34 @@ class PengajuanCutiController extends Controller
             })
             ->get();
 
-        // 2. Filter kandidat yang sedang cuti pada tanggal tersebut
+        // 2. Filter kandidat yang benar-benar tersedia
         $availableDelegates = $candidates->filter(function ($candidate) use ($request) {
-            // Cek apakah kandidat punya cuti DISETUJUI yang bertabrakan
-            $isOnLeave = Cuti::where('id_pegawai', $candidate->id)
-                ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis'])
+            // CEK: Apakah kandidat sedang SIBUK di tanggal tersebut?
+            // Sibuk = Dia sedang CUTI (id_pegawai) ATAU dia sudah jadi DELEGASI orang lain (id_delegasi)
+            $isBusy = Cuti::where(function ($q) use ($candidate) {
+                    $q->where('id_pegawai', $candidate->id) 
+                    ->orWhere('id_delegasi', $candidate->id);
+                })
+                ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis', 'Menunggu'])
                 ->where(function ($query) use ($request) {
+                    // Logika Overlap Tanggal
                     $query->where('tanggal_mulai', '<=', $request->tanggal_selesai)
-                          ->where('tanggal_selesai', '>=', $request->tanggal_mulai);
+                        ->where('tanggal_selesai', '>=', $request->tanggal_mulai);
                 })
                 ->exists();
 
-            return !$isOnLeave;
+            // Masukkan ke daftar hanya jika TIDAK SIBUK (isBusy == false)
+            return !$isBusy;
         });
 
         // 3. Format response untuk dropdown
-        $data = $availableDelegates->map(function ($p) {
+        return response()->json($availableDelegates->map(function ($p) {
             return [
                 'id' => $p->id,
                 'nama' => $p->nama,
                 'jabatan' => $p->jabatan
             ];
-        })->values();
-
-        return response()->json($data);
+        })->values());
     }
 
     /** ========================== 🔍 DETAIL CUTI ============================ */
