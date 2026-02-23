@@ -105,7 +105,7 @@ class PengajuanCutiController extends Controller
                         ->exists();
         
         if ($hasPending) {
-            return back()->with('error', 'Gagal! Anda masih memiliki pengajuan cuti yang sedang diproses atau butuh revisi.');
+            return back()->with('error', 'Gagal! Anda masih memiliki pengajuan cuti yang sedang diproses.');
         }
 
         // 2. VALIDASI FORM
@@ -130,26 +130,28 @@ class PengajuanCutiController extends Controller
             return back()->with('error', 'Pegawai pengganti harus berada di bawah naungan Atasan Langsung yang sama.');
         }
 
-        // 4. VALIDASI KUOTA SEKSI/BIDANG
-        $bulanCuti = \Carbon\Carbon::parse($validated['tanggal_mulai'])->month;
-        $tahunCuti = \Carbon\Carbon::parse($validated['tanggal_mulai'])->year;
-        $unitKerja = trim($pegawai->unit_kerja);
+        // --- Langkah 4: VALIDASI KUOTA BIDANG (Hanya untuk Cuti Tahunan) ---
+        if ($validated['jenis_cuti'] === 'Tahunan') {
+            $bulanCuti = \Carbon\Carbon::parse($validated['tanggal_mulai'])->month;
+            $tahunCuti = \Carbon\Carbon::parse($validated['tanggal_mulai'])->year;
+            $unitKerja = trim($pegawai->unit_kerja);
 
-        $jumlahPegawaiCuti = Cuti::whereHas('pegawai', function($q) use ($unitKerja) {
-                $q->where('unit_kerja', $unitKerja);
-            })
-            ->where('user_id', '!=', $user->id)
-            ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
-            ->where(function($q) use ($bulanCuti, $tahunCuti) {
-                $q->whereMonth('tanggal_mulai', $bulanCuti)
-                ->whereYear('tanggal_mulai', $tahunCuti);
-            })
-            ->distinct('user_id')
-            ->count('user_id');
+            $jumlahOrangCuti = Cuti::whereHas('pegawai', function($q) use ($unitKerja) {
+                    $q->where('unit_kerja', $unitKerja);
+                })
+                ->where('user_id', '!=', $user->id)
+                ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
+                ->where(function($q) use ($bulanCuti, $tahunCuti) {
+                    $q->whereMonth('tanggal_mulai', $bulanCuti)
+                      ->whereYear('tanggal_mulai', $tahunCuti);
+                })
+                ->distinct('user_id')
+                ->count('user_id');
 
-        if ($jumlahPegawaiCuti >= 2) {
-            return back()->with('error', "Gagal! Kuota cuti di unit '$unitKerja' untuk bulan tersebut sudah penuh (Maks. 2 orang).");
-        }
+            if ($jumlahOrangCuti >= 2) {
+                return back()->with('error', "Gagal! Kuota Cuti Tahunan di bidang $unitKerja sudah penuh (Maks. 2 orang).");
+            }
+        } // <--- KURUNG PENUTUP LANGKAH 4 HARUS DI SINI
 
         // 5. CEK APAKAH DELEGASI YANG DIPILIH SEDANG CUTI?
         $isDelegateOnLeave = Cuti::where('id_pegawai', $delegasi->id)
@@ -161,12 +163,10 @@ class PengajuanCutiController extends Controller
             ->exists();
 
         if ($isDelegateOnLeave) {
-            return back()->with('error', "Gagal! Pegawai pengganti ({$delegasi->nama}) sudah memiliki jadwal cuti di tanggal tersebut.");
+            return back()->with('error', "Gagal! Pegawai pengganti ({$delegasi->nama}) sudah memiliki jadwal cuti.");
         }
 
-        // ==================================================================================
-        // 6. LOGIKA INI YANG ANDA MAKSUD: CEK APAKAH PEMOHON SEDANG JADI DELEGASI ORANG LAIN?
-        // ==================================================================================
+        // 6. CEK APAKAH PEMOHON SEDANG JADI DELEGASI ORANG LAIN?
         $conflictTask = Cuti::where('id_delegasi', $pegawai->id)
             ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
             ->where(function ($query) use ($validated) {
@@ -175,41 +175,24 @@ class PengajuanCutiController extends Controller
             })
             ->first();
 
-        // --- Langkah 6: Validasi Bentrok Jadwal Delegasi ---
         if ($conflictTask) {
-            $mulai = $conflictTask->tanggal_mulai->translatedFormat('d M Y');
-            $selesai = $conflictTask->tanggal_selesai->translatedFormat('d M Y');
-
-            return back()->with('error', 
-                "<b>Pengajuan Cuti Ditolak Sistem</b><br><br>" .
-                "Anda tidak dapat mengajukan cuti karena pada periode (<b>$mulai s/d $selesai</b>), " .
-                "Anda terdaftar sebagai <b>Petugas Pengganti</b> untuk: <b>{$conflictTask->nama}</b>.<br><br>" .
-                "Silakan ajukan di tanggal lain."
-            );
+            return back()->with('error', "Gagal! Anda terdaftar sebagai Petugas Pengganti untuk {$conflictTask->nama} di tanggal tersebut.");
         }
 
-        // 6B. VALIDASI: Cek apakah USER INI sudah punya jadwal cuti yang aktif di tanggal tersebut?
-    $existingLeave = Cuti::where('user_id', $user->id)
-        ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
-        ->where(function ($query) use ($validated) {
-            $query->where('tanggal_mulai', '<=', $validated['tanggal_selesai'])
-                ->where('tanggal_selesai', '>=', $validated['tanggal_mulai']);
-        })
-        ->first();
+        // 6B. VALIDASI: Cek Double Booking (Pribadi)
+        $existingLeave = Cuti::where('user_id', $user->id)
+            ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
+            ->where(function ($query) use ($validated) {
+                $query->where('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+                    ->where('tanggal_selesai', '>=', $validated['tanggal_mulai']);
+            })
+            ->exists();
 
         if ($existingLeave) {
-            $mulai = $existingLeave->tanggal_mulai->translatedFormat('d M Y');
-            $selesai = $existingLeave->tanggal_selesai->translatedFormat('d M Y');
-
-            return back()->with('error', 
-                "<b>Gagal Pengajuan!</b><br><br>" .
-                "Anda sudah memiliki jadwal cuti berstatus <b>{$existingLeave->status}</b> " .
-                "pada periode <b>$mulai s/d $selesai</b>.<br><br>" .
-                "Silakan ajukan di tanggal lain."
-            );
+            return back()->with('error', "Gagal! Anda sudah memiliki jadwal cuti lain di tanggal tersebut.");
         }
 
-        // --- Langkah 6C: Validasi Batas Frekuensi Cuti Tahunan (1x Sebulan) ---
+        // 6C. VALIDASI: Batas 1x Cuti Tahunan Sebulan
         if ($validated['jenis_cuti'] === 'Tahunan') {
             $bulanMulai = \Carbon\Carbon::parse($validated['tanggal_mulai'])->month;
             $tahunMulai = \Carbon\Carbon::parse($validated['tanggal_mulai'])->year;
@@ -222,12 +205,7 @@ class PengajuanCutiController extends Controller
                 ->exists();
 
             if ($alreadyHasTahunan) {
-                $namaBulan = \Carbon\Carbon::parse($validated['tanggal_mulai'])->translatedFormat('F');
-                return back()->with('error', 
-                    "<b>Batas Kuota Pengajuan</b><br><br>" .
-                    "Anda sudah memiliki pengajuan <b>Cuti Tahunan</b> di bulan <b>$namaBulan</b>.<br><br>" .
-                    "Sesuai aturan, Cuti Tahunan hanya boleh diajukan 1x dalam sebulan (kecuali Cuti Alasan Penting)."
-                );
+                return back()->with('error', "Gagal! Cuti Tahunan hanya boleh diajukan 1x dalam sebulan.");
             }
         }
 
@@ -378,26 +356,54 @@ class PengajuanCutiController extends Controller
         // ==================================================================================
         // POINT 2: VALIDASI BATAS 1X CUTI TAHUNAN SEBULAN
         // ==================================================================================
-        if ($cuti->jenis_cuti === 'Tahunan') {
-            $bulanMulai = \Carbon\Carbon::parse($request->tanggal_mulai)->month;
-            $tahunMulai = \Carbon\Carbon::parse($request->tanggal_mulai)->year;
+        if ($cuti->jenis_cuti === 'Tahunan') { // <--- Bungkus dengan IF
+            $bulanUpdate = \Carbon\Carbon::parse($request->tanggal_mulai)->month;
+            $tahunUpdate = \Carbon\Carbon::parse($request->tanggal_mulai)->year;
+            $unitKerja = trim($pegawai->unit_kerja);
 
-            $hasExistingTahunan = Cuti::where('user_id', Auth::id())
-                ->where('id', '!=', $id) // Abaikan data yang sedang kita edit ini
-                ->where('jenis_cuti', 'Tahunan')
+            $cekKuotaUpdate = Cuti::whereHas('pegawai', function($q) use ($unitKerja) {
+                    $q->where('unit_kerja', $unitKerja);
+                })
+                ->where('user_id', '!=', Auth::id())
+                ->where('id', '!=', $id)
                 ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
-                ->whereMonth('tanggal_mulai', $bulanMulai)
-                ->whereYear('tanggal_mulai', $tahunMulai)
-                ->exists();
+                ->where(function($q) use ($bulanUpdate, $tahunUpdate) {
+                    $q->whereMonth('tanggal_mulai', $bulanUpdate)
+                      ->whereYear('tanggal_mulai', $tahunUpdate);
+                })
+                ->distinct('user_id')
+                ->count('user_id');
 
-            if ($hasExistingTahunan) {
-                $namaBulan = \Carbon\Carbon::parse($request->tanggal_mulai)->translatedFormat('F');
-                return back()->with('error', "<b>Gagal Update!</b><br>Anda sudah memiliki jadwal Cuti Tahunan lain di bulan <b>$namaBulan</b>.");
+            if ($cekKuotaUpdate >= 2) {
+                return back()->with('error', 'Gagal Update! Kuota Cuti Tahunan sudah penuh.');
             }
         }
 
         // 4. HITUNG DURASI
         $jumlahHari = $this->calculateWorkingDays($request->tanggal_mulai, $request->tanggal_selesai);
+
+
+        // --- Tambahan Validasi Kuota Bidang pada saat Update/Revisi ---
+        $bulanUpdate = \Carbon\Carbon::parse($request->tanggal_mulai)->month;
+        $tahunUpdate = \Carbon\Carbon::parse($request->tanggal_mulai)->year;
+        $unitKerja = trim($pegawai->unit_kerja);
+
+        $cekKuotaUpdate = Cuti::whereHas('pegawai', function($q) use ($unitKerja) {
+                $q->where('unit_kerja', $unitKerja);
+            })
+            ->where('user_id', '!=', Auth::id()) // Abaikan diri sendiri
+            ->where('id', '!=', $id)             // Abaikan record yang sedang diedit ini
+            ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
+            ->where(function($q) use ($bulanUpdate, $tahunUpdate) {
+                $q->whereMonth('tanggal_mulai', $bulanUpdate)
+                ->whereYear('tanggal_mulai', $tahunUpdate);
+            })
+            ->distinct('user_id')
+            ->count('user_id');
+
+        if ($cekKuotaUpdate >= 2) {
+            return back()->with('error', '<b>Gagal Update!</b><br>Kuota cuti di bidang Anda untuk bulan tersebut sudah penuh (Maks. 2 orang).');
+        }
 
         // 5. UPDATE DATA & RESET STATUS (PENTING)
         $cuti->update([
