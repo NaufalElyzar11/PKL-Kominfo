@@ -29,7 +29,6 @@ class Pegawai extends Model
         'id_pejabat_pemberi_cuti',
     ];
 
-    protected $appends = ['sisa_cuti'];
 
     protected $casts = [
         'kuota_cuti' => 'integer',
@@ -74,23 +73,5 @@ class Pegawai extends Model
     public function pejabatPemberiCuti()
     {
         return $this->belongsTo(PejabatPemberiCuti::class, 'id_pejabat_pemberi_cuti');
-    }
-
-    /**
-     * Accessor untuk hitung sisa cuti secara Real-time
-     * Menghitung total cuti yang sudah 'Disetujui' (final approved) tahun ini
-     */
-    public function getSisaCutiAttribute(): int
-    {
-        $tahun = date('Y');
-        
-        // PERBAIKAN: Hanya hitung cuti yang sudah final approved (bukan "Disetujui Atasan")
-        $terpakai = $this->cuti()
-            ->where('tahun', $tahun)
-            ->whereIn('status', ['Disetujui', 'disetujui']) // Hanya yang final approved
-            ->sum('jumlah_hari');
-
-        // Menggunakan kuota_cuti dari database, default 12 jika kosong
-        return max(0, ($this->kuota_cuti ?? 12) - $terpakai);
     }
 }

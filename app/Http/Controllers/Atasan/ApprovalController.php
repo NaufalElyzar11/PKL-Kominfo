@@ -198,24 +198,29 @@ class ApprovalController extends Controller
      */
     public function tolakDelegasi(Request $request, $id)
     {
-        $request->validate(['catatan_tolak_delegasi' => 'required|string|max:255']);
+        $request->validate([
+        // regex:/^[a-zA-Z\s]+$/ artinya hanya menerima huruf dan spasi
+        'catatan_tolak_delegasi' => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/',
+        ], [
+            'catatan_tolak_delegasi.regex' => 'Alasan penolakan hanya boleh berisi huruf dan spasi.'
+        ]);
 
         $cuti = Cuti::findOrFail($id);
         $cuti->update([
             'status_delegasi' => 'ditolak',
-            'status' => 'Ditolak',
+            'status' => 'Revisi Delegasi',
             'catatan_tolak_delegasi' => $request->catatan_tolak_delegasi
         ]);
 
         // Notify User
         Notification::create([
-            'user_id' => $cuti->user_id,
-            'title'   => 'Delegasi Ditolak',
-            'message' => 'Permintaan delegasi cuti Anda ditolak. Alasan: ' . $request->catatan_tolak_delegasi,
-            'is_read' => false,
+                'user_id' => $cuti->user_id,
+                'title'   => 'Revisi Delegasi Diperlukan',
+                'message' => 'Petugas pengganti ditolak atasan. Alasan: ' . $request->catatan_tolak_delegasi . '. Silakan pilih delegasi lain.',
+                'is_read' => false,
         ]);
 
-        return back()->with('success', 'Delegasi ditolak.');
+        return back()->with('success', 'Permintaan revisi delegasi dikirim ke pegawai.');
     }
 
     /**

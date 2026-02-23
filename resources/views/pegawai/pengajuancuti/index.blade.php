@@ -189,8 +189,14 @@
             alasan_cuti: data.alasan_cuti,
             status: data.status,
             jumlah_hari: data.jumlah_hari,
-            id_delegasi: data.delegasi ? data.delegasi.id : '', // Tambahkan ID Delegasi
+            catatan_tolak_delegasi: data.catatan_tolak_delegasi, 
+            id_delegasi: data.id_delegasi || '',
+            rejectedDelegateId: (data.status === 'Revisi Delegasi') ? data.id_delegasi : null
         };
+
+        // PENTING: Panggil fungsi ini agar daftar teman muncul di dropdown saat edit
+        this.loadDelegates(data.tanggal_mulai_raw, data.tanggal_selesai_raw);
+
         this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
         
         // Load delegasi berdasarkan tanggal yang ada
@@ -308,16 +314,22 @@
                                 <td class="px-1 py-2">{{ Str::limit($c->alasan_cuti, 20) }}</td>
                                 <td class="px-1 py-2 text-center">
                                     @if($c->status == 'Menunggu')
-                                        <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
-                                    @elseif($c->status == 'Disetujui Atasan')
-                                        <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">
-                                            <i class="fa-solid fa-user-check mr-1"></i> Disetujui Atasan
+                                        @if(!empty($c->catatan_tolak_delegasi))
+                                            {{-- Jika sudah pernah ditolak tapi status sudah 'Menunggu' lagi --}}
+                                            <span class="px-2 py-0.5 rounded-full bg-cyan-100 text-cyan-700 text-[10px] font-bold">
+                                                <i class="fa-solid fa-hourglass-half mr-1"></i> Menunggu Hasil Revisi
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
+                                        @endif
+                                    @elseif($c->status == 'Revisi Delegasi')
+                                        <span class="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold animate-pulse">
+                                            <i class="fa-solid fa-rotate mr-1"></i> Butuh Revisi
                                         </span>
-                                    @else
-                                        <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px]">{{ $c->status }}</span>
                                     @endif
                                 </td>
                                 <td class="px-1 py-2 text-center flex justify-center gap-1">
+
                                 {{-- Tambahkan baris alasan_cuti di dalam parameter showPendingDetail --}}
                                 <button @click="showPendingDetail({
                                     nama: {{ Js::from($c->pegawai->nama ?? '-') }}, 
@@ -341,6 +353,27 @@
                                 })" class="p-1 text-sky-600 hover:bg-sky-50 rounded">
                                     <i class="fa-solid fa-eye text-[12px]"></i>
                                 </button>
+
+                                {{-- Memunculkan tombol edit --}}
+                                @if($c->status == 'Revisi Delegasi' || $c->status == 'Menunggu')
+                                <button @click="openEditModal({
+                                    id: '{{ $c->id }}',
+                                    nama: '{{ $c->pegawai->nama }}',
+                                    nip: '{{ $c->pegawai->nip }}',
+                                    jabatan: '{{ $c->pegawai->jabatan }}',
+                                    jenis_cuti: '{{ $c->jenis_cuti }}',
+                                    tanggal_mulai_raw: '{{ $c->tanggal_mulai->format('Y-m-d') }}',
+                                    tanggal_selesai_raw: '{{ $c->tanggal_selesai->format('Y-m-d') }}',
+                                    alasan_cuti: '{{ $c->keterangan }}',
+                                    status: '{{ $c->status }}',
+                                    jumlah_hari: '{{ $c->jumlah_hari }}',
+                                    id_delegasi: '{{ $c->id_delegasi }}',
+                                    {{-- BARIS KRUSIAL: Agar alasan muncul di modal --}}
+                                    catatan_tolak_delegasi: '{{ $c->catatan_tolak_delegasi ?? "-" }}'
+                                })" class="p-1 text-orange-600 hover:bg-orange-50 rounded">
+                                    <i class="fa-solid fa-pen-to-square text-[12px]"></i>
+                                </button>
+                                @endif
                                     
                                     <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
                                         method="POST"
@@ -688,7 +721,11 @@
                                         </div>
                                         <div>
                                             <p class="text-[9px] sm:text-[10px] uppercase tracking-wide" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">Sisa Kuota</p>
-                                            <p class="text-[11px] sm:text-xs font-medium" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-700'">Setelah pengajuan ini</p>
+                                            {{-- TAMBAHKAN / GANTI DI SINI --}}
+                                            <p class="text-[11px] sm:text-xs font-medium" 
+                                            :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-700'">
+                                            Sisa Kuota (Termasuk Akumulasi Tahun Lalu)
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -874,7 +911,7 @@
                                                focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
                                         required>
                                         <option value="" disabled selected>— Pilih pegawai pengganti —</option>
-                                        <template x-for="delegate in availableDelegates" :key="delegate.id">
+                                        <template x-for="delegate in availableDelegates.filter(d => d.id != selectedCuti.rejectedDelegateId)" :key="delegate.id">
                                             <option :value="delegate.id" x-text="delegate.nama + ' — ' + delegate.jabatan"></option>
                                         </template>
                                         <option x-show="availableDelegates.length === 0" value="" disabled>--- Pilih tanggal dulu / Tidak ada rekan tersedia ---</option>
@@ -909,11 +946,14 @@
                                 <span class="text-[9px] text-gray-400">hari kerja</span>
                             </div>
                             <div class="flex flex-col items-center p-3 rounded-xl border shadow-sm transition-all duration-300"
-                                 :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'">
-                                <p class="text-[9px] uppercase tracking-wide mb-1" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">Sisa Kuota</p>
+                                :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'">
+                                {{-- GANTI BARIS LABEL DI BAWAH INI --}}
+                                <p class="text-[9px] uppercase tracking-wide mb-1 text-center" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">
+                                    Sisa Kuota (Termasuk Akumulasi Tahun Lalu)
+                                </p>
                                 <span class="text-2xl font-black" 
-                                      :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-600'"
-                                      x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)">12</span>
+                                    :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-600'"
+                                    x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)">12</span>
                                 <span class="text-[9px]" :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-400' : 'text-emerald-500'">hari tersisa</span>
                             </div>
                         </div>
@@ -1056,6 +1096,20 @@
             @method('PUT')
 
             <div class="bg-gray-50 p-2.5 rounded-lg text-[10px] border border-gray-200 space-y-2 text-gray-700">
+
+                <template x-if="selectedCuti.status === 'Revisi Delegasi'">
+                <div class="mb-3 p-3 bg-orange-100 border-l-4 border-orange-500 rounded-r shadow-sm">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-circle-exclamation text-orange-600"></i>
+                        <span class="text-[10px] font-black text-orange-800 uppercase tracking-tighter">Perlu Revisi Delegasi</span>
+                    </div>
+                    <p class="text-[11px] text-orange-700 leading-tight">
+                        <span class="font-bold">Alasan Penolakan:</span> 
+                        <span class="italic" x-text="selectedCuti.catatan_tolak_delegasi"></span>
+                    </p>
+                </div>
+            </template>
+
                 <div class="border-b border-gray-200 pb-2">
                     <label class="font-bold text-gray-500 block mb-0.5">Nama Pegawai:</label>
                     <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium" x-text="selectedCuti.nama"></div>
@@ -1348,6 +1402,18 @@ document.addEventListener('DOMContentLoaded', function () {
         showConfirmButton: false,
         timer: 2500,
         timerProgressBar: true,
+        borderRadius: '15px'
+    });
+</script>
+@endif
+
+@if(session('error'))
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Perhatian',
+        html: "{!! session('error') !!}", 
+        confirmButtonColor: '#ef4444',
         borderRadius: '15px'
     });
 </script>

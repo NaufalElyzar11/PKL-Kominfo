@@ -410,6 +410,7 @@ x-data="{
         <form :action="'{{ url('atasan/approval') }}/' + selectedCuti.id + '/tolak-delegasi'" method="POST">
             @csrf
             <textarea name="catatan_tolak_delegasi" rows="3" required
+                oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
                 class="w-full border-gray-200 rounded-xl shadow-sm focus:ring-rose-500 focus:border-rose-500 p-3 border text-sm"
                 placeholder="Misal: Ybs sedang menangani proyek besar lainnya..."></textarea>
 
