@@ -1155,200 +1155,270 @@
 </div>
 
 <div x-show="showEditModal" x-cloak
-     class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-3">
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
+     @click.self="showEditModal = false"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
 
     <div x-show="showEditModal && selectedCuti"
          @click.stop
-         x-transition.scale
-         class="bg-white rounded-xl p-4 w-full max-w-sm shadow-xl border border-gray-200">
-         
-        <div class="flex justify-between items-center border-b pb-2 mb-2">
-            <h3 class="text-[12px] font-bold text-sky-600 uppercase tracking-tight">
-                <i class="fa-solid fa-pen-to-square"></i> Edit Data Cuti
-            </h3>
-            <button @click="showEditModal=false" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+         class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+
+        {{-- HEADER GRADIENT --}}
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <i class="fa-solid fa-pen-to-square text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-base tracking-wide">Edit Data Cuti</h3>
+                        <p class="text-amber-100 text-[10px]">Ubah tanggal, delegasi, atau alasan cuti</p>
+                    </div>
+                </div>
+                <button @click="showEditModal = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                    <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                </button>
+            </div>
         </div>
 
         <form :action="'/pegawai/cuti/' + selectedCuti.id" method="POST">
             @csrf 
             @method('PUT')
 
-            <div class="bg-gray-50 p-2.5 rounded-lg text-[10px] border border-gray-200 space-y-2 text-gray-700">
+            <div class="p-5 max-h-[75vh] overflow-y-auto space-y-4">
 
+                {{-- REVISI DELEGASI ALERT --}}
                 <template x-if="selectedCuti.status === 'Revisi Delegasi'">
-                <div class="mb-3 p-3 bg-orange-100 border-l-4 border-orange-500 rounded-r shadow-sm">
-                    <div class="flex items-center gap-2 mb-1">
-                        <i class="fa-solid fa-circle-exclamation text-orange-600"></i>
-                        <span class="text-[10px] font-black text-orange-800 uppercase tracking-tighter">Perlu Revisi Delegasi</span>
+                    <div class="flex items-start gap-3 p-3 bg-orange-50 border border-orange-200 rounded-xl">
+                        <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-circle-exclamation text-orange-600"></i>
+                        </div>
+                        <div class="text-xs">
+                            <p class="font-bold text-orange-700 mb-1 uppercase tracking-wide">Perlu Revisi Delegasi</p>
+                            <p class="text-orange-600"><span class="font-semibold">Alasan:</span> <span class="italic" x-text="selectedCuti.catatan_tolak_delegasi"></span></p>
+                        </div>
                     </div>
-                    <p class="text-[11px] text-orange-700 leading-tight">
-                        <span class="font-bold">Alasan Penolakan:</span> 
-                        <span class="italic" x-text="selectedCuti.catatan_tolak_delegasi"></span>
-                    </p>
-                </div>
-            </template>
+                </template>
 
-                <div class="border-b border-gray-200 pb-2">
-                    <label class="font-bold text-gray-500 block mb-0.5">Nama Pegawai:</label>
-                    <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium" x-text="selectedCuti.nama"></div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">NIP:</label>
-                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium" x-text="selectedCuti.nip"></div>
+                {{-- INFO PEGAWAI (readonly) --}}
+                <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                    <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100 flex items-center gap-2">
+                        <i class="fa-solid fa-user-tie text-amber-600 text-sm"></i>
+                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Data Pegawai</span>
                     </div>
-                    <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Jabatan:</label>
-                        <div class="bg-gray-100 px-2 py-1.5 rounded border border-gray-200 text-gray-500 font-medium" x-text="selectedCuti.jabatan"></div>
+                    <div class="p-4 grid grid-cols-2 gap-3">
+                        <div class="col-span-2 flex items-center gap-3 pb-3 border-b border-gray-100">
+                            <div class="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-id-badge text-amber-600"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-[9px] text-gray-400 uppercase tracking-wide">Nama Lengkap</p>
+                                <p class="text-sm font-semibold text-gray-800 truncate" x-text="selectedCuti.nama || '-'"></p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">NIP</p>
+                            <p class="text-xs font-medium text-gray-700" x-text="selectedCuti.nip || '-'"></p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">Jabatan</p>
+                            <p class="text-xs font-medium text-gray-700" x-text="selectedCuti.jabatan || '-'"></p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Mulai:</label>
+                {{-- TANGGAL --}}
+                <div class="bg-gradient-to-br from-sky-50 to-blue-50 rounded-xl border border-sky-100 overflow-hidden">
+                    <div class="px-4 py-2.5 bg-sky-100/50 border-b border-sky-100 flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-sky-600 text-sm"></i>
+                        <span class="text-[10px] font-bold text-sky-600 uppercase tracking-wider">Periode Cuti</span>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500">
+                                    <i class="fa-regular fa-calendar-check text-sky-500 text-[9px]"></i>
+                                    Mulai
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="tanggal_mulai" 
+                                           x-model="selectedCuti.tanggal_mulai" 
+                                           x-ref="editMulai"
+                                           class="w-full bg-white border border-sky-200 rounded-lg pl-3 pr-7 py-2 text-xs outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 transition-all">
+                                    <div class="absolute right-2 top-2.5 pointer-events-none text-sky-400">
+                                        <i class="fa-regular fa-calendar text-[10px]"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="flex items-center gap-1.5 text-[10px] font-semibold text-gray-500">
+                                    <i class="fa-regular fa-calendar-xmark text-sky-500 text-[9px]"></i>
+                                    Selesai
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="tanggal_selesai" 
+                                           x-model="selectedCuti.tanggal_selesai" 
+                                           x-ref="editSelesai"
+                                           class="w-full bg-white border border-sky-200 rounded-lg pl-3 pr-7 py-2 text-xs outline-none focus:ring-2 focus:ring-sky-100 focus:border-sky-400 transition-all">
+                                    <div class="absolute right-2 top-2.5 pointer-events-none text-sky-400">
+                                        <i class="fa-regular fa-calendar text-[10px]"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Total Hari Counter --}}
+                        <div class="flex items-center justify-between bg-white rounded-xl border border-sky-100 px-4 py-2.5 shadow-sm">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 bg-sky-100 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-sun text-sky-600 text-[9px]"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 font-medium">Total Hari Kerja</span>
+                            </div>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-xl font-black text-sky-600" x-text="selectedCuti.jumlah_hari || '0'"></span>
+                                <span class="text-[10px] text-gray-400">hari</span>
+                            </div>
+                            <input type="hidden" name="jumlah_hari" :value="selectedCuti.jumlah_hari">
+                        </div>
+
+                        <!-- Watcher untuk Edit Modal -->
+                        <div x-effect="
+                            if(showEditModal && holidaysLoaded && selectedCuti) {
+                                if($refs.editMulai) {
+                                    if ($refs.editMulai._flatpickr) {
+                                        $refs.editMulai._flatpickr.setDate(selectedCuti.tanggal_mulai);
+                                    } else {
+                                        flatpickr($refs.editMulai, {
+                                            locale: 'id',
+                                            dateFormat: 'Y-m-d',
+                                            defaultDate: selectedCuti.tanggal_mulai,
+                                            disable: [
+                                                function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                                ...holidays.map(h => h.date)
+                                            ],
+                                            onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                                const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                                const holiday = holidays.find(h => h.date === dateStr);
+                                                if (holiday) {
+                                                    dayElem.className += ' holiday';
+                                                    dayElem.title = holiday.desc;
+                                                }
+                                            },
+                                            onChange: (selectedDates, dateStr) => {
+                                                selectedCuti.tanggal_mulai = dateStr;
+                                                hitungHariEdit();
+                                                isChanged = true;
+                                                if ($refs.editSelesai._flatpickr) {
+                                                    $refs.editSelesai._flatpickr.set('minDate', dateStr);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+
+                                if($refs.editSelesai) {
+                                    if ($refs.editSelesai._flatpickr) {
+                                        $refs.editSelesai._flatpickr.setDate(selectedCuti.tanggal_selesai);
+                                        $refs.editSelesai._flatpickr.set('minDate', selectedCuti.tanggal_mulai);
+                                    } else {
+                                        flatpickr($refs.editSelesai, {
+                                            locale: 'id',
+                                            dateFormat: 'Y-m-d',
+                                            defaultDate: selectedCuti.tanggal_selesai,
+                                            minDate: selectedCuti.tanggal_mulai,
+                                            disable: [
+                                                function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
+                                                ...holidays.map(h => h.date)
+                                            ],
+                                            onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                                const dateStr = dayElem.dateObj.toISOString().split('T')[0];
+                                                const holiday = holidays.find(h => h.date === dateStr);
+                                                if (holiday) {
+                                                    dayElem.className += ' holiday';
+                                                    dayElem.title = holiday.desc;
+                                                }
+                                            },
+                                            onChange: (selectedDates, dateStr) => {
+                                                selectedCuti.tanggal_selesai = dateStr;
+                                                hitungHariEdit();
+                                                isChanged = true;
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                        "></div>
+                    </div>
+                </div>
+
+                {{-- DELEGASI --}}
+                <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl border border-violet-100 overflow-hidden">
+                    <div class="px-4 py-2.5 bg-violet-100/50 border-b border-violet-100 flex items-center gap-2">
+                        <i class="fa-solid fa-user-group text-violet-600 text-sm"></i>
+                        <span class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">Pegawai Pengganti</span>
+                    </div>
+                    <div class="p-4">
                         <div class="relative">
-                            <input type="text" name="tanggal_mulai" 
-                                   x-model="selectedCuti.tanggal_mulai" 
-                                   x-ref="editMulai"
-                                   class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
-                             <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
-                                <i class="fa-regular fa-calendar"></i>
+                            <select name="id_delegasi" 
+                                    x-model="selectedCuti.id_delegasi"
+                                    @change="isChanged = true"
+                                    class="w-full bg-white border border-violet-200 rounded-xl px-3 py-2.5 text-xs outline-none focus:ring-2 focus:ring-violet-100 focus:border-violet-400 appearance-none transition-all">
+                                <option value="" disabled>— Pilih Pegawai Pengganti —</option>
+                                <template x-for="delegate in availableDelegates" :key="delegate.id">
+                                    <option :value="delegate.id" 
+                                            x-text="delegate.nama + ' — ' + delegate.jabatan"
+                                            :selected="selectedCuti.id_delegasi == delegate.id"></option>
+                                </template>
+                                <option x-show="availableDelegates.length === 0" value="" disabled>Tidak ada rekan tersedia pada tanggal ini</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-violet-400">
+                                <i class="fa-solid fa-chevron-down text-[10px]"></i>
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="font-bold text-gray-500 block mb-0.5">Selesai:</label>
-                        <div class="relative">
-                            <input type="text" name="tanggal_selesai" 
-                                   x-model="selectedCuti.tanggal_selesai" 
-                                   x-ref="editSelesai"
-                                   class="w-full bg-white border border-gray-300 rounded px-1 py-1 outline-none focus:ring-1 focus:ring-sky-400">
-                            <div class="absolute right-2 top-2 pointer-events-none text-gray-400">
-                                <i class="fa-regular fa-calendar"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Watcher untuk Edit Modal -->
-                    <div x-effect="
-                        if(showEditModal && holidaysLoaded && selectedCuti) {
-                            // Init Edit Start
-                            if($refs.editMulai) {
-                                if ($refs.editMulai._flatpickr) {
-                                    $refs.editMulai._flatpickr.setDate(selectedCuti.tanggal_mulai);
-                                } else {
-                                    flatpickr($refs.editMulai, {
-                                        locale: 'id',
-                                        dateFormat: 'Y-m-d',
-                                        defaultDate: selectedCuti.tanggal_mulai,
-                                        disable: [
-                                            function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
-                                            ...holidays.map(h => h.date)
-                                        ],
-                                        onDayCreate: (dObj, dStr, fp, dayElem) => {
-                                            const dateStr = dayElem.dateObj.toISOString().split('T')[0];
-                                            const holiday = holidays.find(h => h.date === dateStr);
-                                            if (holiday) {
-                                                dayElem.className += ' holiday';
-                                                dayElem.title = holiday.desc;
-                                            }
-                                        },
-                                        onChange: (selectedDates, dateStr) => {
-                                            selectedCuti.tanggal_mulai = dateStr;
-                                            hitungHariEdit();
-                                            isChanged = true;
-                                            if ($refs.editSelesai._flatpickr) {
-                                                $refs.editSelesai._flatpickr.set('minDate', dateStr);
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-
-                            // Init Edit End
-                            if($refs.editSelesai) {
-                                if ($refs.editSelesai._flatpickr) {
-                                    $refs.editSelesai._flatpickr.setDate(selectedCuti.tanggal_selesai);
-                                    $refs.editSelesai._flatpickr.set('minDate', selectedCuti.tanggal_mulai);
-                                } else {
-                                    flatpickr($refs.editSelesai, {
-                                        locale: 'id',
-                                        dateFormat: 'Y-m-d',
-                                        defaultDate: selectedCuti.tanggal_selesai,
-                                        minDate: selectedCuti.tanggal_mulai,
-                                        disable: [
-                                            function(date) { return (date.getDay() === 0 || date.getDay() === 6); },
-                                            ...holidays.map(h => h.date)
-                                        ],
-                                        onDayCreate: (dObj, dStr, fp, dayElem) => {
-                                            const dateStr = dayElem.dateObj.toISOString().split('T')[0];
-                                            const holiday = holidays.find(h => h.date === dateStr);
-                                            if (holiday) {
-                                                dayElem.className += ' holiday';
-                                                dayElem.title = holiday.desc;
-                                            }
-                                        },
-                                        onChange: (selectedDates, dateStr) => {
-                                            selectedCuti.tanggal_selesai = dateStr;
-                                            hitungHariEdit();
-                                            isChanged = true;
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                    "></div>
                 </div>
 
-                {{-- DELEGASI EDIT (NEW) --}}
-                <div class="mt-2">
-                    <label class="font-bold text-gray-500 block mb-0.5">Pegawai Pengganti:</label>
-                    <div class="relative">
-                        <select name="id_delegasi" 
-                                x-model="selectedCuti.id_delegasi"
-                                @change="isChanged = true"
-                                class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none text-[10px] focus:ring-1 focus:ring-sky-400 appearance-none">
-                            <option value="" disabled>— Pilih Pegawai Pengganti —</option>
-                            <template x-for="delegate in availableDelegates" :key="delegate.id">
-                                <option :value="delegate.id" 
-                                        x-text="delegate.nama + ' — ' + delegate.jabatan"
-                                        :selected="selectedCuti.id_delegasi == delegate.id"></option>
-                            </template>
-                             <option x-show="availableDelegates.length === 0" value="" disabled>Tidak ada rekan tersedia pada tanggal ini</option>
-                        </select>
-                        <div class="absolute right-2 top-1.5 pointer-events-none text-gray-400">
-                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                        </div>
-                    </div>
-                </div>
-
-
-                <div>
-                    <label class="font-bold text-gray-500 block mb-0.5">Alasan Cuti:</label>
+                {{-- ALASAN --}}
+                <div class="space-y-1.5">
+                    <label class="flex items-center gap-2 text-[11px] font-semibold text-gray-600">
+                        <i class="fa-solid fa-pen-fancy text-amber-500 text-[10px]"></i>
+                        Alasan Cuti
+                    </label>
                     <textarea 
-                        name="keterangan" {{-- WAJIB: Sama dengan Controller dan Database --}}
+                        name="keterangan"
                         x-model="selectedCuti.alasan_cuti"
                         @input="isChanged = true"
                         oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
-                        class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none resize-none italic min-h-[60px] text-[10px] focus:ring-1 focus:ring-sky-400"
+                        rows="2"
+                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none transition-all duration-200 resize-none"
                         placeholder="Contoh: Menghadiri acara keluarga atau keperluan mendesak lainnya.."></textarea>
                 </div>
 
-                <div class="flex justify-between items-center bg-sky-100/50 p-1.5 rounded border border-sky-200">
-                    <span class="font-bold text-sky-700">Total Hari:</span>
-                    <span class="font-black text-sky-800"><span x-text="selectedCuti.jumlah_hari"></span> Hari</span>
-                    <input type="hidden" name="jumlah_hari" :value="selectedCuti.jumlah_hari">
-                </div>
             </div>
 
-            <div class="flex justify-end mt-3 gap-2">
-                <button type="button" @click="showEditModal=false" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-[10px] font-bold">Batal</button>
+            {{-- FOOTER ACTIONS --}}
+            <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2">
+                <button type="button" 
+                        @click="showEditModal = false"
+                        class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2">
+                    <i class="fa-solid fa-xmark"></i> Batal
+                </button>
                 <button type="submit"
                     :disabled="!isChanged"
-                    :class="!isChanged ? 'bg-gray-400 cursor-not-allowed' : 'bg-sky-600 hover:bg-sky-700'"
-                    class="px-3 py-1.5 text-white rounded text-[10px] font-bold shadow-sm transition">
-                    Update Data
+                    :class="!isChanged 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
+                        : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-amber-200'"
+                    class="px-6 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
                 </button>
             </div>
         </form>

@@ -337,4 +337,64 @@ public function storeCuti(Request $request)
 
     return back()->with('success', 'Pengajuan cuti berhasil dikirim ke Pejabat untuk approval.');
 }
+
+    /**
+     * 🔹 6. Atasan Update Cuti Sendiri (hanya jika masih Menunggu)
+     */
+    public function updateCuti(Request $request, $id)
+    {
+        $user = Auth::user();
+        $cuti = Cuti::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+
+        if ($cuti->status !== 'Menunggu') {
+            return back()->with('error', 'Pengajuan ini sudah tidak dapat diubah.');
+        }
+
+        $validated = $request->validate([
+            'jenis_cuti'      => 'required|in:Tahunan,Alasan Penting',
+            'keterangan'      => ['required', 'string', 'max:500', 'regex:/^[a-zA-Z\s]+$/'],
+            'tanggal_mulai'   => [
+                'required', 'date',
+                function ($attribute, $value, $fail) {
+                    if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
+                        $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
+                    }
+                },
+            ],
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        ], [
+            'keterangan.regex' => 'Alasan cuti hanya boleh berisi huruf dan spasi.',
+        ]);
+
+        $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
+        $end   = \Carbon\Carbon::parse($validated['tanggal_selesai']);
+        $jumlah_hari = $start->diffInDays($end) + 1;
+
+        $cuti->update([
+            'jenis_cuti'      => $validated['jenis_cuti'],
+            'keterangan'      => $validated['keterangan'],
+            'tanggal_mulai'   => $validated['tanggal_mulai'],
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+            'jumlah_hari'     => $jumlah_hari,
+        ]);
+
+        return back()->with('success', 'Pengajuan cuti berhasil diperbarui.');
+    }
+
+    /**
+     * 🔹 7. Atasan Hapus Cuti Sendiri (hanya jika masih Menunggu)
+     */
+    public function destroyCuti($id)
+    {
+        $user = Auth::user();
+        $cuti = Cuti::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+
+        if ($cuti->status !== 'Menunggu') {
+            return back()->with('error', 'Pengajuan ini sudah tidak dapat dihapus.');
+        }
+
+        $cuti->delete();
+
+        return back()->with('success', 'Pengajuan cuti berhasil dihapus.');
+    }
 }

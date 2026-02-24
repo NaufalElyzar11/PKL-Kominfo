@@ -103,6 +103,8 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
     // Atasan mengajukan cuti sendiri (langsung ke pejabat)
     Route::get('/cuti', [ApprovalController::class, 'indexCuti'])->name('cuti.index');
     Route::post('/cuti/store', [ApprovalController::class, 'storeCuti'])->name('cuti.store');
+    Route::put('/cuti/{id}', [ApprovalController::class, 'updateCuti'])->name('cuti.update');
+    Route::delete('/cuti/{id}', [ApprovalController::class, 'destroyCuti'])->name('cuti.destroy');
 
         Route::prefix('profile')->as('profile.')->group(function () {
             Route::get('/', [PegawaiProfileController::class, 'show'])->name('show');
