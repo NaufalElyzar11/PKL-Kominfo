@@ -541,28 +541,34 @@ private function hitungSisaCuti($userId)
 {
     $user = \App\Models\User::with('pegawai')->find($userId);
     $pegawai = $user->pegawai;
-
     if (!$pegawai) return 12;
 
     $jatahDasar = 12;
-    // Sekarang ini akan benar-benar mengambil angka '5' dari database
-    $pakaiTahunLalu = (int) $pegawai->sisa_cuti; 
+    $tahunIni = (int) date('Y');
+    $tahunLalu = $tahunIni - 1;
 
-    // LOGIKA: Jika pakai <= 6 hari, maka jatah = 12 + (12 - pakai)
-    if ($pakaiTahunLalu > 0 && $pakaiTahunLalu <= 6) {
-        $sisaTahunLalu = $jatahDasar - $pakaiTahunLalu; // 12 - 5 = 7
-        $totalKuota2026 = $jatahDasar + $sisaTahunLalu; // 12 + 7 = 19
-    } else {
-        $totalKuota2026 = $jatahDasar; 
-    }
-
-    // Hitung pemakaian riil tahun 2026
-    $terpakai2026 = Cuti::where('user_id', $userId)
-        ->where('tahun', date('Y'))
-        ->whereIn('status', ['Disetujui', 'disetujui', 'Menunggu', 'menunggu', 'Disetujui Atasan'])
+    // 1. OTOMATIS: Hitung pemakaian tahun lalu di tabel Cuti (Untuk 2027 dst)
+    $pakaiTahunLalu = Cuti::where('user_id', $userId)
+        ->where('tahun', $tahunLalu)
+        ->whereIn('status', ['Disetujui', 'disetujui'])
         ->sum('jumlah_hari');
 
-    return max(0, $totalKuota2026 - $terpakai2026);
+    // 2. FALLBACK: Jika di tabel cuti 2025 kosong, ambil angka manual Anda (angka 5)
+    if ($pakaiTahunLalu == 0) {
+        $pakaiTahunLalu = (int) $pegawai->sisa_cuti; 
+    }
+
+    // 3. LOGIKA AKUMULASI: Sisa tahun lalu dibawa jika pakai <= 6 hari
+    $jatahAkumulasi = ($pakaiTahunLalu > 0 && $pakaiTahunLalu <= 6) ? ($jatahDasar - $pakaiTahunLalu) : 0;
+    $totalHakTahunIni = $jatahDasar + $jatahAkumulasi;
+
+    // 4. HITUNG PEMAKAIAN TAHUN INI (Termasuk yang sedang diproses)
+    $terpakaiTahunIni = Cuti::where('user_id', $userId)
+        ->where('tahun', $tahunIni)
+        ->whereIn('status', ['Disetujui', 'disetujui', 'Menunggu', 'Revisi Delegasi', 'Disetujui Atasan'])
+        ->sum('jumlah_hari');
+
+    return max(0, $totalHakTahunIni - $terpakaiTahunIni);
 }
 
 public function exportExcel(Request $request)

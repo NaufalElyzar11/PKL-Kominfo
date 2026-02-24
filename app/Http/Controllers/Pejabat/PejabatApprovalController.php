@@ -12,19 +12,19 @@ class PejabatApprovalController extends Controller
 {
     public function dashboard()
     {
-        // Kueri dasar untuk mengambil pengajuan yang harus diproses Pejabat
+        // Kueri dasar untuk mengambil pengajuan yang harus diproses Pejabat (Kepala Dinas)
         $queryPejabat = Cuti::where(function($query) {
-            // 1. Ambil pengajuan Pegawai yang sudah lolos tahap Atasan
+            // 1. Ambil semua pengajuan (Pegawai/Kasi) yang SUDAH disetujui Kabid
             $query->where('status', 'Disetujui Atasan')
-            // 2. ATAU ambil pengajuan Atasan yang berstatus 'Menunggu'
-                ->orWhere(function($q) {
-                    $q->where('status', 'Menunggu')
-                        ->whereHas('pegawai.user', function($u) {
-                            $u->where('role', 'atasan');
-                        });
-                });
+            
+            // 2. ATAU ambil pengajuan yang memang tidak punya Atasan Langsung (Langsung ke Kadis)
+            ->orWhere(function($q) {
+                $q->where('status', 'Menunggu')
+                ->whereNull('id_atasan_langsung'); // Pemohon yang boss-nya langsung Kepala Dinas
+            });
         });
 
+        // Statistik tetap menggunakan clone dari query yang sudah diperbaiki
         $stats = [
             'menunggu'  => (clone $queryPejabat)->count(),
             'disetujui' => Cuti::where('status', 'Disetujui')->count(),
@@ -35,15 +35,14 @@ class PejabatApprovalController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Riwayat: tampilkan Disetujui ATAU Ditolak yang ada catatan dari pejabat
-        // Penolakan dari atasan/delegasi saja TIDAK ditampilkan
+        // Bagian Riwayat tetap sama
         $riwayat = Cuti::with('pegawai', 'delegasi')
             ->where(function($query) {
                 $query->where('status', 'Disetujui')
-                      ->orWhere(function($q) {
-                          $q->where('status', 'Ditolak')
+                    ->orWhere(function($q) {
+                        $q->where('status', 'Ditolak')
                             ->whereNotNull('catatan_tolak_pejabat');
-                      });
+                    });
             })
             ->orderBy('updated_at', 'desc')
             ->limit(10)

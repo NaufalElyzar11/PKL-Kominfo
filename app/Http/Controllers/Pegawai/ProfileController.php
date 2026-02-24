@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
+use App\Models\Cuti;
 
 class ProfileController extends Controller
 {
@@ -44,7 +45,9 @@ class ProfileController extends Controller
             return redirect()->route($user->role . '.dashboard')->with('error', 'Data tidak ditemukan.');
         }
 
-        // Determine view based on user role
+        // HITUNG DATA CUTI SECARA DINAMIS
+        $dataCuti = $this->hitungSisaCuti($user->id);
+
         $viewPath = match($user->role) {
             'atasan' => 'atasan.profile.profile',
             'pejabat' => 'pejabat.profile.profile',
@@ -54,7 +57,47 @@ class ProfileController extends Controller
         return view($viewPath, [
             'user' => $user,
             'pegawai' => $pegawai,
+            // Kirim hasil hitungan ke view
+            'sisaCuti' => $dataCuti['sisa'],
+            'hakCuti'  => $dataCuti['total_hak'],
         ]);
+    }
+
+    /**
+     * Logika hitung yang sama dengan Dashboard agar angka sinkron
+     */
+    private function hitungSisaCuti($userId)
+    {
+        $user = \App\Models\User::with('pegawai')->find($userId);
+        $pegawai = $user->pegawai;
+        
+        $tahunIni = (int) date('Y');
+        $tahunLalu = $tahunIni - 1;
+        $jatahDasar = 12;
+
+        // 1. Cek Akumulasi Tahun Lalu (Data Dummy 2025)
+        $pakaiTahunLalu = Cuti::where('user_id', $userId)
+            ->where('tahun', $tahunLalu)
+            ->whereIn('status', ['Disetujui', 'disetujui'])
+            ->sum('jumlah_hari');
+
+        if ($pakaiTahunLalu == 0) {
+            $pakaiTahunLalu = (int) ($pegawai->sisa_cuti ?? 0); 
+        }
+
+        $jatahAkumulasi = ($pakaiTahunLalu > 0 && $pakaiTahunLalu <= 6) ? ($jatahDasar - $pakaiTahunLalu) : 0;
+        $totalHak = $jatahDasar + $jatahAkumulasi;
+
+        // 2. Hitung Pemakaian Tahun Ini (Hanya yang Final Disetujui sesuai keinginan Anda)
+        $terpakai = Cuti::where('user_id', $userId)
+            ->where('tahun', $tahunIni)
+            ->whereIn('status', ['Disetujui', 'disetujui'])
+            ->sum('jumlah_hari');
+
+        return [
+            'total_hak' => $totalHak,
+            'sisa'      => max(0, $totalHak - $terpakai)
+        ];
     }
 
     /**

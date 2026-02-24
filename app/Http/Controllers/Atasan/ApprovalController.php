@@ -259,82 +259,151 @@ class ApprovalController extends Controller
     }
 
     /**
-     * 🔹 5. Atasan Mengajukan Cuti Sendiri
-     * Status langsung 'Disetujui Atasan' karena tidak perlu approval dari diri sendiri
+     * 5. Atasan Mengajukan Cuti Sendiri
      */
-public function storeCuti(Request $request)
-{
-    $user = Auth::user();
-    $pegawai = $user->pegawai;
+    public function storeCuti(Request $request)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
 
-    if (!$pegawai) {
-        return back()->with('error', 'Data pegawai belum ditemukan. Hubungi admin.');
+        if (!$pegawai) {
+            return back()->with('error', 'Data pegawai belum ditemukan. Hubungi admin.');
+        }
+
+        // 1. Validasi Form
+        $validated = $request->validate([
+            'jenis_cuti'      => 'required|in:Tahunan,Alasan Penting',
+            'keterangan'      => [
+                'required', 'string', 'max:500',
+                'regex:/^[a-zA-Z\s]+$/',
+            ],
+            'tanggal_mulai'   => [
+                'required', 'date',
+                function ($attribute, $value, $fail) {
+                    // PERBAIKAN: Hapus ->addDays(3) agar bisa pilih Hari H
+                    if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today())) {
+                        $fail('Tanggal mulai cuti tidak boleh di masa lalu.');
+                    }
+                },
+            ],
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+        ], [
+            'keterangan.regex' => 'Alasan cuti hanya boleh berisi huruf dan spasi.',
+        ]);
+
+        // 2. HITUNG HARI KERJA (Gunakan fungsi dinamis agar Sabtu/Minggu tidak dihitung)
+        $jumlah_hari = $this->calculateWorkingDays($validated['tanggal_mulai'], $validated['tanggal_selesai']);
+
+        // 3. CEK SISA CUTI (Gunakan hitungan dinamis)
+        $sisaCutiSaatIni = $this->hitungSisaCuti($user->id);
+        if ($sisaCutiSaatIni < $jumlah_hari) {
+            return back()->with('error', "Gagal! Sisa jatah Anda ($sisaCutiSaatIni hari) tidak cukup untuk pengajuan $jumlah_hari hari.");
+        }
+
+        // 4. SIMPAN DATA
+        Cuti::create([
+            'user_id'         => $user->id,
+            'id_pegawai'      => $pegawai->id,
+            'nama'            => $pegawai->nama,
+            'nip'             => $pegawai->nip ?? '-',
+            'jabatan'         => $pegawai->jabatan,
+            'jenis_cuti'      => $validated['jenis_cuti'],
+            'tanggal_mulai'   => $validated['tanggal_mulai'],
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+            'jumlah_hari'     => $jumlah_hari,
+            'tahun'           => date('Y'),
+            'keterangan'      => $validated['keterangan'],
+            'status'          => 'Menunggu', 
+            'status_delegasi' => 'disetujui', 
+            'status_atasan'   => 'pending', // Kasi (Atasan) butuh disetujui Kabid
+            'atasan_nama'     => $pegawai->atasanLangsung->nama_atasan ?? '-', 
+            'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
+            'id_atasan_langsung'      => $pegawai->id_atasan_langsung,
+            'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
+        ]);
+
+        return back()->with('success', 'Pengajuan berhasil dikirim ke Atasan (Kabid) untuk ditinjau.');
     }
 
-    // Cek pengajuan pending
-    $hasPending = Cuti::where('user_id', $user->id)
-                    ->where('status', 'Menunggu')
-                    ->exists();
-    
-    if ($hasPending) {
-        return back()->with('error', 'Anda masih memiliki pengajuan cuti yang menunggu persetujuan.');
+    private function calculateWorkingDays($startDate, $endDate)
+    {
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+        $holidays = $this->getHolidays($start->year);
+        
+        $workingDays = 0;
+        $current = $start->copy();
+        while ($current <= $end) {
+            if (!in_array($current->dayOfWeek, [0, 6]) && !in_array($current->toDateString(), $holidays)) {
+                $workingDays++;
+            }
+            $current->addDay();
+        }
+        return max(1, $workingDays);
     }
 
-    // --- PERBAIKAN VALIDASI ---
-    $validated = $request->validate([
-        'jenis_cuti'      => 'required|in:Tahunan,Alasan Penting',
-        'keterangan'      => [
-            'required',
-            'string',
-            'max:500',
-            'regex:/^[a-zA-Z\s]+$/', // Filter: Hanya huruf (A-Z, a-z) dan Spasi
-        ], // <--- PENTING: Menutup array keterangan sebelum pindah ke field lain
-        'tanggal_mulai'   => [
-            'required', 'date',
-            function ($attribute, $value, $fail) {
-                if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today()->addDays(3))) {
-                    $fail('Tanggal mulai cuti minimal 3 hari dari hari ini.');
-                }
-            },
-        ],
-        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-    ], [
-        // Memberikan pesan error yang jelas jika user mengetik angka/simbol
-        'keterangan.regex' => 'Alasan cuti hanya boleh berisi huruf dan spasi, tidak boleh angka atau simbol.',
-    ]);
-
-    // Hitung jumlah hari (sederhana)
-    $start = \Carbon\Carbon::parse($validated['tanggal_mulai']);
-    $end = \Carbon\Carbon::parse($validated['tanggal_selesai']);
-    $jumlah_hari = $start->diffInDays($end) + 1;
-
-    // Cek sisa cuti
-    if ($pegawai->sisa_cuti < $jumlah_hari) {
-        return back()->with('error', 'Sisa cuti Anda tidak mencukupi.');
+    private function getHolidays($year)
+    {
+        try {
+            $url = "https://dayoffapi.vercel.app/api?year={$year}";
+            $response = file_get_contents($url);
+            return array_column(json_decode($response, true), 'tanggal');
+        } catch (\Exception $e) { return []; }
     }
 
-    // Simpan cuti dengan status langsung 'Disetujui Atasan'
-    Cuti::create([
-        'user_id'         => $user->id,
-        'id_pegawai'      => $pegawai->id,
-        'nama'            => $pegawai->nama,
-        'nip'             => $pegawai->nip ?? '-',
-        'jabatan'         => $pegawai->jabatan,
-        'jenis_cuti'      => $validated['jenis_cuti'],
-        'tanggal_mulai'   => $validated['tanggal_mulai'],
-        'tanggal_selesai' => $validated['tanggal_selesai'],
-        'jumlah_hari'     => $jumlah_hari,
-        'tahun'           => date('Y'),
-        'keterangan'      => $validated['keterangan'],
-        'status'          => 'Menunggu', 
-        'status_delegasi' => 'disetujui', // Atasan otomatis menyetujui diri sendiri
-        'status_atasan'   => 'disetujui',
-        'atasan_nama'     => $pegawai->nama, 
-        'pejabat_nama'    => $pegawai->pejabatPemberiCuti->nama_pejabat ?? '-',
-        'id_pejabat_pemberi_cuti' => $pegawai->id_pejabat_pemberi_cuti,
-        'id_delegasi'     => null, // Atasan tidak perlu delegasi
-    ]);
+    private function hitungSisaCuti($userId)
+    {
+        $user = \App\Models\User::with('pegawai')->find($userId);
+        $pegawai = $user->pegawai;
+        $tahunIni = (int) date('Y');
+        $tahunLalu = $tahunIni - 1;
+        $jatahDasar = 12;
 
-    return back()->with('success', 'Pengajuan cuti berhasil dikirim ke Pejabat untuk approval.');
-}
+        $pakaiTahunLalu = Cuti::where('user_id', $userId)->where('tahun', $tahunLalu)->whereIn('status', ['Disetujui', 'disetujui'])->sum('jumlah_hari');
+        if ($pakaiTahunLalu == 0) $pakaiTahunLalu = (int) ($pegawai->sisa_cuti ?? 0);
+
+        $jatahAkumulasi = ($pakaiTahunLalu > 0 && $pakaiTahunLalu <= 6) ? ($jatahDasar - $pakaiTahunLalu) : 0;
+        $totalHak = $jatahDasar + $jatahAkumulasi;
+
+        $terpakai = Cuti::where('user_id', $userId)->where('tahun', $tahunIni)->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Atasan', 'Menunggu'])->sum('jumlah_hari');
+        return max(0, $totalHak - $terpakai);
+    }
+
+    /**
+     * 🔹 Update Pengajuan Cuti Sendiri
+     */
+    public function update(Request $request, $id)
+    {
+        $cuti = Cuti::where('user_id', Auth::id())->findOrFail($id);
+
+        $validated = $request->validate([
+            'tanggal_mulai'   => 'required|date|after_or_equal:today',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'keterangan'      => 'required|string|max:500|regex:/^[a-zA-Z\s]+$/',
+        ]);
+
+        $jumlahHari = $this->calculateWorkingDays($request->tanggal_mulai, $request->tanggal_selesai);
+
+        $cuti->update([
+            'tanggal_mulai'   => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'jumlah_hari'     => $jumlahHari,
+            'keterangan'      => $request->keterangan,
+            'status'          => 'Menunggu', // Reset status jika diedit
+        ]);
+
+        return redirect()->back()->with('success', 'Pengajuan cuti berhasil diperbarui.');
+    }
+
+    /**
+     * 🔹 Hapus Pengajuan Cuti Sendiri
+     */
+    public function destroy($id)
+    {
+        $cuti = Cuti::where('user_id', Auth::id())->findOrFail($id);
+        $cuti->delete();
+
+        return redirect()->back()->with('success', 'Pengajuan cuti berhasil dihapus.');
+    }
+
 }

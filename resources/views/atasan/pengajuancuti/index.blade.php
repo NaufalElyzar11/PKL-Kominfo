@@ -1,6 +1,6 @@
 @extends('layouts.pegawai')
 
-@section('title', 'Pengajuan Cuti')
+@section('title', 'Pengajuan Cuti Atasan')
 
 @section('content')
 @php
@@ -20,13 +20,29 @@
 
 <style>
     [x-cloak] { display: none !important; }
+    .flatpickr-day.holiday { background: #fee2e2 !important; color: #ef4444 !important; border-color: #fecaca !important; }
 </style>
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/airbnb.css">
+@endpush
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
 
 <div x-data="{
     tab: 'menunggu',
     showModal: false, 
+    showEditModal: false,
     showDetailPending: false, 
     showDetailRiwayat: false, 
+
+    selectedCuti: {},
+    isChanged: false,
 
     jenisCutiTambah: '',
     alasanCutiTambah: '',
@@ -34,67 +50,73 @@
     detailPending: {}, 
     detailRiwayat: {},
     hasPendingCuti: @json($hasPendingCuti ?? false),
+    sisaCutiTersedia: @json($sisaCuti ?? 12),
+
+    holidays: [],
+    holidaysLoaded: false,
 
     // FORM TAMBAH
     tanggalMulaiTambah: '',
     tanggalSelesaiTambah: '',
     jumlahHariTambah: 0,
 
-    hitungHariTambah() {
-        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { 
-            this.jumlahHariTambah = 0; 
-            return; 
-        }
-        
-        const mulai = new Date(this.tanggalMulaiTambah);
-        const selesai = new Date(this.tanggalSelesaiTambah);
-        
-        if (isNaN(mulai) || isNaN(selesai) || mulai > selesai) { 
-            this.jumlahHariTambah = 0; 
-            return; 
-        }
-
-        // Hitung hari kerja (tanpa weekend)
-        let count = 0;
-        let current = new Date(mulai);
-        while (current <= selesai) {
-            const day = current.getDay();
-            if (day !== 0 && day !== 6) count++;
-            current.setDate(current.getDate() + 1);
-        }
-        this.jumlahHariTambah = count;
+    async loadHolidays() {
+        if (this.holidaysLoaded) return;
+        try {
+            const year = new Date().getFullYear();
+            const response = await fetch(`https://dayoffapi.vercel.app/api?year=${year}`);
+            const data = await response.json();
+            this.holidays = data.map(h => ({ date: h.tanggal, desc: h.keterangan }));
+            this.holidaysLoaded = true;
+        } catch (error) { this.holidays = []; this.holidaysLoaded = true; }
     },
 
-    // FUNGSI DETAIL PENDING
+    calculateWorkingDays(start, end) {
+        if (!start || !end) return 0;
+        let count = 0;
+        let current = new Date(start);
+        const endDate = new Date(end);
+        while (current <= endDate) {
+            const dateStr = current.toLocaleDateString('en-CA');
+            const isHoliday = this.holidays.some(h => h.date === dateStr);
+            if (current.getDay() !== 0 && current.getDay() !== 6 && !isHoliday) count++;
+            current.setDate(current.getDate() + 1);
+        }
+        return count;
+    },
+
+    async hitungHariTambah() {
+        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { this.jumlahHariTambah = 0; return; }
+        if (!this.holidaysLoaded) await this.loadHolidays();
+        this.jumlahHariTambah = this.calculateWorkingDays(this.tanggalMulaiTambah, this.tanggalSelesaiTambah);
+    },
+
+    openEditModal(data) {
+        this.selectedCuti = { ...data };
+        this.showEditModal = true;
+        this.isChanged = false;
+    },
+
+    async hitungHariEdit() {
+        if (!this.selectedCuti.tanggal_mulai || !this.selectedCuti.tanggal_selesai) return;
+        if (!this.holidaysLoaded) await this.loadHolidays();
+        this.selectedCuti.jumlah_hari = this.calculateWorkingDays(this.selectedCuti.tanggal_mulai, this.selectedCuti.tanggal_selesai);
+        this.isChanged = true;
+    },
+
     showPendingDetail(data) { 
         this.detailPending = { ...data };
         this.showDetailPending = true; 
-    },
-
-    // FUNGSI DETAIL RIWAYAT
-    showRiwayatDetail(data) { 
-        this.detailRiwayat = { ...data };
-        this.showDetailRiwayat = true; 
     }
-
-}" class="space-y-4 font-sans text-gray-800">
+}" x-init="loadHolidays()" class="space-y-4 font-sans text-gray-800">
 
     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-800">Daftar Pengajuan Cuti</h2>
-            <div class="flex items-center gap-2">
-                <form method="GET" class="inline">
-                    <select name="tahun" onchange="this.form.submit()" class="border border-gray-300 rounded-md text-xs px-2 py-1">
-                        <option value="semua" {{ request('tahun') == 'semua' ? 'selected' : '' }}>Semua</option>
-                        <option value="2025" {{ request('tahun') == '2025' ? 'selected' : '' }}>2025</option>
-                        <option value="2026" {{ request('tahun') == '2026' ? 'selected' : '' }}>2026</option>
-                    </select>
-                </form>
-                <button @click="showModal = true" class="text-white bg-green-600 hover:bg-green-700 text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow-sm transition">
-                    <i class="fa-solid fa-plus-circle text-[10px]"></i>
-                    <span>Ajukan Cuti</span>
-                </button>
-            </div>
+            <h2 class="text-xl font-bold text-gray-800">Daftar Pengajuan Cuti Atasan</h2>
+            <button @click="showModal = true" class="text-white bg-green-600 hover:bg-green-700 text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow-sm transition">
+                <i class="fa-solid fa-plus-circle text-[10px]"></i>
+                <span>Ajukan Cuti</span>
+            </button>
         </div>
 
         {{-- TABS --}}
@@ -103,286 +125,77 @@
             <button @click="tab='riwayat'" :class="tab==='riwayat' ? 'text-sky-600 border-b-2 border-sky-600 font-semibold' : 'text-gray-500 hover:text-sky-500'" class="py-2 px-1 text-sm transition">Riwayat Cuti</button>
         </div>
 
-        {{-- ================= TAB MENUNGGU ================= --}}
+        {{-- TAB MENUNGGU --}}
         <div x-show="tab === 'menunggu'" class="space-y-2">
-            <div class="overflow-x-auto rounded border border-gray-300 shadow-sm">
+            <div class="overflow-x-auto rounded border border-gray-300">
                 <table class="min-w-full divide-y divide-gray-200 text-[11px]">
                     <thead class="bg-sky-600 text-white">
                         <tr>
                             <th class="px-1 py-1 text-center font-semibold">No</th>
                             <th class="px-1 py-1 font-semibold text-left">Nama</th>
-                            <th class="px-1 py-1 font-semibold text-left">NIP</th>
                             <th class="px-1 py-1 font-semibold text-left">Jenis</th>
                             <th class="px-1 py-1 font-semibold text-left">Tanggal</th>
                             <th class="px-1 py-1 text-center font-semibold">Hari</th>
-                            <th class="px-1 py-1 font-semibold text-left">Alasan</th>
                             <th class="px-1 py-1 text-center font-semibold">Status</th>
                             <th class="px-1 py-1 text-center font-semibold">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($cuti as $index => $c)
-                            @php
-                                $no = ($cutiCurrent - 1) * $cutiPerPage + $index + 1;
-                            @endphp
+                            @php $no = ($cutiCurrent - 1) * $cutiPerPage + $index + 1; @endphp
                             <tr class="hover:bg-gray-50 text-gray-700">
                                 <td class="px-1 py-2 text-center">{{ $no }}</td>
                                 <td class="px-1 py-2">{{ $c->pegawai->nama ?? '-' }}</td>
-                                <td class="px-1 py-2">{{ $c->pegawai->nip ?? '-' }}</td>
                                 <td class="px-1 py-2">{{ $c->jenis_cuti }}</td>
-                                <td class="px-1 py-2 leading-tight">
-                                    {{ $c->tanggal_mulai->translatedFormat('d M Y') }} <br>
-                                    s/d {{ $c->tanggal_selesai->translatedFormat('d M Y') }}
-                                </td>
+                                <td class="px-1 py-2">{{ $c->tanggal_mulai->format('d/m/Y') }} - {{ $c->tanggal_selesai->format('d/m/Y') }}</td>
                                 <td class="px-1 py-2 text-center font-bold">{{ $c->jumlah_hari }}</td>
-                                <td class="px-1 py-2">{{ Str::limit($c->keterangan ?? $c->alasan_cuti, 20) }}</td>
                                 <td class="px-1 py-2 text-center">
-                                    @if($c->status == 'Menunggu')
-                                        <span class="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[10px] font-bold">Menunggu</span>
-                                    @elseif($c->status == 'Disetujui Atasan')
-                                        <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">
-                                            <i class="fa-solid fa-clock mr-1"></i> Menunggu Pejabat
-                                        </span>
-                                    @else
-                                        <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[10px]">{{ $c->status }}</span>
-                                    @endif
+                                    <span class="px-2 py-0.5 rounded-full {{ $c->status == 'Menunggu' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700' }} text-[10px] font-bold">
+                                        {{ $c->status }}
+                                    </span>
                                 </td>
-                                <td class="px-1 py-2 text-center">
+                                {{-- POINT B: KOLOM AKSI DENGAN EDIT & HAPUS --}}
+                                <td class="px-1 py-2 text-center flex justify-center gap-1">
                                     <button @click="showPendingDetail({
-                                        nama: {{ Js::from($c->pegawai->nama ?? '-') }}, 
-                                        nip: {{ Js::from($c->pegawai->nip ?? '-') }}, 
-                                        jabatan: {{ Js::from($c->pegawai->jabatan ?? '-') }},
-                                        pengganti_jabatan: {{ Js::from($c->delegasi->jabatan ?? '') }}, 
-                                        jenis_cuti: {{ Js::from($c->jenis_cuti ?? '') }}, 
-                                        tanggal_mulai: {{ Js::from($c->tanggal_mulai ? $c->tanggal_mulai->translatedFormat('d M Y') : '-') }},
-                                        tanggal_selesai: {{ Js::from($c->tanggal_selesai ? $c->tanggal_selesai->translatedFormat('d M Y') : '-') }}, 
-                                        jumlah_hari: {{ Js::from($c->jumlah_hari ?? 0) }},
-                                        alasan_cuti: {{ Js::from($c->keterangan ?? $c->alasan_cuti ?? '') }},
-                                        status: {{ Js::from($c->status ?? '') }}
+                                        nama: '{{ $c->pegawai->nama }}', 
+                                        nip: '{{ $c->pegawai->nip }}', 
+                                        jabatan: '{{ $c->pegawai->jabatan }}',
+                                        jenis_cuti: '{{ $c->jenis_cuti }}', 
+                                        tanggal_mulai: '{{ $c->tanggal_mulai->format('d/m/Y') }}',
+                                        tanggal_selesai: '{{ $c->tanggal_selesai->format('d/m/Y') }}', 
+                                        jumlah_hari: {{ $c->jumlah_hari }},
+                                        alasan_cuti: '{{ $c->keterangan }}',
+                                        status: '{{ $c->status }}'
                                     })" class="p-1 text-sky-600 hover:bg-sky-50 rounded">
                                         <i class="fa-solid fa-eye text-[12px]"></i>
                                     </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="10" class="px-2 py-4 text-center text-gray-500 italic">Tidak ada pengajuan menunggu</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if ($cutiIsPaginator && $cuti->lastPage() > 1)
-                <div class="flex justify-between items-center text-xs text-gray-700">
-                    <p>Menampilkan {{ $cuti->firstItem() }} - {{ $cuti->lastItem() }} dari {{ $cuti->total() }} hasil</p>
-                    <div>{{ $cuti->links('vendor.pagination.tailwind') }}</div>
-                </div>
-            @endif
-        </div>
 
-        {{-- ================= TAB RIWAYAT ================= --}}
-        <div x-show="tab === 'riwayat'" x-cloak class="space-y-2">
-            <div class="overflow-x-auto rounded border border-gray-300 shadow-sm">
-                <table class="min-w-full divide-y divide-gray-200 text-[11px]">
-                    <thead class="bg-sky-600 text-white">
-                        <tr>
-                            <th class="px-1 py-1 text-center font-semibold">No</th>
-                            <th class="px-1 py-1 font-semibold text-left">Nama</th>
-                            <th class="px-1 py-1 text-center font-semibold">NIP</th>
-                            <th class="px-1 py-1 text-center font-semibold">Jenis</th>
-                            <th class="px-1 py-1 text-center font-semibold">Tanggal</th>
-                            <th class="px-1 py-1 text-center font-semibold">Hari</th>
-                            <th class="px-1 py-1 font-semibold text-left">Alasan</th>
-                            <th class="px-1 py-1 text-center font-semibold">Status</th>
-                            <th class="px-1 py-1 text-center font-semibold">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @forelse ($riwayat as $index => $r)
-                            @php
-                                $noR = ($riwayatCurrent - 1) * $riwayatPerPage + $index + 1;
-                                $status = strtolower(trim($r->status ?? ''));
-                            @endphp
-                            <tr class="hover:bg-gray-50 text-gray-700">
-                                <td class="px-1 py-2 text-center">{{ $noR }}</td>
-                                <td class="px-1 py-2">{{ $r->pegawai->nama ?? '-' }}</td>
-                                <td class="px-1 py-2 text-center">{{ $r->pegawai->nip ?? '-' }}</td>
-                                <td class="px-1 py-2 text-center">{{ $r->jenis_cuti }}</td>
-                                <td class="px-1 py-2 text-center leading-tight">
-                                    {{ optional($r->tanggal_mulai)->format('d/m/Y') }} <br> s/d {{ optional($r->tanggal_selesai)->format('d/m/Y') }}
-                                </td>
-                                <td class="px-1 py-2 text-center font-bold">{{ $r->jumlah_hari }}</td>
-                                <td class="px-1 py-2">{{ Str::limit($r->keterangan ?? $r->alasan_cuti, 15) }}</td>
-                                
-                                <td class="px-1 py-2 text-center">
-                                    @if($status == 'disetujui' || $status == 'disetujui kadis')
-                                        <span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-bold">Disetujui</span>
-                                    @elseif($status == 'ditolak')
-                                        <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] font-bold">Ditolak</span>
-                                    @else
-                                        <span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold">{{ ucfirst($status) }}</span>
-                                    @endif
-                                </td>
-
-                                <td class="px-1 py-2 text-center">
-                                    <button @click="showRiwayatDetail({
-                                        nama: {{ Js::from($r->pegawai->nama ?? '-') }},
-                                        nip: {{ Js::from($r->pegawai->nip ?? '-') }},
-                                        jabatan: {{ Js::from($r->pegawai->jabatan ?? '-') }},
-                                        pengganti_jabatan: {{ Js::from($r->delegasi->jabatan ?? '') }},
-                                        jenis_cuti: {{ Js::from($r->jenis_cuti ?? '') }},
-                                        status: {{ Js::from($r->status ?? '') }},
-                                        tanggal_mulai: {{ Js::from($r->tanggal_mulai ? $r->tanggal_mulai->format('d/m/Y') : '-') }},
-                                        tanggal_selesai: {{ Js::from($r->tanggal_selesai ? $r->tanggal_selesai->format('d/m/Y') : '-') }},
-                                        jumlah_hari: {{ Js::from($r->jumlah_hari ?? 0) }},
-                                        alasan_cuti: {{ Js::from($r->keterangan ?? $r->alasan_cuti ?? '') }},
-                                        catatan: {{ Js::from($r->catatan_final ?? '') }}
-                                    })" class="p-1 text-sky-600 hover:bg-sky-100 rounded">
-                                        <i class="fa-solid fa-eye text-[12px]"></i>
+                                    @if($c->status == 'Menunggu')
+                                    <button @click="openEditModal({
+                                        id: '{{ $c->id }}',
+                                        jenis_cuti: '{{ $c->jenis_cuti }}',
+                                        tanggal_mulai: '{{ $c->tanggal_mulai->format('Y-m-d') }}',
+                                        tanggal_selesai: '{{ $c->tanggal_selesai->format('Y-m-d') }}',
+                                        alasan_cuti: '{{ $c->keterangan }}',
+                                        jumlah_hari: '{{ $c->jumlah_hari }}'
+                                    })" class="p-1 text-orange-600 hover:bg-orange-50 rounded">
+                                        <i class="fa-solid fa-pen-to-square text-[12px]"></i>
                                     </button>
-                                </td>
+                                    @endif
 
-                                <td class="px-1 py-2 border-l text-[10px] text-gray-700">
-                                    <div class="font-bold text-sky-700">{{ $r->delegasi->nama ?? '-' }}</div>
-                                    <div class="text-[9px] text-gray-400">{{ $r->delegasi->jabatan ?? '' }}</div>
+                                    <form action="{{ route('atasan.cuti.destroy', $c->id) }}" method="POST" class="form-delete inline">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" data-nama="{{ $c->pegawai->nama }}" class="p-1 text-red-600 hover:bg-red-50 rounded">
+                                            <i class="fa-solid fa-trash text-[12px]"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="11" class="text-center py-4 text-gray-400 italic font-medium">Tidak ada riwayat cuti</td></tr>
+                            <tr><td colspan="7" class="px-2 py-4 text-center text-gray-500 italic">Tidak ada pengajuan</td></tr>
                         @endforelse
                     </tbody>
                 </table>
-            </div>
-        </div>
-
-    </div>
-
-    {{-- =====================================
-        MODAL DETAIL PENDING
-    ===================================== --}}
-    <div x-show="showDetailPending" 
-        x-cloak 
-        class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm">
-        
-        <div @click.outside="showDetailPending = false" 
-            x-transition
-            class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden text-gray-800 border-t-4 border-sky-500">
-            
-            <div class="flex justify-between items-center px-4 py-3 border-b bg-gray-50">
-                <h3 class="text-[12px] font-bold text-sky-600 uppercase flex items-center gap-2">
-                    <i class="fa-solid fa-info-circle"></i> Detail Pengajuan
-                </h3>
-                <button @click="showDetailPending = false" class="text-gray-400 hover:text-black text-xl">&times;</button>
-            </div>
-
-            <div class="p-4 space-y-3 text-[12px]">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Nama</p>
-                        <p class="font-semibold" x-text="detailPending.nama"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">NIP</p>
-                        <p class="font-semibold" x-text="detailPending.nip"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Jabatan</p>
-                        <p class="font-semibold" x-text="detailPending.jabatan"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Jenis Cuti</p>
-                        <p class="font-semibold" x-text="detailPending.jenis_cuti"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Tanggal Mulai</p>
-                        <p class="font-semibold" x-text="detailPending.tanggal_mulai"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Tanggal Selesai</p>
-                        <p class="font-semibold" x-text="detailPending.tanggal_selesai"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Jumlah Hari</p>
-                        <p class="font-semibold" x-text="detailPending.jumlah_hari"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Status</p>
-                        <p class="font-semibold" x-text="detailPending.status"></p>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 uppercase">Alasan Cuti</p>
-                    <p class="font-semibold" x-text="detailPending.alasan_cuti"></p>
-                </div>
-            </div>
-
-            <div class="px-4 py-3 bg-gray-50 border-t flex justify-end">
-                <button @click="showDetailPending = false" 
-                    class="px-4 py-1.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 rounded text-[11px] font-bold transition-colors shadow-sm">
-                    Tutup
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- =====================================
-        MODAL DETAIL RIWAYAT
-    ===================================== --}}
-    <div x-show="showDetailRiwayat" 
-        x-cloak 
-        class="fixed inset-0 bg-black/40 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm">
-        
-        <div @click.outside="showDetailRiwayat = false" 
-            x-transition
-            class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden text-gray-800 border-t-4 border-emerald-500">
-            
-            <div class="flex justify-between items-center px-4 py-3 border-b bg-gray-50">
-                <h3 class="text-[12px] font-bold text-emerald-600 uppercase flex items-center gap-2">
-                    <i class="fa-solid fa-history"></i> Detail Riwayat
-                </h3>
-                <button @click="showDetailRiwayat = false" class="text-gray-400 hover:text-black text-xl">&times;</button>
-            </div>
-
-            <div class="p-4 space-y-3 text-[12px]">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Nama</p>
-                        <p class="font-semibold" x-text="detailRiwayat.nama"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Status</p>
-                        <p class="font-semibold" x-text="detailRiwayat.status"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Jenis Cuti</p>
-                        <p class="font-semibold" x-text="detailRiwayat.jenis_cuti"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Jumlah Hari</p>
-                        <p class="font-semibold" x-text="detailRiwayat.jumlah_hari"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Tanggal Mulai</p>
-                        <p class="font-semibold" x-text="detailRiwayat.tanggal_mulai"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-gray-400 uppercase">Tanggal Selesai</p>
-                        <p class="font-semibold" x-text="detailRiwayat.tanggal_selesai"></p>
-                    </div>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-400 uppercase">Alasan</p>
-                    <p class="font-semibold" x-text="detailRiwayat.alasan_cuti"></p>
-                </div>
-                <div x-show="detailRiwayat.catatan">
-                    <p class="text-[10px] text-gray-400 uppercase">Catatan Pejabat</p>
-                    <p class="font-semibold text-emerald-700" x-text="detailRiwayat.catatan"></p>
-                </div>
-            </div>
-
-            <div class="px-4 py-3 bg-gray-50 border-t flex justify-end">
-                <button @click="showDetailRiwayat = false" 
-                    class="px-4 py-1.5 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 rounded text-[11px] font-bold transition-colors shadow-sm">
-                    Tutup
-                </button>
             </div>
         </div>
     </div>
@@ -489,33 +302,95 @@
                                 </div>
                             </div>
 
-                            {{-- TANGGAL --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] font-semibold text-gray-600">
-                                    <i class="fa-solid fa-calendar-days text-sky-500 text-[10px]"></i>
+                            {{-- TANGGAL (MODIFIKASI TAMPILAN SESUAI GAMBAR) --}}
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-bold text-gray-700">
+                                    <i class="fa-solid fa-calendar-days text-sky-500"></i>
                                     Periode Cuti <span class="text-red-500">*</span>
                                 </label>
+                                
                                 <div class="grid grid-cols-2 gap-3">
-                                    <input type="date" name="tanggal_mulai" 
-                                        x-model="tanggalMulaiTambah"
-                                        @change="hitungHariTambah()"
-                                        min="{{ date('Y-m-d', strtotime('+3 days')) }}"
-                                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-[11px] focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none"
-                                        required>
-                                    <input type="date" name="tanggal_selesai" 
-                                        x-model="tanggalSelesaiTambah"
-                                        @change="hitungHariTambah()"
-                                        :min="tanggalMulaiTambah"
-                                        :disabled="!tanggalMulaiTambah"
-                                        :class="!tanggalMulaiTambah ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'"
-                                        class="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-[11px] focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none"
-                                        required>
+                                    {{-- TANGGAL MULAI --}}
+                                    <div class="relative group">
+                                        <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                                            <i class="fa-regular fa-calendar text-gray-400 group-focus-within:text-sky-500 transition-colors text-xs"></i>
+                                        </div>
+                                        <input type="text" 
+                                            name="tanggal_mulai" 
+                                            x-model="tanggalMulaiTambah" 
+                                            x-ref="tglMulai"
+                                            placeholder="Tanggal Mulai"
+                                            class="w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                            required readonly>
+                                    </div>
+
+                                    {{-- TANGGAL SELESAI --}}
+                                    <div class="relative group">
+                                        <div class="absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                                            <i class="fa-regular fa-calendar-check text-gray-400 group-focus-within:text-sky-500 transition-colors text-xs"></i>
+                                        </div>
+                                        <input type="text" 
+                                            name="tanggal_selesai" 
+                                            x-model="tanggalSelesaiTambah" 
+                                            x-ref="tglSelesai"
+                                            placeholder="Tanggal Selesai"
+                                            :disabled="!tanggalMulaiTambah"
+                                            :class="!tanggalMulaiTambah ? 'bg-gray-50 cursor-not-allowed opacity-60' : 'bg-white cursor-pointer'"
+                                            class="w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
+                                            required readonly>
+                                    </div>
                                 </div>
-                                <p class="text-[9px] text-gray-400 flex items-center gap-1">
-                                    <i class="fa-solid fa-circle-info"></i>
-                                    Jumlah hari kerja: <span class="font-bold text-sky-600" x-text="jumlahHariTambah">0</span> hari
+
+                                {{-- KETERANGAN / HELPER TEXT --}}
+                                <p class="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1.5 mt-1">
+                                    <i class="fa-solid fa-circle-info text-gray-300"></i>
+                                    Tanggal merah & akhir pekan otomatis dilewati
                                 </p>
                             </div>
+
+                            {{-- Watcher Logic untuk Inisialisasi Kalender --}}
+                            <div x-effect="
+                                if(showModal && holidaysLoaded) {
+                                    const config = {
+                                        locale: 'id',
+                                        dateFormat: 'Y-m-d',
+                                        disable: [
+                                            function(date) { 
+                                                // Matikan Sabtu (6) dan Minggu (0)
+                                                return (date.getDay() === 0 || date.getDay() === 6); 
+                                            },
+                                            ...holidays.map(h => h.date) // Matikan Libur Nasional dari API
+                                        ],
+                                        onDayCreate: (dObj, dStr, fp, dayElem) => {
+                                            const dateStr = dayElem.dateObj.toLocaleDateString('en-CA');
+                                            if (holidays.some(h => h.date === dateStr)) {
+                                                dayElem.classList.add('holiday');
+                                            }
+                                        }
+                                    };
+
+                                    // Init Mulai
+                                    flatpickr($refs.tglMulai, {
+                                        ...config,
+                                        minDate: 'today', // <--- BISA PILIH HARI INI
+                                        onChange: (sel, dateStr) => {
+                                            tanggalMulaiTambah = dateStr;
+                                            tanggalSelesaiTambah = ''; // Reset selesai jika mulai berubah
+                                            if($refs.tglSelesai._flatpickr) $refs.tglSelesai._flatpickr.set('minDate', dateStr);
+                                            hitungHariTambah();
+                                        }
+                                    });
+
+                                    // Init Selesai
+                                    flatpickr($refs.tglSelesai, {
+                                        ...config,
+                                        onChange: (sel, dateStr) => {
+                                            tanggalSelesaiTambah = dateStr;
+                                            hitungHariTambah();
+                                        }
+                                    });
+                                }
+                            "></div>
 
                             {{-- ALASAN --}}
                             <div class="space-y-1.5">
@@ -557,10 +432,121 @@
             </div>
         </div>
     </template>
+{{-- MODAL EDIT CUTI --}}
+<template x-if="showEditModal">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" x-cloak>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+            <div class="bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Pengajuan
+                </h3>
+                <button @click="showEditModal = false"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6">
+                <form :action="'/atasan/cuti/' + selectedCuti.id" method="POST">
+                    @csrf @method('PUT')
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Tanggal Mulai</label>
+                                <input type="date" name="tanggal_mulai" x-model="selectedCuti.tanggal_mulai" @change="hitungHariEdit()" 
+                                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-orange-100 outline-none" required>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Tanggal Selesai</label>
+                                <input type="date" name="tanggal_selesai" x-model="selectedCuti.tanggal_selesai" @change="hitungHariEdit()" 
+                                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-orange-100 outline-none" required>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-orange-600 bg-orange-50 p-2 rounded-lg border border-orange-100">
+                            <i class="fa-solid fa-calendar-check text-[10px]"></i>
+                            <span class="text-[11px] font-bold">Durasi Baru: <span x-text="selectedCuti.jumlah_hari"></span> Hari Kerja</span>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Alasan Revisi</label>
+                            <textarea name="keterangan" x-model="selectedCuti.alasan_cuti" @input="isChanged = true" 
+                                class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-orange-100 outline-none resize-none" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-8 pt-4 border-t">
+                        <button type="button" @click="showEditModal = false" class="px-4 py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors">Batal</button>
+                        <button type="submit" :disabled="!isChanged" 
+                            class="px-6 py-2 bg-orange-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-orange-200 disabled:opacity-50 disabled:grayscale transition-all hover:bg-orange-700">Simpan Perubahan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>
+
+
+{{-- MODAL DETAIL PENDING --}}
+<template x-if="showDetailPending">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4" x-cloak>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100" @click.outside="showDetailPending = false">
+            <div class="bg-sky-600 px-6 py-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info"></i> Detail Pengajuan Cuti
+                </h3>
+                <button @click="showDetailPending = false" class="hover:rotate-90 transition-transform"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div class="space-y-1">
+                        <p class="text-gray-400 uppercase font-bold tracking-widest text-[9px]">Nama Pegawai</p>
+                        <p class="font-bold text-gray-800" x-text="detailPending.nama"></p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-gray-400 uppercase font-bold tracking-widest text-[9px]">NIP</p>
+                        <p class="font-semibold text-gray-800" x-text="detailPending.nip"></p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-gray-400 uppercase font-bold tracking-widest text-[9px]">Jenis Cuti</p>
+                        <p class="font-bold text-sky-600" x-text="detailPending.jenis_cuti"></p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-gray-400 uppercase font-bold tracking-widest text-[9px]">Jumlah Hari</p>
+                        <p class="font-bold text-gray-800"><span x-text="detailPending.jumlah_hari"></span> Hari</p>
+                    </div>
+                </div>
+                <div class="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="text-[9px] text-gray-400 uppercase font-bold mb-1">Periode Cuti</p>
+                    <p class="text-xs font-bold text-gray-700">
+                        <span x-text="detailPending.tanggal_mulai"></span> s/d <span x-text="detailPending.tanggal_selesai"></span>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-[9px] text-gray-400 uppercase font-bold mb-1">Alasan Cuti</p>
+                    <p class="text-xs text-gray-700 italic bg-sky-50 p-3 rounded-xl border border-sky-100" x-text="detailPending.alasan_cuti"></p>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end">
+                <button @click="showDetailPending = false" class="px-5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-all">Tutup</button>
+            </div>
+        </div>
+    </div>
+</template>
+
 
 </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@endpush
-@endsection
+<script>
+document.addEventListener('submit', function (e) {
+    if (e.target.classList.contains('form-delete')) {
+        e.preventDefault();
+        const form = e.target;
+        const nama = form.querySelector('button').dataset.nama;
+        Swal.fire({
+            title: 'Hapus Pengajuan?',
+            text: `Cuti Anda akan dihapus permanen!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) form.submit();
+        });
+    }
+});
+</script>

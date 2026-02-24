@@ -150,33 +150,30 @@
                     </div>
 
                     @php
-                        $jatahTahunan = 12;
-                        $sisa = $pegawai->sisa_cuti ?? 0;
+                        $jatahTotal = $hakCuti ?? 12; // Jatah total (bisa 19 jika ada akumulasi)
+                        $sisa = $sisaCuti ?? 0;     // Sisa asli (setelah dipotong cuti disetujui)
                         
-                        // Hitung persentase (Maksimal 100% agar lingkaran tidak berlebih)
-                        $persen = ($sisa > 0) ? min(($sisa / $jatahTahunan) * 100, 100) : 0;
+                        // Hitung persentase berdasarkan jatah total yang dinamis
+                        $persen = ($jatahTotal > 0) ? min(($sisa / $jatahTotal) * 100, 100) : 0;
                     @endphp
 
                     <div class="relative flex-shrink-0 z-10">
                         {{-- Container Utama (Background Progress) --}}
                         <div class="w-40 h-40 lg:w-48 lg:h-48 rounded-full flex items-center justify-center relative shadow-lg"
+                            {{-- Progress bar sekarang mengikuti $jatahTotal yang dinamis --}}
                             style="background: conic-gradient({{ $sisa <= 3 ? '#ef4444' : '#2E5BFF' }} {{ $persen }}%, #f1f5f9 0);">
                             
-                            {{-- Lingkaran Dalam (Untuk membuat efek Ring/Cincin) --}}
-                            {{-- Ketebalan ring diatur oleh calc (100% - 24px) sesuai border 12px Anda --}}
+                            {{-- Lingkaran Dalam --}}
                             <div class="w-[calc(100%-24px)] h-[calc(100%-24px)] bg-white rounded-full flex flex-col items-center justify-center">
                                 <div class="text-center">
                                     <span class="block text-4xl lg:text-5xl font-black text-electric-blue transition-all duration-500">
-                                        {{ $sisa }}
+                                        {{ $sisa }} {{-- Tampilkan sisa yang sudah berkurang --}}
                                     </span>
                                     <span class="block text-[10px] lg:text-xs font-bold text-slate-400 uppercase tracking-tighter">
                                         Sisa Cuti
                                     </span>
                                 </div>
                             </div>
-                            
-                            {{-- Aksesoris: Bayangan Halus (Opsional) --}}
-                            <div class="absolute inset-0 rounded-full border-[1px] border-black/5 pointer-events-none"></div>
                         </div>
                     </div>
 
