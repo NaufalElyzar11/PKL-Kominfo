@@ -128,7 +128,7 @@
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-[11px] font-bold text-gray-800 mb-0.5 truncate">{{ $n->title }}</h4>
-                                        <p class="text-[10px] text-gray-500 leading-relaxed line-clamp-2">
+                                        <p class="text-[10px] leading-relaxed line-clamp-2 {{ Str::contains($n->message, 'Admin') ? 'text-blue-600 font-medium' : 'text-gray-500' }}">
                                             {{ $n->message }}
                                         </p>
                                         <p class="text-[9px] text-gray-400 mt-1.5 flex items-center gap-1">
@@ -267,9 +267,24 @@
                                 <span class="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] {{ $badgeClass }}">
                                     {{ ucfirst($c->status) }}
                                 </span>
+                                {{-- TAMBAHAN: Cek jika disetujui admin --}}
+                                @if($c->status == 'Disetujui' && $c->catatan_final == 'Disetujui Admin atas izin pejabat')
+                                    <div class="text-[8px] text-blue-500 mt-0.5 leading-none italic font-bold">Oleh Admin</div>
+                                @endif
                             </td>
 <td class="border px-1.5 sm:px-2 py-2">
-    @if(str_contains(strtolower($c->status), 'ditolak'))
+    {{-- MODIFIKASI: Tampilkan catatan jika Ditolak ATAU jika ada Catatan Final dari Admin --}}
+    @if(str_contains(strtolower($c->status), 'ditolak') || !empty($c->catatan_final))
+        <div class="flex flex-col gap-2 min-w-[200px]">
+            
+            {{-- TAMPILKAN CATATAN ADMIN JIKA ADA --}}
+            @if(!empty($c->catatan_final))
+                <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 shadow-sm">
+                    <p class="text-[9px] text-blue-700 font-bold uppercase">Keterangan Sistem:</p>
+                    <p class="text-[11px] text-blue-900 font-medium italic">"{{ $c->catatan_final }}"</p>
+                </div>
+            @endif
+
         <div class="flex flex-col gap-2 min-w-[200px]">
             
             {{-- PRIORITAS 1: JIKA DITOLAK PEJABAT (KADIS) --}}

@@ -10,6 +10,7 @@ use App\Models\PejabatPemberiCuti;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Notification;
 
 class CutiController extends Controller
 {
@@ -230,18 +231,27 @@ public function update(Request $request, $id)
     /**
      * 🔹 Setujui pengajuan cuti
      */
-    public function approve(Request $request, $id) // Tambahkan Request $request
+    public function approve(Request $request, $id)
     {
-        // Cek apakah checkbox konfirmasi di Blade sudah dicentang
+        // 1. Cek Konfirmasi
         if (!$request->pejabat_confirmed) {
             return back()->with('error', 'Gagal! Anda harus memberikan konfirmasi izin dari Pejabat (Kadis/Sekre) terlebih dahulu.');
         }
 
         $cuti = Cuti::findOrFail($id);
+        
+        // 2. Update Status & Tambah Keterangan Audit
         $cuti->update([
             'status' => 'Disetujui',
-            // Jika Anda sudah menambah kolom di database (Langkah 1), aktifkan baris bawah ini:
-            // 'is_pejabat_confirmed' => true 
+            'catatan_final' => 'Disetujui Admin atas izin pejabat' // <--- KUNCI AGAR DI BLADE MUNCUL
+        ]);
+
+        // 3. Kirim Notifikasi ke Pegawai
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Cuti Disetujui (Sistem)',
+            'message' => 'Pengajuan cuti Anda telah disetujui oleh Admin berdasarkan arahan/izin pejabat berwenang.',
+            'is_read' => false,
         ]);
 
         return back()->with('success', 'Pengajuan cuti telah disetujui atas izin Pejabat.');
@@ -252,28 +262,29 @@ public function update(Request $request, $id)
      */
     public function reject(Request $request, $id)
     {
-        // 1. Cek Konfirmasi Pejabat
         if (!$request->pejabat_confirmed) {
             return back()->with('error', 'Gagal! Anda harus mengonfirmasi bahwa pimpinan sudah menginstruksikan penolakan ini.');
         }
 
-        // 2. Validasi Alasan (Tetap gunakan kode Anda)
         $request->validate([
-            'catatan_penolakan' => [
-                'required',
-                'string',
-                'max:100',
-                'regex:/^[A-Za-z\s]+$/'
-            ]
-        ], [
-            'catatan_penolakan.required' => 'Alasan penolakan wajib diisi.',
+            'catatan_penolakan' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s]+$/']
         ]);
 
         $cuti = Cuti::findOrFail($id);
 
+        // Update Status & Tambah Jejak Audit Penolakan
         $cuti->update([
             'status' => 'Ditolak',
-            'catatan_penolakan' => $request->catatan_penolakan
+            'catatan_penolakan' => $request->catatan_penolakan,
+            'catatan_final' => 'Ditolak Admin atas izin pejabat' // Jejak audit
+        ]);
+
+        // Kirim Notifikasi Penolakan
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Cuti Ditolak (Sistem)',
+            'message' => 'Pengajuan cuti Anda ditolak oleh Admin atas izin pejabat. Alasan: ' . $request->catatan_penolakan,
+            'is_read' => false,
         ]);
 
         return back()->with('success', 'Pengajuan cuti berhasil ditolak berdasarkan arahan Pejabat.');
