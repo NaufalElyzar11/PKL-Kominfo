@@ -39,7 +39,7 @@
 @endpush
 
 @section('content')
-<div class="flex flex-col gap-6" x-data="{ showRejectModal: false, rejectId: null, showResetModal: false, resetId: null }">
+<div class="flex flex-col gap-6" x-data="{ showRejectModal: false, rejectId: null, showResetModal: false, resetId: null, showDetailPejabat: false, detailCuti: {} }">
 
     {{-- Page Heading --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -157,6 +157,28 @@
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
+                                    {{-- Detail Button --}}
+                                    <button type="button"
+                                            @click.stop="
+                                                detailCuti = {
+                                                    nama: '{{ $c->pegawai->nama ?? '-' }}',
+                                                    nip: '{{ $c->pegawai->nip ?? '-' }}',
+                                                    jabatan: '{{ $jabatan }}',
+                                                    jenis_cuti: '{{ $c->jenis_cuti }}',
+                                                    tanggal_mulai: '{{ optional($c->tanggal_mulai)->format('d M Y') }}',
+                                                    tanggal_selesai: '{{ optional($c->tanggal_selesai)->format('d M Y') }}',
+                                                    jumlah_hari: '{{ $c->jumlah_hari }}',
+                                                    alasan_cuti: @js($c->alasan_cuti ?? '-'),
+                                                    pengganti_nama: '{{ $c->delegasi->nama ?? '-' }}',
+                                                    pengganti_jabatan: '{{ $c->delegasi->jabatan ?? '' }}',
+                                                    status: '{{ $c->status }}'
+                                                };
+                                                showDetailPejabat = true"
+                                            class="w-8 h-8 rounded-full bg-sky-50 text-sky-600 hover:bg-sky-500 hover:text-white transition-all flex items-center justify-center shadow-sm"
+                                            title="Detail">
+                                        <span class="material-symbols-outlined text-[18px]">info</span>
+                                    </button>
+
                                     {{-- Approve Button --}}
                                     <form id="form-approve-{{ $c->id }}" action="{{ route('pejabat.approval.approve', $c->id) }}" method="POST">
                                         @csrf
@@ -292,6 +314,154 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+{{-- MODAL DETAIL CUTI PEJABAT - PREMIUM --}}
+<div x-show="showDetailPejabat" x-cloak
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4"
+     @click.self="showDetailPejabat = false"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0">
+
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100"
+         @click.stop
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+         x-transition:enter-end="opacity-100 scale-100 translate-y-0">
+
+        {{-- HEADER GRADIENT --}}
+        <div class="bg-gradient-to-r from-sky-500 to-blue-600 px-5 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <i class="fa-solid fa-file-circle-check text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-bold text-base tracking-wide">Detail Pengajuan Cuti</h3>
+                        <p class="text-sky-100 text-[10px]">Menunggu persetujuan Pejabat</p>
+                    </div>
+                </div>
+                <button @click="showDetailPejabat = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
+                    <i class="fa-solid fa-xmark text-white group-hover:rotate-90 transition-transform duration-200"></i>
+                </button>
+            </div>
+        </div>
+
+        {{-- BODY --}}
+        <div class="p-5 max-h-[75vh] overflow-y-auto space-y-4">
+
+            {{-- Status Badge --}}
+            <div class="flex justify-center">
+                <span class="px-4 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 flex items-center gap-2">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                    <span x-text="detailCuti.status || 'Menunggu Persetujuan'"></span>
+                </span>
+            </div>
+
+            {{-- INFO PEGAWAI --}}
+            <div class="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-100 overflow-hidden">
+                <div class="px-4 py-2.5 bg-gray-100/50 border-b border-gray-100 flex items-center gap-2">
+                    <i class="fa-solid fa-user-tie text-sky-600 text-sm"></i>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Data Pegawai</span>
+                </div>
+                <div class="p-4 grid grid-cols-2 gap-3">
+                    <div class="col-span-2 flex items-center gap-3 pb-3 border-b border-gray-100">
+                        <div class="w-9 h-9 bg-sky-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-id-badge text-sky-600"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[9px] text-gray-400 uppercase tracking-wide">Nama Lengkap</p>
+                            <p class="text-sm font-semibold text-gray-800 truncate" x-text="detailCuti.nama || '-'"></p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">NIP</p>
+                        <p class="text-xs font-medium text-gray-700" x-text="detailCuti.nip || '-'"></p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">Jabatan</p>
+                        <p class="text-xs font-medium text-gray-700" x-text="detailCuti.jabatan || '-'"></p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- INFO CUTI --}}
+            <div class="bg-gradient-to-br from-sky-50 to-blue-50 rounded-xl border border-sky-100 overflow-hidden">
+                <div class="px-4 py-2.5 bg-sky-100/50 border-b border-sky-100 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-days text-sky-600 text-sm"></i>
+                    <span class="text-[10px] font-bold text-sky-600 uppercase tracking-wider">Detail Cuti</span>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 bg-sky-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-solid fa-tag text-sky-600 text-[10px]"></i>
+                            </div>
+                            <span class="text-xs text-gray-500">Jenis Cuti</span>
+                        </div>
+                        <span class="text-xs font-bold text-sky-700" x-text="detailCuti.jenis_cuti || '-'"></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 bg-sky-100 rounded-lg flex items-center justify-center">
+                                <i class="fa-regular fa-calendar text-sky-600 text-[10px]"></i>
+                            </div>
+                            <span class="text-xs text-gray-500">Periode Cuti</span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-semibold text-gray-700" x-text="detailCuti.tanggal_mulai || '-'"></p>
+                            <p class="text-[10px] text-gray-400">s/d <span x-text="detailCuti.tanggal_selesai || '-'"></span></p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center p-3 bg-white rounded-xl border border-sky-100 shadow-sm">
+                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-1">Total Hari Cuti</p>
+                        <span class="text-3xl font-black text-sky-600" x-text="detailCuti.jumlah_hari || '0'"></span>
+                        <span class="text-[9px] text-gray-400">hari kerja</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- DELEGASI --}}
+            <template x-if="detailCuti.pengganti_nama && detailCuti.pengganti_nama !== '-'">
+                <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl border border-violet-100 overflow-hidden">
+                    <div class="px-4 py-2.5 bg-violet-100/50 border-b border-violet-100 flex items-center gap-2">
+                        <i class="fa-solid fa-user-group text-violet-600 text-sm"></i>
+                        <span class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">Pegawai Pengganti</span>
+                    </div>
+                    <div class="p-4 flex items-center gap-3">
+                        <div class="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-user-check text-violet-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-violet-700" x-text="detailCuti.pengganti_nama"></p>
+                            <p class="text-[10px] text-gray-400" x-text="detailCuti.pengganti_jabatan || ''"></p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            {{-- ALASAN --}}
+            <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-pen-fancy text-sky-500 text-sm"></i>
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Alasan Cuti</span>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-600 italic leading-relaxed" x-text="detailCuti.alasan_cuti || '-'"></div>
+            </div>
+        </div>
+
+        {{-- FOOTER --}}
+        <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+            <button @click="showDetailPejabat = false"
+                    class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl text-xs font-semibold transition-all duration-200 flex items-center gap-2">
+                <i class="fa-solid fa-xmark"></i> Tutup
+            </button>
+        </div>
     </div>
 </div>
 
