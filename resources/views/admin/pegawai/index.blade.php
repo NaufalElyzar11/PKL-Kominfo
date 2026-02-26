@@ -880,7 +880,7 @@ get filteredAtasan() {
                                         </div>
                                         <p class="text-[9px] text-gray-400 flex items-center gap-1">
                                             <i class="fa-solid fa-circle-info"></i>
-                                            Pejabat yang menyetujui cuti tahap pertama
+                                            Kadis yang menyetujui cuti tahap pertama
                                         </p>
                                     </div>
 
@@ -898,7 +898,7 @@ get filteredAtasan() {
                                                class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-gray-100/50 text-[11px] sm:text-xs cursor-not-allowed">
                                         <p class="text-[9px] text-gray-400 flex items-center gap-1">
                                             <i class="fa-solid fa-circle-info"></i>
-                                            Pejabat yang memberikan persetujuan akhir cuti
+                                            Kadis yang memberikan persetujuan akhir cuti
                                         </p>
                                     </div>
 
@@ -1145,7 +1145,7 @@ get filteredAtasan() {
                                         <i class="fa-solid fa-stamp text-green-600 text-xs"></i>
                                     </div>
                                     <div>
-                                        <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Pejabat Pemberi Cuti</p>
+                                        <p class="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase">Kadis Pemberi Cuti</p>
                                         <p class="text-sm font-medium text-gray-800" x-text="selectedPegawai?.pejabat || '-'"></p>
                                     </div>
                                 </div>

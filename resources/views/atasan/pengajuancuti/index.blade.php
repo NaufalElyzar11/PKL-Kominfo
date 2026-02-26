@@ -678,7 +678,7 @@
                                             <p class="text-[11px] sm:text-xs font-medium text-gray-700">{{ $pegawai->atasan ?? '-' }}</p>
                                         </div>
                                         <div>
-                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Pejabat Pemberi Cuti</p>
+                                            <p class="text-[9px] sm:text-[10px] text-gray-400 uppercase tracking-wide">Kadis Pemberi Cuti</p>
                                             <p class="text-[11px] sm:text-xs font-medium text-gray-700">{{ $pegawai->pemberi_cuti ?? '-' }}</p>
                                         </div>
                                     </div>
@@ -1068,7 +1068,7 @@
                         <p class="text-xs font-medium text-gray-700" x-text="detailPending.atasan || '-'"></p>
                     </div>
                     <div>
-                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">Pejabat Pemberi Cuti</p>
+                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">Kadis Pemberi Cuti</p>
                         <p class="text-xs font-medium text-gray-700" x-text="detailPending.pejabat || '-'"></p>
                     </div>
                 </div>
@@ -1462,7 +1462,7 @@
                         <p class="text-xs font-medium text-gray-700" x-text="detailRiwayat.atasan || '-'"></p>
                     </div>
                     <div>
-                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">Pejabat Pemberi Cuti</p>
+                        <p class="text-[9px] text-gray-400 uppercase tracking-wide mb-0.5">Kadis Pemberi Cuti</p>
                         <p class="text-xs font-medium text-gray-700" x-text="detailRiwayat.pejabat || '-'"></p>
                     </div>
                 </div>

@@ -54,7 +54,7 @@
                 <th class="w-6 px-1 py-1.5 border text-center font-bold">Hr</th>
                 <th class="w-18 px-1 py-1.5 border text-center font-medium">Alasan</th>
                 <th class="w-18 px-1 py-1.5 border text-center font-medium">Alamat</th>
-                <th class="w-20 px-1 py-1.5 border text-center text-[7.5px] leading-tight font-normal">Atasan/Pejabat</th>
+                <th class="w-20 px-1 py-1.5 border text-center text-[7.5px] leading-tight font-normal">Atasan/Kadis</th>
                 <th class="w-18 px-1 py-1.5 border text-center font-bold">Status</th>
                 <th class="w-12 px-1 py-1.5 border text-center font-bold">Aksi</th>
             </tr>
@@ -100,7 +100,7 @@
                         <div class="text-blue-600 truncate" title="Atasan: {{ $cuti->atasanLangsung->nama_atasan ?? '-' }}">
                             <span class="font-bold">A:</span> {{ $cuti->atasanLangsung->nama_atasan ?? '-' }}
                         </div>
-                        <div class="text-emerald-600 truncate mt-0.5" title="Pejabat: {{ $cuti->pejabatPemberiCuti->nama_pejabat ?? '-' }}">
+                        <div class="text-emerald-600 truncate mt-0.5" title="Kadis: {{ $cuti->pejabatPemberiCuti->nama_pejabat ?? '-' }}">
                             <span class="font-bold">P:</span> {{ $cuti->pejabatPemberiCuti->nama_pejabat ?? '-' }}
                         </div>
                     </td>
@@ -214,7 +214,7 @@
                             <span x-text="detail.atasan"></span>
                         </div>
                         <div>
-                            <span class="text-gray-400 text-[9px] uppercase font-bold block">Pejabat</span>
+                            <span class="text-gray-400 text-[9px] uppercase font-bold block">Kadis</span>
                             <span x-text="detail.pejabat"></span>
                         </div>
                     </div>
@@ -326,7 +326,7 @@
                 {{-- KOLOM ALAMAT --}}
                 <th class="w-18 px-1 py-1.5 border text-center font-medium">Alamat</th>
                 {{-- KOLOM ATASAN/PEJABAT --}}
-                <th class="w-20 px-1 py-1.5 border text-center text-[7.5px] leading-tight font-normal">Atasan/Pejabat</th>
+                <th class="w-20 px-1 py-1.5 border text-center text-[7.5px] leading-tight font-normal">Atasan/Kadis</th>
                 <th class="w-14 px-1 py-1.5 border text-center font-bold">Status</th>
                 <th class="w-10 px-1 py-1.5 border text-center font-bold">Aksi</th>
             </tr>
@@ -378,7 +378,7 @@
                         <div class="text-blue-600 truncate" title="Atasan: {{ $cuti->atasanLangsung->nama_atasan ?? '-' }}">
                             <span class="font-bold">A:</span> {{ $cuti->atasanLangsung->nama_atasan ?? '-' }}
                         </div>
-                        <div class="text-emerald-600 truncate mt-0.5" title="Pejabat: {{ $cuti->pejabatPemberiCuti->nama_pejabat ?? '-' }}">
+                        <div class="text-emerald-600 truncate mt-0.5" title="Kadis: {{ $cuti->pejabatPemberiCuti->nama_pejabat ?? '-' }}">
                             <span class="font-bold">P:</span> {{ $cuti->pejabatPemberiCuti->nama_pejabat ?? '-' }}
                         </div>
                     </td>

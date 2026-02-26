@@ -108,7 +108,7 @@
                                     <option value="pegawai" {{ old('role') == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
                                     <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                                     <option value="atasan" {{ old('role') == 'atasan' ? 'selected' : '' }}>Atasan Langsung</option>
-                                    <option value="pejabat" {{ old('role') == 'pejabat' ? 'selected' : '' }}>Pejabat Pemberi Cuti</option>
+                                    <option value="pejabat" {{ old('role') == 'pejabat' ? 'selected' : '' }}>Kadis Pemberi Cuti</option>
                                 </select>
                                 <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                     <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
@@ -196,7 +196,7 @@
                                    placeholder="Nama atasan langsung pegawai" required>
                             <p class="text-[9px] text-gray-400 flex items-center gap-1">
                                 <i class="fa-solid fa-circle-info"></i>
-                                Pejabat yang menyetujui cuti tahap pertama
+                                Kadis yang menyetujui cuti tahap pertama
                             </p>
                             @error('atasan') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
                         </div>

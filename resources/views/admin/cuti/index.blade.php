@@ -35,7 +35,7 @@
 
                 @if(request('search') || request('status') || request('tanggal_dari') || request('tanggal_sampai'))
                     <a href="{{ route('admin.cuti.index') }}" class="px-2 py-1 bg-gray-500 text-white rounded text-[10px] hover:bg-gray-600 transition shadow-sm">
-                        Reset
+                        Ulang
                     </a>
                 @endif
                 </div>

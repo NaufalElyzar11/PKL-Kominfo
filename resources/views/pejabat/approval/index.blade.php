@@ -4,7 +4,7 @@
 <div class="container mx-auto px-4 py-6" x-data="{ showRejectModal: false, rejectId: null }">
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Persetujuan Cuti Pegawai</h2>
-        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tahap: Pejabat (Final)</span>
+        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tahap: Kadis (Final)</span>
     </div>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">

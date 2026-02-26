@@ -544,7 +544,7 @@
 
                     {{-- TAMBAHKAN DUA BARIS INI --}}
                     <div><span class="font-bold">Atasan:</span> {{ $pegawai->atasan ?? '-' }}</div>
-                    <div><span class="font-bold">Pejabat:</span> {{ $pegawai->pemberi_cuti ?? '-' }}</div>
+                    <div><span class="font-bold">Kadis:</span> {{ $pegawai->pemberi_cuti ?? '-' }}</div>
 
                     {{-- INPUT HIDDEN AGAR MASUK KE DATABASE SAAT STORE --}}
                     <input type="hidden" name="atasan" value="{{ $pegawai->atasan }}">
@@ -796,7 +796,7 @@
                 <span x-text="detailPending.atasan || '-'"></span>
             </p>
             <p class="flex justify-between border-b border-gray-100 pb-1">
-                <span class="font-semibold text-gray-500">Pejabat:</span> 
+                <span class="font-semibold text-gray-500">Kadis:</span> 
                 <span x-text="detailPending.pejabat || '-'"></span>
             </p>
 

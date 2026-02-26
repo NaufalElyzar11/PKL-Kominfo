@@ -347,7 +347,7 @@ x-data="{
                                         @if($r->catatan_tolak_pejabat)
                                             <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 shadow-sm">
                                                 <p class="text-[10px] text-blue-700 font-bold uppercase flex items-center gap-1">
-                                                    <i class="fa-solid fa-user-shield text-[10px]"></i> Keputusan Pejabat:
+                                                    <i class="fa-solid fa-user-shield text-[10px]"></i> Keputusan Kadis:
                                                 </p>
                                                 <p class="text-xs text-blue-900 font-medium">{{ $r->catatan_tolak_pejabat }}</p>
                                             </div>
@@ -409,7 +409,7 @@ x-data="{
                                     <div class="bg-rose-50 p-2 rounded-lg border border-rose-100 text-[10px]"><span class="font-bold text-rose-600">Penolakan Atasan:</span> {{ $r->catatan_tolak_atasan }}</div>
                                 @endif
                                 @if($r->catatan_tolak_pejabat)
-                                    <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 text-[10px]"><span class="font-bold text-blue-700">Keputusan Pejabat:</span> {{ $r->catatan_tolak_pejabat }}</div>
+                                    <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 text-[10px]"><span class="font-bold text-blue-700">Keputusan Kadis:</span> {{ $r->catatan_tolak_pejabat }}</div>
                                 @endif
                             </div>
                         @else
@@ -584,7 +584,7 @@ x-data="{
             </div>
             <div>
                 <h3 class="text-lg font-bold text-gray-900">Ajukan Cuti</h3>
-                <p class="text-xs text-gray-500">Pengajuan Anda akan langsung diteruskan ke Pejabat</p>
+                <p class="text-xs text-gray-500">Pengajuan Anda akan langsung diteruskan ke Kadis</p>
             </div>
         </div>
         
@@ -645,7 +645,7 @@ x-data="{
             {{-- Info Box --}}
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
                 <p class="font-semibold mb-1">ℹ️ Informasi:</p>
-                <p>Pengajuan cuti Anda akan langsung masuk ke halaman Pejabat untuk approval final karena Anda adalah Atasan.</p>
+                <p>Pengajuan cuti Anda akan langsung masuk ke halaman Kadis untuk approval final karena Anda adalah Atasan.</p>
             </div>
 
             {{-- Actions --}}

@@ -1,6 +1,6 @@
 @extends('layouts.pegawai')
 
-@section('title', 'Dashboard Pejabat')
+@section('title', 'Dashboard Kadis')
 
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
@@ -44,7 +44,7 @@
     {{-- Page Heading --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div class="flex flex-col gap-1">
-            <h1 class="text-[#0d141b] text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Dashboard Pejabat</h1>
+            <h1 class="text-[#0d141b] text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Dashboard Kadis</h1>
             <p class="text-[#4c739a] text-base font-normal">Tinjau dan kelola pengajuan cuti pegawai (Tahap Akhir).</p>
         </div>
     </div>
@@ -373,7 +373,7 @@
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6" @click.away="showResetModal = false">
         <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-amber-500">rotate_left</span>
-            Reset Persetujuan
+            Ulang Persetujuan
         </h3>
 
         <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
@@ -385,7 +385,7 @@
             @csrf
 
         <div x-data="{ count: 0 }">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Reset <span class="text-red-500">*</span></label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Alasan Ulang <span class="text-red-500">*</span></label>
             <textarea name="alasan_reset"
                 rows="4"
                 required
@@ -411,7 +411,7 @@
 
                 <button type="submit" 
                     class="bg-amber-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-amber-700 shadow-md">
-                    Reset Persetujuan
+                    Ulang Persetujuan
                 </button>
             </div>
         </form>
@@ -444,7 +444,7 @@
                     </div>
                     <div>
                         <h3 class="text-white font-bold text-base tracking-wide">Detail Pengajuan Cuti</h3>
-                        <p class="text-sky-100 text-[10px]">Menunggu persetujuan Pejabat</p>
+                        <p class="text-sky-100 text-[10px]">Menunggu persetujuan Kadis</p>
                     </div>
                 </div>
                 <button @click="showDetailPejabat = false" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all duration-200 group">
@@ -638,12 +638,12 @@
                                     <button type="button" 
                                         @click.stop="resetId = {{ $r->id }}; showResetModal = true" 
                                         class="w-8 h-8 rounded-full bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center justify-center shadow-sm mx-auto" 
-                                        title="Reset Persetujuan">
+                                        title="Ulang Persetujuan">
                                         <span class="material-symbols-outlined text-[18px] pointer-events-none">rotate_left</span>
                                     </button>
                                 @elseif($r->status === 'Disetujui' || $r->status === 'Ditolak')
                                     {{-- Tampilkan icon disabled jika sudah lewat 8 jam --}}
-                                    <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-300 flex items-center justify-center shadow-sm mx-auto" title="Reset tidak tersedia (Sudah lewat 8 jam)">
+                                    <div class="w-8 h-8 rounded-full bg-gray-100 text-gray-300 flex items-center justify-center shadow-sm mx-auto" title="Ulang tidak tersedia (Sudah lewat 8 jam)">
                                         <span class="material-symbols-outlined text-[18px]">lock</span>
                                     </div>
                                 @else
@@ -715,12 +715,12 @@
                             <button type="button" 
                                 @click.stop="resetId = {{ $r->id }}; showResetModal = true" 
                                 class="px-4 py-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2 text-xs font-bold" 
-                                title="Reset Persetujuan">
-                                <span class="material-symbols-outlined text-[16px] pointer-events-none">rotate_left</span> Reset
+                                title="Ulang Persetujuan">
+                                <span class="material-symbols-outlined text-[16px] pointer-events-none">rotate_left</span> Ulang
                             </button>
                         @elseif($r->status === 'Disetujui' || $r->status === 'Ditolak')
-                            <div class="px-4 py-2 rounded-xl bg-gray-100 text-gray-400 flex items-center gap-2 text-xs font-medium" title="Reset tidak tersedia (Sudah lewat 8 jam)">
-                                <span class="material-symbols-outlined text-[16px]">lock</span> Reset Terkunci
+                            <div class="px-4 py-2 rounded-xl bg-gray-100 text-gray-400 flex items-center gap-2 text-xs font-medium" title="Ulang tidak tersedia (Sudah lewat 8 jam)">
+                                <span class="material-symbols-outlined text-[16px]">lock</span> Ulang Terkunci
                             </div>
                         @endif
                     </div>

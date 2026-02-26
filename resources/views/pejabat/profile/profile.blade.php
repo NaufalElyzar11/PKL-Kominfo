@@ -97,7 +97,7 @@
                         {{ $pegawai->nama ?? $user->name }}
                     </h1>
                     <p class="text-white/80 text-lg mt-2 font-medium">
-                        {{ $pegawai->jabatan ?? 'Pejabat' }} • {{ $pegawai->unit_kerja ?? 'Kominfo' }}
+                        {{ $pegawai->jabatan ?? 'Kadis' }} • {{ $pegawai->unit_kerja ?? 'Kominfo' }}
                     </p>
                     
                     <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4">

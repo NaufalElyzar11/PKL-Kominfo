@@ -286,7 +286,7 @@
             {{-- PRIORITAS 1: JIKA DITOLAK PEJABAT (KADIS) --}}
             @if(!empty(trim($c->catatan_tolak_pejabat ?? '')))
                 <div class="bg-rose-50 p-2 rounded-lg border border-rose-200 shadow-sm">
-                    <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Pejabat (Kadis):</p>
+                    <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Kadis:</p>
                     <p class="text-[11px] text-rose-900 font-medium italic">"{{ $c->catatan_tolak_pejabat }}"</p>
                 </div>
 

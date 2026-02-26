@@ -90,7 +90,7 @@
                                 <th class="px-4 py-3 font-semibold text-center">Durasi</th>
                                 <th class="px-4 py-3 font-semibold text-center">Status</th>
                                 {{-- KOLOM BARU --}}
-                                <th class="px-4 py-3 font-semibold text-center w-32">Konfirmasi Pejabat</th>
+                                <th class="px-4 py-3 font-semibold text-center w-32">Konfirmasi Kadis</th>
                                 <th class="px-4 py-3 font-semibold text-center w-24">Aksi</th>
                             </tr>
                         </thead>
