@@ -27,13 +27,15 @@
         <div class="lg:col-span-8 bg-white rounded-xl shadow border border-gray-200 overflow-hidden lg:h-[28rem] h-full flex flex-col">
             <div class="flex flex-col h-full divide-y divide-gray-100">
                 
-                {{-- BAGIAN ATAS: STATISTIK --}}
-                <div class="p-4 sm:p-6 flex flex-col justify-center flex-1">
-                    <h2 class="text-sm font-semibold text-sky-700 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie"></i> Statistik Sisa Cuti
-                    </h2>
+                {{-- BAGIAN ATAS: STATISTIK (DIPERKECIL) --}}
+                <div class="p-4 sm:p-6 flex flex-col justify-center border-b border-gray-100 shrink-0">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-sm font-semibold text-sky-700 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie"></i> Statistik Sisa Cuti
+                        </h2>
+                    </div>
 
-                    <div class="space-y-6">
+                    <div class="flex items-center gap-6">
                         @php
                             $hakCutiDisplay = $hakCuti ?? 12;
                             $terpakai = $cutiTerpakai ?? 0;
@@ -42,27 +44,21 @@
                         @endphp
 
                         {{-- Main Number --}}
-                        <div class="text-center space-y-2">
-                            <div>
-                                <p class="text-4xs text-gray-400 uppercase tracking-widest font-semibold">Sisa Cuti</p>
-                                <p class="text-6xl font-black {{ $sisa > 0 ? 'text-sky-600' : 'text-red-500' }} tracking-tight">
-                                    {{ $sisa }}
-                                    <span class="text-3xl font-medium text-gray-400">Hari</span>
-                                </p>
-                            </div>
+                        <div class="text-center shrink-0">
+                            <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-1">Sisa Cuti</p>
+                            <p class="text-4xl font-black {{ $sisa > 0 ? 'text-sky-600' : 'text-red-500' }} tracking-tight leading-none">
+                                {{ $sisa }}
+                                <span class="text-lg font-medium text-gray-400">Hari</span>
+                            </p>
                         </div>
 
                         {{-- Progress --}}
-                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                            <div class="flex justify-between text-[10px] items-center mb-1.5 uppercase font-bold text-gray-400">
-                                <span>Terpakai</span>
-                                <span>Total Hak</span>
+                        <div class="flex-1 bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <div class="flex justify-between text-[10px] items-center mb-1 uppercase font-semibold text-gray-400">
+                                <span>Terpakai ({{ $terpakai }} Hari)</span>
+                                <span>Dari Total Hak ({{ $hakCutiDisplay }} Hari)</span>
                             </div>
-                            <div class="flex justify-between text-xs font-bold text-gray-700 mb-2">
-                                <span>{{ $terpakai }} Hari</span>
-                                <span>{{ $hakCutiDisplay }} Hari</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                                 <div class="h-full rounded-full transition-all duration-1000 ease-out 
                                             {{ $sisa == 0 ? 'bg-red-500' : ($sisa <= 3 ? 'bg-orange-400' : 'bg-gradient-to-r from-sky-400 to-blue-500') }}"
                                      style="width: {{ $persenTerpakai }}%">
@@ -72,8 +68,8 @@
                     </div>
                 </div>
 
-                {{-- BAGIAN BAWAH: NOTIFIKASI --}}
-                <div class="p-4 sm:p-6 bg-gray-50/50 flex flex-col flex-1 overflow-hidden">
+                {{-- BAGIAN BAWAH: NOTIFIKASI (DIPERBESAR) --}}
+                <div class="p-4 sm:p-6 bg-gray-50/50 flex flex-col flex-[2] overflow-hidden min-h-[300px]">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
                             <i class="fa-solid fa-bell text-yellow-500"></i> Pemberitahuan

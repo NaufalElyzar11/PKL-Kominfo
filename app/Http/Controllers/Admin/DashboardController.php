@@ -32,14 +32,12 @@ class DashboardController extends Controller
         // 5. Data cuti terbaru
         $cutiTerbaru = Cuti::with(['pegawai'])
             ->orderByDesc('created_at')
-            ->limit(10)
-            ->get();
+            ->paginate(10, ['*'], 'cuti_page');
 
         // 6. Data pegawai terbaru
         $pegawaiTerbaru = Pegawai::with('user.roles') 
             ->orderByDesc('created_at')
-            ->limit(10)
-            ->get();
+            ->paginate(10, ['*'], 'pegawai_page');
 
         return view('admin.dashboard.index', compact(
             'totalPegawai',

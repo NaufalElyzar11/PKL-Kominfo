@@ -65,7 +65,7 @@ class PegawaiController extends Controller
         $sisaCutiFinal = max(0, $hakCuti - $cutiTerpakai);
 
         // 6. DATA TAMBAHAN LAINNYA
-        $notif = Notification::where('user_id', $user->id)->where('is_read', false)->latest()->get();
+        $notif = Notification::where('user_id', $user->id)->latest()->take(5)->get();
         $cutiPending = (clone $queryCuti)->whereIn('status', ['Menunggu', 'Disetujui Atasan'])->count();
         $cutiDisetujui = (clone $queryCuti)->where('status', 'Disetujui')->count();
         $cutiDitolak = (clone $queryCuti)->where('status', 'Ditolak')->count();

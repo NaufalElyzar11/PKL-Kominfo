@@ -98,7 +98,7 @@
                     </a>
                 </div>
 
-                <div class="overflow-auto max-h-80 border rounded-lg text-xs">
+                <div class="hidden md:block overflow-auto max-h-80 border rounded-lg text-[11px] lg:text-xs">
                     <table class="min-w-full border-collapse bg-white">
                         <thead class="bg-gradient-to-r from-[#0288D1] to-[#03A9F4] text-white sticky top-0 z-10 text-xs shadow-sm">
                             <tr>
@@ -136,6 +136,34 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Mobile View Cards --}}
+                <div class="md:hidden flex flex-col gap-3 mt-2">
+                    @forelse ($pegawaiTerbaru as $index => $p)
+                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm flex flex-col gap-2">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <span class="font-bold text-sky-700 text-sm">{{ $p->nama }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $p->status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                {{ ucfirst($p->status) }}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                            <div class="flex flex-col"><span class="text-gray-500">NIP</span><span class="font-mono text-gray-800">{{ $p->nip ?? '-' }}</span></div>
+                            <div class="flex flex-col"><span class="text-gray-500">Role</span><span class="capitalize text-gray-800">{{ $p->user?->role ?? '-' }}</span></div>
+                            <div class="flex flex-col col-span-2"><span class="text-gray-500">Jabatan</span><span class="text-gray-800">{{ $p->jabatan ?? '-' }}</span></div>
+                            <div class="flex flex-col col-span-2"><span class="text-gray-500">Email</span><span class="text-gray-800 break-all">{{ $p->user?->email ?? '-' }}</span></div>
+                        </div>
+                    </div>
+                    @empty
+                     <div class="text-center py-4 text-gray-400 text-xs italic">Belum ada data pegawai.</div>
+                    @endforelse
+                </div>
+
+                @if($pegawaiTerbaru->hasPages())
+                <div class="mt-4 pt-3 border-t">
+                    {{ $pegawaiTerbaru->links() }}
+                </div>
+                @endif
             </div>
 
             {{-- 📋 Data Pengajuan Cuti Terbaru --}}
@@ -147,7 +175,7 @@
                     </a>
                 </div>
 
-                <div class="overflow-auto max-h-80 border rounded-lg text-xs">
+                <div class="hidden md:block overflow-auto max-h-80 border rounded-lg text-[11px] lg:text-xs">
                     <table class="min-w-full border-collapse bg-white">
                         <thead class="bg-gradient-to-r from-[#0288D1] to-[#03A9F4] text-white text-xs sticky top-0 z-10 shadow-sm">
                             <tr>
@@ -201,6 +229,42 @@
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Mobile View Cards --}}
+                <div class="md:hidden flex flex-col gap-3 mt-2">
+                    @forelse ($cutiTerbaru as $i => $c)
+                    @php
+                        $pegawaiNama = $c->pegawai?->nama ?? 'Pegawai Terhapus';
+                        $color = match($c->status) {
+                            'disetujui' => 'bg-green-100 text-green-700',
+                            'ditolak'   => 'bg-red-100 text-red-700',
+                            default     => 'bg-yellow-100 text-yellow-700'
+                        };
+                    @endphp
+                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 shadow-sm flex flex-col gap-2">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <span class="font-bold text-sky-700 text-sm">{{ $pegawaiNama }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {{ $color }}">
+                                {{ ucfirst($c->status) }}
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                            <div class="flex flex-col"><span class="text-gray-500">Jabatan</span><span class="text-gray-800">{{ $c->pegawai?->jabatan ?? '-' }}</span></div>
+                            <div class="flex flex-col"><span class="text-gray-500">Jenis Cuti</span><span class="text-gray-800 font-semibold">{{ $c->jenis_cuti }}</span></div>
+                            <div class="flex flex-col col-span-2"><span class="text-gray-500">Tanggal</span><span class="text-gray-800 font-mono">{{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d M Y') }}</span></div>
+                            <div class="flex flex-col col-span-2"><span class="text-gray-500">Alasan</span><span class="text-gray-800 italic">{{ $c->alasan_cuti ?: '-' }}</span></div>
+                        </div>
+                    </div>
+                    @empty
+                     <div class="text-center py-4 text-gray-400 text-xs italic">Tidak ada pengajuan terbaru.</div>
+                    @endforelse
+                </div>
+
+                @if($cutiTerbaru->hasPages())
+                <div class="mt-4 pt-3 border-t">
+                    {{ $cutiTerbaru->links() }}
+                </div>
+                @endif
             </div>
         </div>
     </div>

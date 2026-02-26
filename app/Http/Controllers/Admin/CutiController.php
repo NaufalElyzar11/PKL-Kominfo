@@ -185,12 +185,20 @@ public function update(Request $request, $id)
             }
         }
 
-        // 3. Filter Tanggal
+        // 3. Filter Tanggal & Default limit to current year
+        $hasDateFilter = false;
         if ($request->filled('tanggal_dari')) {
             $query->whereDate('tanggal_mulai', '>=', $request->tanggal_dari);
+            $hasDateFilter = true;
         }
         if ($request->filled('tanggal_sampai')) {
             $query->whereDate('tanggal_selesai', '<=', $request->tanggal_sampai);
+            $hasDateFilter = true;
+        }
+
+        // 4. Default: Filter berdasarkan tahun ini saja JIKA tidak ada filter tanggal spesifik
+        if (!$hasDateFilter) {
+            $query->whereYear('tanggal_mulai', Carbon::now()->year);
         }
 
         // Urutkan berdasarkan yang terbaru agar laporan rapi
@@ -200,7 +208,7 @@ public function update(Request $request, $id)
         $pdf = Pdf::loadView('admin.cuti.export_pdf', compact('cuti'))
                     ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Laporan_Cuti_Pegawai_' . now()->format('d-m-Y') . '.pdf');
+        return $pdf->download('Laporan_Cuti_Pegawai_' . now()->format('Y') . '.pdf');
     }
 
     /**
