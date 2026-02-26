@@ -223,99 +223,86 @@
             Riwayat Cuti Pegawai
         </h2>
 
-        <div class="overflow-x-auto overflow-y-auto max-h-[28rem] -mx-3 sm:mx-0">
+        {{-- Tampilan Desktop (Tabel) --}}
+        <div class="hidden md:block overflow-x-auto overflow-y-auto max-h-[28rem] -mx-3 sm:mx-0">
             <div class="inline-block min-w-full align-middle px-3 sm:px-0">
                 <table class="min-w-full border-collapse text-[10px] sm:text-xs">
-                    <thead class="bg-sky-600 text-white sticky top-0">
+                    <thead class="bg-sky-600 text-white sticky top-0 z-10">
                         <tr>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left">No</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left">Nama</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left hidden sm:table-cell">NIP</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left hidden md:table-cell">Jabatan</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left">Jenis Cuti</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left">Mulai</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left hidden lg:table-cell">Selesai</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-center">Hari</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-center">Status</th>
-                            <th class="border px-1.5 sm:px-2 py-1 text-left">Catatan / Tindak Lanjut</th>
+                            <th class="border px-1.5 sm:px-2 py-2 text-center w-10">No</th>
+                            <th class="border px-1.5 sm:px-2 py-2 text-left">Nama</th>
+                            <th class="border px-1.5 sm:px-2 py-2 text-left">Jenis Cuti</th>
+                            <th class="border px-1.5 sm:px-2 py-2 text-center">Tanggal</th>
+                            <th class="border px-1.5 sm:px-2 py-2 text-center w-16">Hari</th>
+                            <th class="border px-1.5 sm:px-2 py-2 text-center w-24">Status</th>
+                            <th class="border px-1.5 sm:px-2 py-2 text-left min-w-[200px]">Catatan / Tindak Lanjut</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($latestCuti ?? [] as $i => $c)
-                        <tr class="hover:bg-gray-100">
-                            <td class="border px-1.5 sm:px-2 py-1 text-center">{{ $i + 1 }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1 font-medium">{{ $c->pegawai->nama ?? '-' }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1 text-center hidden sm:table-cell">{{ $c->pegawai->nip ?? '-' }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1 hidden md:table-cell">{{ $c->pegawai->jabatan ?? '-' }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1">{{ $c->jenis_cuti }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1 text-center whitespace-nowrap">{{ $c->tanggal_mulai?->format('d-m-Y') }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1 text-center whitespace-nowrap hidden lg:table-cell">{{ $c->tanggal_selesai?->format('d-m-Y') }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1 text-center">{{ $c->jumlah_hari }}</td>
-                            <td class="border px-1.5 sm:px-2 py-1 text-center">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="border px-1.5 sm:px-2 py-2 text-center font-medium">{{ $i + 1 }}</td>
+                            <td class="border px-1.5 sm:px-2 py-2">
+                                <div class="font-bold text-gray-800">{{ $c->pegawai->nama ?? '-' }}</div>
+                                <div class="text-[9px] text-gray-500 font-mono">{{ $c->pegawai->nip ?? '-' }}</div>
+                                <div class="text-[9px] text-sky-600 font-medium mt-0.5">{{ $c->pegawai->jabatan ?? '-' }}</div>
+                            </td>
+                            <td class="border px-1.5 sm:px-2 py-2 font-medium text-gray-700">{{ $c->jenis_cuti }}</td>
+                            <td class="border px-1.5 sm:px-2 py-2 text-center">
+                                <span class="font-mono text-gray-800">{{ $c->tanggal_mulai?->format('d/m/Y') }}</span>
+                                <span class="text-gray-400 mx-1">-</span>
+                                <span class="font-mono text-gray-800">{{ $c->tanggal_selesai?->format('d/m/Y') }}</span>
+                            </td>
+                            <td class="border px-1.5 sm:px-2 py-2 text-center font-bold text-sky-700">{{ $c->jumlah_hari }}</td>
+                            <td class="border px-1.5 sm:px-2 py-2 text-center">
                                 @php
                                     $statusLower = strtolower($c->status);
                                     $badgeClass = str_contains($statusLower, 'disetujui') 
-                                        ? 'bg-green-100 text-green-700' 
+                                        ? 'bg-green-100 text-green-700 border-green-200' 
                                         : (str_contains($statusLower, 'ditolak') 
-                                            ? 'bg-red-100 text-red-700' 
-                                            : 'bg-yellow-100 text-yellow-700');
+                                            ? 'bg-red-100 text-red-700 border-red-200' 
+                                            : 'bg-yellow-100 text-yellow-700 border-yellow-200');
                                 @endphp
-                                <span class="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] {{ $badgeClass }}">
+                                <span class="inline-flex px-2 py-1 border rounded-lg text-[9px] font-bold uppercase tracking-wider {{ $badgeClass }}">
                                     {{ ucfirst($c->status) }}
                                 </span>
-                                {{-- TAMBAHAN: Cek jika disetujui admin --}}
                                 @if($c->status == 'Disetujui' && $c->catatan_final == 'Disetujui Admin atas izin pejabat')
-                                    <div class="text-[8px] text-blue-500 mt-0.5 leading-none italic font-bold">Oleh Admin</div>
+                                    <div class="text-[8px] text-blue-500 mt-1 leading-none italic font-bold">Oleh Admin</div>
                                 @endif
                             </td>
-<td class="border px-1.5 sm:px-2 py-2">
-    {{-- MODIFIKASI: Tampilkan catatan jika Ditolak ATAU jika ada Catatan Final dari Admin --}}
-    @if(str_contains(strtolower($c->status), 'ditolak') || !empty($c->catatan_final))
-        <div class="flex flex-col gap-2 min-w-[200px]">
-            
-            {{-- TAMPILKAN CATATAN ADMIN JIKA ADA --}}
-            @if(!empty($c->catatan_final))
-                <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 shadow-sm">
-                    <p class="text-[9px] text-blue-700 font-bold uppercase">Keterangan Sistem:</p>
-                    <p class="text-[11px] text-blue-900 font-medium italic">"{{ $c->catatan_final }}"</p>
-                </div>
-            @endif
-
-        <div class="flex flex-col gap-2 min-w-[200px]">
-            
-            {{-- PRIORITAS 1: JIKA DITOLAK PEJABAT (KADIS) --}}
-            @if(!empty(trim($c->catatan_tolak_pejabat ?? '')))
-                <div class="bg-rose-50 p-2 rounded-lg border border-rose-200 shadow-sm">
-                    <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Kadis:</p>
-                    <p class="text-[11px] text-rose-900 font-medium italic">"{{ $c->catatan_tolak_pejabat }}"</p>
-                </div>
-
-            {{-- PRIORITAS 2: JIKA DITOLAK ATASAN --}}
-            @elseif(!empty(trim($c->catatan_tolak_atasan ?? '')))
-                <div class="bg-orange-50 p-2 rounded-lg border border-orange-200 shadow-sm">
-                    <p class="text-[9px] text-orange-700 font-bold uppercase">Catatan Atasan:</p>
-                    <p class="text-[11px] text-orange-900 font-medium italic">"{{ $c->catatan_tolak_atasan }}"</p>
-                </div>
-
-            {{-- PRIORITAS 3: CATATAN UMUM (JIKA KOLOM KHUSUS DI ATAS KOSONG) --}}
-            @elseif(!empty(trim($c->catatan_penolakan ?? '')))
-                <div class="bg-gray-50 p-2 rounded-lg border border-gray-200 shadow-sm">
-                    <p class="text-[9px] text-gray-700 font-bold uppercase">Catatan Penolakan:</p>
-                    <p class="text-[11px] text-gray-900 font-medium italic">"{{ $c->catatan_penolakan }}"</p>
-                </div>
-            @else
-                <span class="text-gray-400 italic text-[10px]">Tidak ada catatan</span>
-            @endif
-
-        </div>
-    @else
-        <span class="text-gray-400 italic text-[10px]">Tidak ada catatan</span>
-    @endif
-</td>
+                            <td class="border px-1.5 sm:px-2 py-2">
+                                @if(str_contains(strtolower($c->status), 'ditolak') || !empty($c->catatan_final))
+                                    <div class="flex flex-col gap-1.5">
+                                        @if(!empty($c->catatan_final))
+                                            <div class="bg-blue-50 p-1.5 rounded-md border border-blue-100 text-[10px]">
+                                                <span class="font-bold text-blue-700 block mb-0.5 uppercase tracking-wide text-[8px]">Sistem Admin:</span>
+                                                <span class="text-blue-900 italic font-medium leading-tight">"{{ $c->catatan_final }}"</span>
+                                            </div>
+                                        @endif
+                                        @if(!empty(trim($c->catatan_tolak_pejabat ?? '')))
+                                            <div class="bg-rose-50 p-1.5 rounded-md border border-rose-100 text-[10px]">
+                                                <span class="font-bold text-rose-700 block mb-0.5 uppercase tracking-wide text-[8px]">Kadis:</span>
+                                                <span class="text-rose-900 italic font-medium leading-tight">"{{ $c->catatan_tolak_pejabat }}"</span>
+                                            </div>
+                                        @elseif(!empty(trim($c->catatan_tolak_atasan ?? '')))
+                                            <div class="bg-orange-50 p-1.5 rounded-md border border-orange-100 text-[10px]">
+                                                <span class="font-bold text-orange-700 block mb-0.5 uppercase tracking-wide text-[8px]">Atasan:</span>
+                                                <span class="text-orange-900 italic font-medium leading-tight">"{{ $c->catatan_tolak_atasan }}"</span>
+                                            </div>
+                                        @elseif(!empty(trim($c->catatan_penolakan ?? '')))
+                                            <div class="bg-gray-50 p-1.5 rounded-md border border-gray-200 text-[10px]">
+                                                <span class="text-gray-900 italic font-medium leading-tight">"{{ $c->catatan_penolakan }}"</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @else
+                                    <span class="text-gray-400 italic text-[10px] pl-1">-</span>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" class="text-center text-gray-500 py-4">
+                            <td colspan="7" class="text-center text-gray-400 py-6 border-b border-gray-100 italic bg-gray-50/50">
                                 Tidak ada data cuti
                             </td>
                         </tr>
@@ -323,6 +310,94 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+        {{-- Tampilan Mobile (Cards) --}}
+        <div class="md:hidden space-y-3 mt-3">
+            @forelse ($latestCuti ?? [] as $i => $c)
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm relative overflow-hidden flex flex-col gap-3">
+                    {{-- Badge Status di pojok kanan atas --}}
+                    @php
+                        $statusLower = strtolower($c->status);
+                        $badgeClass = str_contains($statusLower, 'disetujui') 
+                            ? 'bg-green-100 text-green-700 border border-green-200' 
+                            : (str_contains($statusLower, 'ditolak') 
+                                ? 'bg-red-100 text-red-700 border border-red-200' 
+                                : 'bg-yellow-100 text-yellow-700 border border-yellow-200');
+                    @endphp
+                    <div class="absolute top-3 right-3 text-right">
+                        <span class="inline-flex px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider {{ $badgeClass }} shadow-sm">
+                            {{ ucfirst($c->status) }}
+                        </span>
+                        @if($c->status == 'Disetujui' && $c->catatan_final == 'Disetujui Admin atas izin pejabat')
+                            <div class="text-[8px] text-blue-500 mt-1 leading-none italic font-bold">Oleh Admin</div>
+                        @endif
+                    </div>
+
+                    {{-- Header Card --}}
+                    <div class="pr-20">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded uppercase tracking-widest">
+                                #{{ $i + 1 }}
+                            </span>
+                            <span class="text-xs font-bold text-sky-700 bg-sky-50 border border-sky-100 px-2 py-0.5 rounded-md">
+                                {{ $c->jenis_cuti }}
+                            </span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 text-sm leading-tight">{{ $c->pegawai->nama ?? '-' }}</h4>
+                        <p class="text-[10px] text-gray-500 font-mono mt-0.5">{{ $c->pegawai->nip ?? '-' }}</p>
+                        <p class="text-[10px] sm:text-xs text-sky-600 font-medium mt-1">{{ $c->pegawai->jabatan ?? '-' }}</p>
+                    </div>
+
+                    {{-- Info Waktu --}}
+                    <div class="bg-gray-50 rounded-lg p-2.5 border border-gray-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-regular fa-calendar text-gray-400"></i>
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-gray-700">{{ $c->tanggal_mulai?->format('d/m/Y') }}</span>
+                                <span class="text-[10px] text-gray-400">s/d {{ $c->tanggal_selesai?->format('d/m/Y') }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right flex flex-col justify-center border-l border-gray-200 pl-3">
+                            <span class="text-lg font-black text-sky-600 leading-none">{{ $c->jumlah_hari }}</span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Hari</span>
+                        </div>
+                    </div>
+
+                    {{-- Catatan (jika ada) --}}
+                    @if(str_contains(strtolower($c->status), 'ditolak') || !empty($c->catatan_final))
+                        <div class="flex flex-col gap-2 pt-2 border-t border-gray-100">
+                            @if(!empty($c->catatan_final))
+                                <div class="bg-blue-50 p-2 rounded-lg border border-blue-100 relative">
+                                    <div class="absolute -top-2 left-3 bg-blue-100 px-2 py-0.5 rounded text-[8px] font-bold text-blue-700 uppercase tracking-wider">Sistem Admin</div>
+                                    <p class="text-xs text-blue-900 italic font-medium mt-1">"{{ $c->catatan_final }}"</p>
+                                </div>
+                            @endif
+                            
+                            @if(!empty(trim($c->catatan_tolak_pejabat ?? '')))
+                                <div class="bg-rose-50 p-2 rounded-lg border border-rose-100 relative">
+                                    <div class="absolute -top-2 left-3 bg-rose-100 px-2 py-0.5 rounded text-[8px] font-bold text-rose-700 uppercase tracking-wider">Kadis</div>
+                                    <p class="text-xs text-rose-900 italic font-medium mt-1">"{{ $c->catatan_tolak_pejabat }}"</p>
+                                </div>
+                            @elseif(!empty(trim($c->catatan_tolak_atasan ?? '')))
+                                <div class="bg-orange-50 p-2 rounded-lg border border-orange-100 relative">
+                                    <div class="absolute -top-2 left-3 bg-orange-100 px-2 py-0.5 rounded text-[8px] font-bold text-orange-700 uppercase tracking-wider">Atasan</div>
+                                    <p class="text-xs text-orange-900 italic font-medium mt-1">"{{ $c->catatan_tolak_atasan }}"</p>
+                                </div>
+                            @elseif(!empty(trim($c->catatan_penolakan ?? '')))
+                                <div class="bg-gray-50 p-2 rounded-lg border border-gray-200">
+                                    <p class="text-xs text-gray-900 italic font-medium">"{{ $c->catatan_penolakan }}"</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @empty
+                <div class="bg-gray-50 rounded-xl p-6 text-center border border-gray-100">
+                    <i class="fa-solid fa-folder-open text-gray-300 text-2xl mb-2"></i>
+                    <p class="text-sm font-medium text-gray-500">Tidak ada data cuti</p>
+                </div>
+            @endforelse
         </div>
     </div>
 
