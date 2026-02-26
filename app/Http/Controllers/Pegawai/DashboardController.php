@@ -18,66 +18,76 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        // Ambil data pegawai sesuai user login
         $pegawai = $user->pegawai;
+
         if (!$pegawai) {
             return redirect()->route('pegawai.profile.show')
-                ->with('error', 'Data pegawai tidak ditemukan. Lengkapi profil Anda terlebih dahulu.');
+                ->with('error', 'Data pegawai tidak ditemukan.');
         }
-        // Query data cuti pegawai
-        $cutiQuery = Cuti::where('user_id', $user->id);
 
-        // Normalisasi status (karena di beberapa bagian aplikasi ada yang pakai "Menunggu"/"Disetujui"/"Ditolak"
-        // dan ada juga yang pakai lowercase seperti "pending"/"disetujui"/"ditolak")
-        $statusMenunggu  = ['Menunggu', 'menunggu', 'Pending', 'pending', 'Disetujui Atasan', 'disetujui atasan'];
-        // PERBAIKAN: Hanya hitung yang sudah final approved (bukan "Disetujui Atasan")
-        $statusDisetujui = ['Disetujui', 'disetujui'];
-        $statusDitolak   = ['Ditolak', 'ditolak'];
+        // 1. TAHUN DINAMIS & JATAH DASAR
+        $tahunIni = (int) date('Y');
+        $tahunLalu = $tahunIni - 1;
+        $jatahDasar = 12;
 
-        $totalCuti     = (clone $cutiQuery)->count();
-        $cutiPending   = (clone $cutiQuery)->whereIn('status', $statusMenunggu)->count();
-        $cutiDisetujui = (clone $cutiQuery)->whereIn('status', $statusDisetujui)->count();
-        $cutiDitolak   = (clone $cutiQuery)->whereIn('status', $statusDitolak)->count();
-        
-        // HITUNG CUTI TERPAKAI TAHUN INI (hanya yang final approved)
-        $cutiTerpakai = (clone $cutiQuery)
-            ->where('tahun', date('Y'))
-            ->whereIn('status', $statusDisetujui)
+        // 2. HITUNG PEMAKAIAN TAHUN LALU (Data Dummy 2025)
+        // Cek di tabel cuti untuk pemakaian tahun lalu
+        $pakaiTahunLalu = Cuti::where('user_id', $user->id)
+            ->where('tahun', $tahunLalu)
+            ->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Atasan'])
             ->sum('jumlah_hari');
 
-        // Ambil 5 cuti terbaru lengkap dengan relasi
-        $latestCuti = $cutiQuery
-            ->with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])
-            ->latest()
-            ->take(5)
-            ->get();
+        // FALLBACK: Jika di tabel cuti 2025 kosong, ambil angka pemakaian manual (angka 5) 
+        // yang Anda input di kolom sisa_cuti tabel pegawai.
+        if ($pakaiTahunLalu == 0) {
+            $pakaiTahunLalu = (int) ($pegawai->sisa_cuti ?? 0); 
+        }
 
-        // Ambil daftar atasan langsung & pejabat cuti
-        $atasanLangsung     = AtasanLangsung::orderBy('nama_atasan', 'asc')->get();
-        $pejabatPemberiCuti = PejabatPemberiCuti::orderBy('nama_pejabat', 'asc')->get();
+        // 3. LOGIKA AKUMULASI: Sisa tahun lalu dibawa jika pakai <= 6 hari
+        $jatahAkumulasi = 0;
+        if ($pakaiTahunLalu > 0 && $pakaiTahunLalu <= 6) {
+            $jatahAkumulasi = $jatahDasar - $pakaiTahunLalu; // Contoh: 12 - 5 = 7
+        }
+        
+        // HAK CUTI TOTAL (Misal: 12 + 7 = 19 Hari)
+        $hakCuti = $jatahDasar + $jatahAkumulasi;
 
-        // Total pegawai untuk statistik
-        $totalPegawai = Pegawai::count();
+        // 4. HITUNG PEMAKAIAN TAHUN INI (Termasuk yang sedang diproses)
+        // Masukkan status 'Disetujui Atasan' agar sisa cuti Dicky langsung berkurang
+        $statusTerhitung = [
+            'Disetujui', 'disetujui', 
+            'Disetujui Atasan', 'disetujui atasan', 
+            'Menunggu', 'menunggu', 
+            'Revisi Delegasi'
+        ];
+        
+        $cutiQuery = Cuti::where('user_id', $user->id);
+        $cutiTerpakai = (clone $cutiQuery)
+            ->where('tahun', $tahunIni)
+            ->whereIn('status', $statusTerhitung)
+            ->sum('jumlah_hari');
 
-        // TAMBAHAN: Hitung hak cuti dan sisa cuti dari database
-        $hakCuti = $pegawai->kuota_cuti ?? 12; // Ambil dari database, default 12
+        // 5. SISA CUTI AKHIR
         $sisaCuti = max(0, $hakCuti - $cutiTerpakai);
 
-        // Kirim semua data ke view
-        return view('pegawai.dashboard.index', compact(
-            'user',
-            'pegawai',
-            'totalPegawai',
-            'totalCuti',
-            'cutiPending',
-            'cutiDisetujui',
-            'cutiDitolak',
-            'cutiTerpakai',
-            'latestCuti',
-            'atasanLangsung',
-            'pejabatPemberiCuti',
-            'hakCuti',      // BARU: Kuota cuti dari database
-            'sisaCuti'      // BARU: Sisa cuti yang dihitung
-        ));
+        // 6. STATISTIK DASHBOARD
+        $latestCuti = (clone $cutiQuery)->with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti'])->latest()->take(5)->get();
+        $cutiPending = (clone $cutiQuery)->whereIn('status', ['Menunggu', 'menunggu', 'Pending', 'pending', 'Disetujui Atasan', 'disetujui atasan'])->count();
+        $cutiDisetujuiCount = (clone $cutiQuery)->whereIn('status', ['Disetujui', 'disetujui'])->count();
+        $cutiDitolakCount = (clone $cutiQuery)->whereIn('status', ['Ditolak', 'ditolak'])->count();
+
+        return view('pegawai.dashboard.index', [
+            'user' => $user,
+            'pegawai' => $pegawai,
+            'totalPegawai' => Pegawai::count(),
+            'totalCuti' => (clone $cutiQuery)->count(),
+            'cutiPending' => $cutiPending,
+            'cutiDisetujui' => $cutiDisetujuiCount,
+            'cutiDitolak' => $cutiDitolakCount,
+            'cutiTerpakai' => $cutiTerpakai,
+            'latestCuti' => $latestCuti,
+            'hakCuti' => $hakCuti,   // Kirim jatah yang sudah terakumulasi
+            'sisaCuti' => $sisaCuti, // Kirim sisa yang sudah dipotong pemakaian
+        ]);
     }
 }
