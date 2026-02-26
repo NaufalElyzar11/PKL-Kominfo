@@ -96,25 +96,26 @@
         </h3>
         
         <div class="bg-white rounded-xl shadow-sm border border-[#e7edf3] overflow-hidden">
-            <div class="overflow-x-auto">
+            {{-- Desktop View --}}
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-sm text-left text-[#0d141b]">
                     <thead class="bg-gradient-to-r from-[#0288D1] to-[#03A9F4] text-white text-xs uppercase border-b border-[#e7edf3]">
                         <tr>
-                            <th class="px-6 py-4 font-semibold w-16 text-center">No</th>
-                            <th class="px-6 py-4 font-semibold min-w-[200px]">Pegawai</th>
-                            <th class="px-6 py-4 font-semibold hidden md:table-cell">Jabatan</th>
-                            <th class="px-6 py-4 font-semibold">Jenis Cuti</th>
-                            <th class="px-6 py-4 font-semibold min-w-[150px]">Tanggal</th>
-                            <th class="px-6 py-4 font-semibold text-center">Durasi</th>
-                            <th class="px-6 py-4 font-semibold text-center">Status</th>
-                            <th class="px-6 py-4 font-semibold text-center w-32">Aksi</th>
+                            <th class="px-4 py-3 font-semibold w-16 text-center">No</th>
+                            <th class="px-4 py-3 font-semibold min-w-[200px]">Pegawai</th>
+                            <th class="px-4 py-3 font-semibold hidden md:table-cell">Jabatan</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap hidden sm:table-cell">Jenis Cuti</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap hidden lg:table-cell">Tanggal</th>
+                            <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Durasi</th>
+                            <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Status</th>
+                            <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#e7edf3]">
                         @forelse($pengajuan as $index => $c)
                         <tr class="bg-white hover:bg-blue-50/30 transition-colors group">
-                            <td class="px-6 py-4 text-center font-medium text-[#9aaabb]">{{ $index + 1 }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3 text-center font-medium text-[#9aaabb]">{{ $index + 1 }}</td>
+                            <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
                                     {{-- Avatar Initials --}}
                                     @php
@@ -131,31 +132,31 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 hidden md:table-cell text-[#4c739a]">{{ $jabatan }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3 hidden md:table-cell text-[#4c739a]">{{ $jabatan }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap hidden sm:table-cell">
                                 <div class="flex items-center gap-1.5">
                                     <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                                     <span>{{ $c->jenis_cuti }}</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
                                 <div class="flex flex-col text-xs font-medium">
                                     <span class="text-[#0d141b]">{{ optional($c->tanggal_mulai)->format('d M Y') }}</span>
                                     <span class="text-[#9aaabb]">s.d. {{ optional($c->tanggal_selesai)->format('d M Y') }}</span>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md bg-gray-100 text-gray-800 text-xs font-medium border border-gray-200">
                                     {{ $c->jumlah_hari }} Hari
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                     {{ $c->status }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-2">
                                     {{-- Detail Button --}}
                                     <button type="button"
@@ -212,6 +213,106 @@
                 </table>
             </div>
 
+            {{-- Mobile View Cards --}}
+            <div class="md:hidden flex flex-col gap-4 p-4 bg-gray-50/50">
+                @forelse($pengajuan as $index => $c)
+                @php
+                    $nama = $c->pegawai->nama ?? $c->nama ?? $c->user->name ?? 'Unknown';
+                    $nip = $c->pegawai->nip ?? $c->nip ?? '-';
+                    $jabatan = $c->pegawai->jabatan ?? $c->jabatan ?? '-';
+                @endphp
+                <div class="bg-white rounded-xl border border-[#e7edf3] p-4 shadow-sm flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-[#e7edf3] pb-3">
+                        <span class="text-xs font-bold text-[#4c739a]">#{{ $index + 1 }}</span>
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            {{ $c->status }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
+                            {{ strtoupper(substr($nama, 0, 1)) }}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-[#0d141b] text-sm">{{ $nama }}</span>
+                            <span class="text-xs text-[#4c739a] font-mono">{{ $nip }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mt-2 text-xs">
+                        <div>
+                            <span class="text-[#9aaabb] block mb-0.5">Jenis Cuti</span>
+                            <span class="font-semibold text-[#0d141b] flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                {{ $c->jenis_cuti }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-[#9aaabb] block mb-0.5">Durasi</span>
+                            <span class="font-semibold text-[#0d141b]">{{ $c->jumlah_hari }} Hari</span>
+                        </div>
+                        <div class="col-span-2">
+                            <span class="text-[#9aaabb] block mb-0.5">Tanggal</span>
+                            <span class="font-semibold text-[#0d141b]">
+                                {{ optional($c->tanggal_mulai)->format('d M Y') }} - {{ optional($c->tanggal_selesai)->format('d M Y') }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-[#e7edf3] flex justify-center gap-2">
+                        {{-- Detail Button --}}
+                        <button type="button"
+                                @click.stop="
+                                    detailCuti = {
+                                        nama: '{{ $c->pegawai->nama ?? '-' }}',
+                                        nip: '{{ $c->pegawai->nip ?? '-' }}',
+                                        jabatan: '{{ $jabatan }}',
+                                        jenis_cuti: '{{ $c->jenis_cuti }}',
+                                        tanggal_mulai: '{{ optional($c->tanggal_mulai)->format('d M Y') }}',
+                                        tanggal_selesai: '{{ optional($c->tanggal_selesai)->format('d M Y') }}',
+                                        jumlah_hari: '{{ $c->jumlah_hari }}',
+                                        alasan_cuti: @js($c->alasan_cuti ?? '-'),
+                                        pengganti_nama: '{{ $c->delegasi->nama ?? '-' }}',
+                                        pengganti_jabatan: '{{ $c->delegasi->jabatan ?? '' }}',
+                                        status: '{{ $c->status }}'
+                                    };
+                                    showDetailPejabat = true"
+                                class="flex flex-1 items-center justify-center gap-1.5 py-2 rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-500 hover:text-white transition-all text-[11px] font-bold"
+                                title="Detail">
+                            <span class="material-symbols-outlined text-[16px]">info</span> Detail
+                        </button>
+
+                        {{-- Approve Button --}}
+                        <form id="form-approve-mobile-{{ $c->id }}" action="{{ route('pejabat.approval.approve', $c->id) }}" method="POST" class="flex flex-1">
+                            @csrf
+                            <button type="button" onclick="confirmApprove('{{ $c->id }}')" class="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all text-[11px] font-bold" title="Setujui">
+                                <span class="material-symbols-outlined text-[16px]">check</span> Setuju
+                            </button>
+                        </form>
+                        
+                        {{-- Reject Button --}}
+                        <button type="button" 
+                                @click.stop="rejectId = {{ $c->id }}; showRejectModal = true" 
+                                class="flex flex-1 items-center justify-center gap-1.5 py-2 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white transition-all text-[11px] font-bold" 
+                                title="Tolak">
+                            <span class="material-symbols-outlined text-[16px] pointer-events-none">close</span> Tolak
+                        </button>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-8 text-gray-400">
+                    <span class="material-symbols-outlined text-4xl mb-2">inbox</span>
+                    <p class="text-sm">Tidak ada pengajuan cuti yang menunggu konfirmasi saat ini.</p>
+                </div>
+                @endforelse
+            </div>
+
+            @if($pengajuan->hasPages())
+            <div class="p-4 border-t border-[#e7edf3] bg-gray-50 overflow-x-auto">
+                {{ $pengajuan->links() }}
+            </div>
+            @endif
         </div>
     </div>
 
@@ -473,29 +574,30 @@
         </h3>
         
         <div class="bg-white rounded-xl shadow-sm border border-[#e7edf3] overflow-hidden">
-            <div class="overflow-x-auto">
+            {{-- Desktop View --}}
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-sm text-left text-[#0d141b]">
                     <thead class="bg-gradient-to-r from-[#0288D1] to-[#03A9F4] text-white text-xs uppercase border-b border-[#e7edf3]">
                         <tr>
-                            <th class="px-6 py-4 font-semibold w-16 text-center">No</th>
-                            <th class="px-6 py-4 font-semibold">Pegawai</th>
-                            <th class="px-6 py-4 font-semibold">Jenis Cuti</th>
-                            <th class="px-6 py-4 font-semibold">Tanggal</th>
-                            <th class="px-6 py-4 font-semibold text-center">Status</th>
-                            <th class="px-6 py-4 font-semibold">Catatan / Keterangan</th>
-                            <th class="px-6 py-4 font-semibold text-center w-24">Aksi</th>
+                            <th class="px-4 py-3 font-semibold w-16 text-center">No</th>
+                            <th class="px-4 py-3 font-semibold min-w-[200px]">Pegawai</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap hidden sm:table-cell">Jenis Cuti</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap hidden lg:table-cell">Tanggal</th>
+                            <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Status</th>
+                            <th class="px-4 py-3 font-semibold">Catatan / Keterangan</th>
+                            <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#e7edf3]">
                         @forelse($riwayat as $index => $r)
                         <tr class="bg-white hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 text-center font-medium text-[#9aaabb]">{{ $index + 1 }}</td>
-                            <td class="px-6 py-4 font-medium">{{ $r->pegawai->nama ?? '-' }}</td>
-                            <td class="px-6 py-4">{{ $r->jenis_cuti }}</td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3 text-center font-medium text-[#9aaabb]">{{ $index + 1 }}</td>
+                            <td class="px-4 py-3 font-medium">{{ $r->pegawai->nama ?? '-' }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{{ $r->jenis_cuti }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
                                 {{ optional($r->tanggal_mulai)->format('d M Y') }} s.d. {{ optional($r->tanggal_selesai)->format('d M Y') }}
                             </td>
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
                                 @if($r->status == 'Disetujui' || $r->status == 'Disetujui Atasan')
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                         {{ $r->status }}
@@ -510,7 +612,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-4 py-3">
                                 @if($r->status == 'Ditolak')
                                     <div class="bg-red-50 border border-red-200 text-red-700 text-xs p-2 rounded-md">
                                         <span class="font-semibold">Alasan:</span>
@@ -522,7 +624,7 @@
                             </td>
 
                             {{-- KOLOM AKSI - Reset dengan SweetAlert & Modal --}}
-                            <td class="px-6 py-4 text-center">
+                            <td class="px-4 py-3 text-center whitespace-nowrap">
                                 @php
                                     // Cek apakah sudah lewat 8 jam sejak updated_at
                                     $canReset = false;
@@ -559,6 +661,83 @@
                     </tbody>
                 </table>
             </div>
+
+            {{-- Mobile View Cards --}}
+            <div class="md:hidden flex flex-col gap-4 p-4 bg-gray-50/50">
+                @forelse($riwayat as $index => $r)
+                <div class="bg-white rounded-xl border border-[#e7edf3] p-4 shadow-sm flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-[#e7edf3] pb-3">
+                        <span class="text-xs font-bold text-[#4c739a]">#{{ $index + 1 }}</span>
+                        <div>
+                            @if($r->status == 'Disetujui' || $r->status == 'Disetujui Atasan')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800">{{ $r->status }}</span>
+                            @elseif($r->status == 'Ditolak')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">Ditolak</span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-800">{{ $r->status }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1">
+                        <span class="font-bold text-[#0d141b] text-sm">{{ $r->pegawai->nama ?? '-' }}</span>
+                        <span class="text-xs text-[#4c739a] flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>{{ $r->jenis_cuti }}</span>
+                    </div>
+                    
+                    <div class="text-xs mt-1">
+                        <span class="text-[#9aaabb] block mb-0.5">Tanggal</span>
+                        <span class="font-semibold text-[#0d141b]">
+                            {{ optional($r->tanggal_mulai)->format('d M Y') }} s.d. {{ optional($r->tanggal_selesai)->format('d M Y') }}
+                        </span>
+                    </div>
+
+                    <div class="mt-2 text-xs">
+                        <span class="text-[#9aaabb] block mb-1">Catatan / Keterangan</span>
+                        @if($r->status == 'Ditolak')
+                            <div class="bg-red-50 border border-red-200 text-red-700 text-[10px] p-2 rounded-md">
+                                <span class="font-bold">Alasan:</span> {{ $r->catatan_final }}
+                            </div>
+                        @else
+                            <span class="text-gray-400 italic">-</span>
+                        @endif
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-[#e7edf3] flex justify-end">
+                        @php
+                            $canReset = false;
+                            if (($r->status === 'Disetujui' || $r->status === 'Ditolak') && $r->updated_at) {
+                                $hoursSinceUpdate = $r->updated_at->diffInHours(now());
+                                $canReset = $hoursSinceUpdate < 8;
+                            }
+                        @endphp
+                        
+                        @if($canReset)
+                            <button type="button" 
+                                @click.stop="resetId = {{ $r->id }}; showResetModal = true" 
+                                class="px-4 py-2 rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-all flex items-center gap-2 text-xs font-bold" 
+                                title="Reset Persetujuan">
+                                <span class="material-symbols-outlined text-[16px] pointer-events-none">rotate_left</span> Reset
+                            </button>
+                        @elseif($r->status === 'Disetujui' || $r->status === 'Ditolak')
+                            <div class="px-4 py-2 rounded-xl bg-gray-100 text-gray-400 flex items-center gap-2 text-xs font-medium" title="Reset tidak tersedia (Sudah lewat 8 jam)">
+                                <span class="material-symbols-outlined text-[16px]">lock</span> Reset Terkunci
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                @empty
+                <div class="text-center py-8 text-gray-400">
+                    <span class="material-symbols-outlined text-4xl mb-2">history</span>
+                    <p class="text-sm">Belum ada riwayat pengajuan.</p>
+                </div>
+                @endforelse
+            </div>
+
+            @if($riwayat->hasPages())
+            <div class="p-4 border-t border-[#e7edf3] bg-gray-50 overflow-x-auto">
+                {{ $riwayat->links() }}
+            </div>
+            @endif
         </div>
     </div>
 </div>

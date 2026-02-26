@@ -40,7 +40,7 @@ class ApprovalController extends Controller
             })
             ->where('status', 'Menunggu')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'pengajuan_page');
 
         // PERBAIKAN: Tambahkan 'delegasi' juga di riwayat
         $riwayat = Cuti::with(['pegawai', 'delegasi'])
@@ -49,8 +49,7 @@ class ApprovalController extends Controller
             })
             ->whereIn('status', ['Disetujui Atasan', 'Disetujui', 'Ditolak'])
             ->orderBy('updated_at', 'desc')
-            ->limit(10)
-            ->get();
+            ->paginate(10, ['*'], 'riwayat_page');
 
         // Ambil rekan sebidang untuk delegasi (pegawai di bawah atasan ini)
         $rekanSebidang = collect();

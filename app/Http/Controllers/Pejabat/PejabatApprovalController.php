@@ -33,7 +33,7 @@ class PejabatApprovalController extends Controller
 
         $pengajuan = (clone $queryPejabat)->with('pegawai', 'delegasi')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10, ['*'], 'pengajuan_page');
 
         // Bagian Riwayat tetap sama
         $riwayat = Cuti::with('pegawai', 'delegasi')
@@ -45,8 +45,7 @@ class PejabatApprovalController extends Controller
                     });
             })
             ->orderBy('updated_at', 'desc')
-            ->limit(10)
-            ->get();
+            ->paginate(10, ['*'], 'riwayat_page');
 
         return view('pejabat.dashboard', compact('stats', 'pengajuan', 'riwayat'));
     }
