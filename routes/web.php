@@ -145,6 +145,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
         Route::get('/dashboard', [PegawaiDashboard::class, 'index'])->name('dashboard');
         Route::get('/cuti/export-excel', [PegawaiCutiController::class, 'exportExcel'])->name('cuti.export-excel');
         Route::resource('cuti', PegawaiCutiController::class)->except(['show']);
+        Route::get('/cuti/check-conflict', [PegawaiCutiController::class, 'checkConflict'])->name('cuti.check-conflict');
         Route::get('/cuti/available-delegates', [PegawaiCutiController::class, 'getAvailableDelegates'])->name('cuti.available-delegates');
         Route::post('/cuti/ajax-store', [PegawaiCutiController::class, 'ajaxStore'])->name('cuti.ajax-store');
 

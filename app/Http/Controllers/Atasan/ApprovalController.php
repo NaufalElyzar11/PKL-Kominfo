@@ -74,17 +74,6 @@ class ApprovalController extends Controller
         $pegawai = $user->pegawai;
         $tahun = request('tahun', date('Y'));
 
-        // Ambil rekan sebidang untuk delegasi
-        $rekanSebidang = collect();
-        if ($pegawai && $pegawai->unit_kerja) {
-            $rekanSebidang = \App\Models\Pegawai::where('unit_kerja', 'LIKE', trim($pegawai->unit_kerja))
-                ->where('id', '!=', $pegawai->id)
-                ->whereHas('user', function($query) {
-                    $query->where('role', 'pegawai');
-                })
-                ->get();
-        }
-
         // Query cuti milik atasan sendiri
         $baseQuery = Cuti::with(['pegawai', 'delegasi'])
             ->where('user_id', $user->id);
@@ -110,7 +99,6 @@ class ApprovalController extends Controller
 
         return view('atasan.pengajuancuti.index', [
             'pegawai' => $pegawai,
-            'rekanSebidang' => $rekanSebidang,
             'cuti' => $cuti,
             'riwayat' => $riwayat,
             'tahun' => $tahun,
@@ -279,7 +267,6 @@ class ApprovalController extends Controller
             'tanggal_mulai'   => [
                 'required', 'date',
                 function ($attribute, $value, $fail) {
-                    // PERBAIKAN: Hapus ->addDays(3) agar bisa pilih Hari H
                     if (\Carbon\Carbon::parse($value)->lt(\Carbon\Carbon::today())) {
                         $fail('Tanggal mulai cuti tidak boleh di masa lalu.');
                     }
@@ -290,19 +277,37 @@ class ApprovalController extends Controller
             'keterangan.regex' => 'Alasan cuti hanya boleh berisi huruf dan spasi.',
         ]);
 
-        // 2. HITUNG HARI KERJA (Gunakan fungsi dinamis agar Sabtu/Minggu tidak dihitung)
+        // =====================================================================
+        // 2. CEK DOUBLE BOOKING (Mencegah cuti di tanggal yang sama)
+        // =====================================================================
+        $isOverlap = Cuti::where('user_id', $user->id)
+            ->whereIn('status', ['Menunggu', 'Disetujui Atasan', 'Disetujui']) 
+            ->where(function ($query) use ($validated) {
+                // Rumus Irisan: (StartA <= EndB) AND (EndA >= StartB)
+                $query->where('tanggal_mulai', '<=', $validated['tanggal_selesai'])
+                      ->where('tanggal_selesai', '>=', $validated['tanggal_mulai']);
+            })
+            ->exists();
+
+        if ($isOverlap) {
+            return back()->with('error', 'Gagal! Anda sudah memiliki pengajuan cuti pada rentang tanggal tersebut.');
+        }
+        // =====================================================================
+
+        // 3. HITUNG HARI KERJA (Gunakan fungsi dinamis agar Sabtu/Minggu tidak dihitung)
         $jumlah_hari = $this->calculateWorkingDays($validated['tanggal_mulai'], $validated['tanggal_selesai']);
 
-        // 3. CEK SISA CUTI (Gunakan hitungan dinamis)
+        // 4. CEK SISA CUTI (Gunakan hitungan dinamis)
         $sisaCutiSaatIni = $this->hitungSisaCuti($user->id);
         if ($sisaCutiSaatIni < $jumlah_hari) {
             return back()->with('error', "Gagal! Sisa jatah Anda ($sisaCutiSaatIni hari) tidak cukup untuk pengajuan $jumlah_hari hari.");
         }
 
-        // 4. SIMPAN DATA
+        // 5. SIMPAN DATA
         Cuti::create([
             'user_id'         => $user->id,
             'id_pegawai'      => $pegawai->id,
+            'id_delegasi'     => null, // <-- PASTIKAN INI NULL KARENA ATASAN TIDAK PAKAI DELEGASI
             'nama'            => $pegawai->nama,
             'nip'             => $pegawai->nip ?? '-',
             'jabatan'         => $pegawai->jabatan,
@@ -371,7 +376,7 @@ class ApprovalController extends Controller
     /**
      * 🔹 Update Pengajuan Cuti Sendiri
      */
-    public function update(Request $request, $id)
+   public function updateCuti(Request $request, $id)
     {
         $cuti = Cuti::where('user_id', Auth::id())->findOrFail($id);
 
@@ -380,6 +385,23 @@ class ApprovalController extends Controller
             'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
             'keterangan'      => 'required|string|max:500|regex:/^[a-zA-Z\s]+$/',
         ]);
+
+        // =====================================================================
+        // CEK DOUBLE BOOKING SAAT EDIT (Abaikan ID yang sedang diedit)
+        // =====================================================================
+        $isOverlapUpdate = Cuti::where('user_id', Auth::id())
+            ->where('id', '!=', $id) // Abaikan data ini sendiri
+            ->whereIn('status', ['Menunggu', 'Disetujui Atasan', 'Disetujui'])
+            ->where(function ($query) use ($request) {
+                $query->where('tanggal_mulai', '<=', $request->tanggal_selesai)
+                      ->where('tanggal_selesai', '>=', $request->tanggal_mulai);
+            })
+            ->exists();
+
+        if ($isOverlapUpdate) {
+            return back()->with('error', 'Gagal Update! Tanggal revisi yang Anda pilih bentrok dengan jadwal cuti Anda yang lain.');
+        }
+        // =====================================================================
 
         $jumlahHari = $this->calculateWorkingDays($request->tanggal_mulai, $request->tanggal_selesai);
 
@@ -397,7 +419,7 @@ class ApprovalController extends Controller
     /**
      * 🔹 Hapus Pengajuan Cuti Sendiri
      */
-    public function destroy($id)
+    public function destroyCuti($id)
     {
         $cuti = Cuti::where('user_id', Auth::id())->findOrFail($id);
         $cuti->delete();

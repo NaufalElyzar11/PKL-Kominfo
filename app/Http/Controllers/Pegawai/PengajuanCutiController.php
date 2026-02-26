@@ -149,7 +149,7 @@ class PengajuanCutiController extends Controller
                 ->count('user_id');
 
             if ($jumlahOrangCuti >= 2) {
-                return back()->with('error', "Gagal! Kuota Cuti Tahunan di bidang $unitKerja sudah penuh (Maks. 2 orang).");
+                return back()->with('error', "Gagal! Kuota Cuti Tahunan di $unitKerja sudah penuh (Maks. 2 orang).");
             }
         } // <--- KURUNG PENUTUP LANGKAH 4 HARUS DI SINI
 
@@ -668,5 +668,36 @@ private function calculateWorkingDays($startDate, $endDate)
             \Log::warning('Failed to fetch holidays: ' . $e->getMessage());
             return [];
         }
+    }
+
+    public function checkConflict(Request $request)
+    {
+        $user = Auth::user();
+        $pegawai = $user->pegawai;
+        $mulai = $request->tanggal_mulai;
+        $selesai = $request->tanggal_selesai;
+
+        if (!$pegawai || !$mulai || !$selesai) return response()->json([]);
+
+        // Cari rekan kerja yang memiliki atasan yang sama
+        $conflicts = Cuti::where('id_atasan_langsung', $pegawai->id_atasan_langsung)
+            ->where('user_id', '!=', $user->id) // Jangan hitung diri sendiri
+            ->whereIn('status', ['Menunggu', 'Disetujui Atasan', 'Disetujui']) // Status yang dianggap aktif
+            ->where(function($q) use ($mulai, $selesai) {
+                // Rumus Matematika Irisan Tanggal:
+                // (TanggalMulai_A <= TanggalSelesai_B) DAN (TanggalSelesai_A >= TanggalMulai_B)
+                $q->where('tanggal_mulai', '<=', $selesai)
+                ->where('tanggal_selesai', '>=', $mulai);
+            })
+            ->with('pegawai')
+            ->get()
+
+            ->map(function ($cuti) {
+            $cuti->tgl_mulai_format = \Carbon\Carbon::parse($cuti->tanggal_mulai)->format('d M Y');
+            $cuti->tgl_selesai_format = \Carbon\Carbon::parse($cuti->tanggal_selesai)->format('d M Y');
+            return $cuti;
+        });
+
+        return response()->json($conflicts);
     }
 }

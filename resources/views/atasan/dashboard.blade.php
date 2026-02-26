@@ -14,7 +14,7 @@
         theme: {
             extend: {
                 colors: {
-                    "primary": "#008fd3", {{-- Warna Kominfo --}}
+                    "primary": "#008fd3",
                     "background-light": "#f6f7f8",
                     "background-dark": "#101922",
                 },
@@ -147,6 +147,7 @@ x-data="{
                             <th class="px-4 py-3 font-semibold whitespace-nowrap">Jenis Cuti</th>
                             <th class="px-4 py-3 font-semibold whitespace-nowrap">Tanggal</th>
                             <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Durasi</th>
+                            <th class="px-4 py-3 font-semibold whitespace-nowrap">Pengganti</th>
                             <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Status</th>
                             <th class="px-4 py-3 font-semibold text-center whitespace-nowrap">Aksi</th>
                         </tr>
@@ -154,10 +155,12 @@ x-data="{
                     <tbody class="divide-y divide-[#e7edf3]">
                         @forelse($pengajuan as $index => $c)
                         <tr class="bg-white hover:bg-blue-50/30 transition-colors group">
+                            {{-- 1. NO --}}
                             <td class="px-4 py-3 text-center font-medium text-[#9aaabb]">{{ $index + 1 }}</td>
+                            
+                            {{-- 2. PEGAWAI --}}
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-3">
-                                    {{-- Avatar Initials --}}
                                     <div class="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">
                                         {{ strtoupper(substr($c->pegawai->nama ?? 'P', 0, 1)) }}
                                     </div>
@@ -167,37 +170,65 @@ x-data="{
                                     </div>
                                 </div>
                             </td>
+                            
+                            {{-- 3. JABATAN --}}
                             <td class="px-4 py-3 hidden md:table-cell text-[#4c739a]">{{ $c->pegawai->jabatan ?? '-' }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-                                    <span>{{ $c->jenis_cuti }}</span>
+                            
+                            {{-- 4. JENIS CUTI --}}
+                            <td class="px-4 py-3 align-top whitespace-nowrap">
+                                <div class="flex flex-col gap-1">
+                                    <div class="flex items-center gap-1.5 font-semibold text-[#0d141b]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                                        <span>{{ $c->jenis_cuti }}</span>
+                                    </div>
+                                    @if($c->jenis_cuti == 'Alasan Penting')
+                                        <div class="text-xs text-gray-500 italic max-w-[250px] truncate" 
+                                            title="{{ $c->keterangan ?? $c->alasan_cuti }}">
+                                            "{{ $c->keterangan ?? $c->alasan_cuti }}"
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
+                            
+                            {{-- 5. TANGGAL --}}
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex flex-col text-xs font-medium">
                                     <span class="text-[#0d141b]">{{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d M Y') }}</span>
                                     <span class="text-[#9aaabb]">s.d. {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d M Y') }}</span>
                                 </div>
                             </td>
+                            
+                            {{-- 6. DURASI --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <span class="inline-flex items-center justify-center px-2.5 py-0.5 rounded-md bg-gray-100 text-gray-800 text-xs font-medium border border-gray-200">
                                     {{ $c->jumlah_hari }} Hari
                                 </span>
                             </td>
+
+                            {{-- 7. PENGGANTI --}}
+                            <td class="px-4 py-3 align-top whitespace-nowrap">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-semibold text-[#0d141b]">{{ $c->delegasi->nama ?? '-' }}</span>
+                                    <span class="text-[10px] text-[#4c739a]">{{ $c->delegasi->jabatan ?? '' }}</span>
+                                </div>
+                            </td>
+
+                            {{-- 8. STATUS --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                     {{ $c->status }}
                                 </span>
                             </td>
+                            
+                            {{-- 9. AKSI --}}
                             <td class="px-4 py-3 text-center whitespace-nowrap">
-                            <button type="button" 
-                                    @click="openReview(@js($c))"
-                                    class="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 mx-auto">
-                                <span class="material-symbols-outlined text-sm">visibility</span>
-                                Tinjau Pengajuan
-                            </button>
+                                <button type="button" 
+                                        @click="openReview(@js($c))"
+                                        class="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 mx-auto">
+                                    <span class="material-symbols-outlined text-sm">visibility</span>
+                                    Tinjau Pengajuan
+                                </button>
                             </td>
                         </tr>
                         @empty
@@ -237,13 +268,24 @@ x-data="{
                     </div>
                     
                     <div class="grid grid-cols-2 gap-2 mt-2 text-xs">
-                        <div>
-                            <span class="text-[#9aaabb] block mb-0.5">Jenis Cuti</span>
+                    <div>
+                        <span class="text-[#9aaabb] block mb-0.5">Jenis Cuti</span>
+                        <div class="flex flex-col">
                             <span class="font-semibold text-[#0d141b] flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
                                 {{ $c->jenis_cuti }}
                             </span>
+                            
+                            {{-- TAMBAHAN: Detail Alasan Penting (Mobile) --}}
+                            @if($c->jenis_cuti == 'Alasan Penting')
+                                {{-- PERUBAHAN: text-[10px] menjadi text-xs dan limit karakter ditambah --}}
+                                <span class="text-xs text-gray-500 italic mt-0.5" 
+                                    title="{{ $c->keterangan ?? $c->alasan_cuti }}">
+                                    "{{ Str::limit($c->keterangan ?? $c->alasan_cuti, 40) }}"
+                                </span>
+                            @endif
                         </div>
+                    </div>
                         <div>
                             <span class="text-[#9aaabb] block mb-0.5">Durasi</span>
                             <span class="font-semibold text-[#0d141b]">{{ $c->jumlah_hari }} Hari</span>
@@ -254,6 +296,18 @@ x-data="{
                                 {{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d M Y') }}
                             </span>
                         </div>
+
+                        {{-- 3. TAMBAHKAN DELEGASI UNTUK TAMPILAN HP DI SINI --}}
+                        <div class="col-span-2 pt-2 border-t border-[#e7edf3] mt-1">
+                            <span class="text-[#9aaabb] block mb-0.5 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">handshake</span> Pegawai Pengganti
+                            </span>
+                            <span class="font-semibold text-[#0d141b]">{{ $c->delegasi->nama ?? '-' }}</span>
+                        </div>
+
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-[#e7edf3]">
                     </div>
 
                     <div class="mt-3 pt-3 border-t border-[#e7edf3]">

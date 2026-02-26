@@ -64,8 +64,6 @@
     // Data libur nasional
     holidays: [],
     holidaysLoaded: false,
-    availableDelegates: [], // List delegasi tersedia
-
 
     // FORM TAMBAH
     tanggalMulaiTambah: '',
@@ -117,33 +115,6 @@
         return count;
     },
 
-    async loadDelegates(start, end) {
-        if (!start || !end) return;
-        
-        // Cek validitas tanggal
-        const d1 = new Date(start);
-        const d2 = new Date(end);
-        if (isNaN(d1) || isNaN(d2) || d1 > d2) {
-            this.availableDelegates = [];
-            return;
-        }
-
-        try {
-            // Kirim request ke backend
-            const s = d1.toISOString().split('T')[0];
-            const e = d2.toISOString().split('T')[0];
-            const response = await fetch(`{{ route('pegawai.cuti.available-delegates') }}?tanggal_mulai=${s}&tanggal_selesai=${e}`);
-            this.availableDelegates = await response.json();
-            
-            // Debugging
-            console.log('Delegates loaded:', this.availableDelegates);
-        } catch (error) {
-            console.error('Gagal load delegasi:', error);
-            this.availableDelegates = [];
-        }
-    },
-
-
     async hitungHariTambah() {
         if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { 
             this.jumlahHariTambah = 0; 
@@ -165,11 +136,7 @@
 
         // Hitung hari kerja
         this.jumlahHariTambah = this.calculateWorkingDays(mulai, selesai);
-        
-        // Load Delegasi Tersedia
-        this.loadDelegates(this.tanggalMulaiTambah, this.tanggalSelesaiTambah);
     },
-
 
     selectedCuti: {},
 
@@ -188,24 +155,13 @@
             pejabat: data.pejabat,
             alasan_cuti: data.alasan_cuti,
             status: data.status,
-            jumlah_hari: data.jumlah_hari,
-            catatan_tolak_delegasi: data.catatan_tolak_delegasi, 
-            id_delegasi: data.id_delegasi || '',
-            rejectedDelegateId: (data.status === 'Revisi Delegasi') ? data.id_delegasi : null
+            jumlah_hari: data.jumlah_hari
         };
 
-        // PENTING: Panggil fungsi ini agar daftar teman muncul di dropdown saat edit
-        this.loadDelegates(data.tanggal_mulai_raw, data.tanggal_selesai_raw);
-
         this.originalCuti = JSON.parse(JSON.stringify(this.selectedCuti));
-        
-        // Load delegasi berdasarkan tanggal yang ada
-        this.loadDelegates(data.tanggal_mulai_raw, data.tanggal_selesai_raw);
-        
         this.isChanged = false;
         this.showEditModal = true;
     },
-
 
     async hitungHariEdit() {
         if (!this.selectedCuti.tanggal_mulai || !this.selectedCuti.tanggal_selesai) return;
@@ -224,11 +180,7 @@
         }
 
         this.selectedCuti.jumlah_hari = this.calculateWorkingDays(mulai, selesai);
-        
-        // Load ulang delegasi saat tanggal edit berubah
-        this.loadDelegates(this.selectedCuti.tanggal_mulai, this.selectedCuti.tanggal_selesai);
     },
-
 
     checkChange() {
         this.isChanged = JSON.stringify(this.selectedCuti) !== JSON.stringify(this.originalCuti);
@@ -249,9 +201,10 @@
     showCatatanKadis(pesan) { 
         this.catatanContent = pesan; 
         this.openCatatanKadis = true; 
-    },
+    }
 
 }" x-init="loadHolidays()" class="space-y-4 font-sans text-gray-800">
+
     {{-- Alert --}}
 
     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
@@ -354,28 +307,26 @@
                                     <i class="fa-solid fa-eye text-[12px]"></i>
                                 </button>
 
-                                {{-- Memunculkan tombol edit --}}
-                                @if($c->status == 'Revisi Delegasi' || $c->status == 'Menunggu')
-                                <button @click="openEditModal({
-                                    id: '{{ $c->id }}',
-                                    nama: '{{ $c->pegawai->nama }}',
-                                    nip: '{{ $c->pegawai->nip }}',
-                                    jabatan: '{{ $c->pegawai->jabatan }}',
-                                    jenis_cuti: '{{ $c->jenis_cuti }}',
-                                    tanggal_mulai_raw: '{{ $c->tanggal_mulai->format('Y-m-d') }}',
-                                    tanggal_selesai_raw: '{{ $c->tanggal_selesai->format('Y-m-d') }}',
-                                    alasan_cuti: '{{ $c->keterangan }}',
-                                    status: '{{ $c->status }}',
-                                    jumlah_hari: '{{ $c->jumlah_hari }}',
-                                    id_delegasi: '{{ $c->id_delegasi }}',
-                                    {{-- BARIS KRUSIAL: Agar alasan muncul di modal --}}
-                                    catatan_tolak_delegasi: '{{ $c->catatan_tolak_delegasi ?? "-" }}'
-                                })" class="p-1 text-orange-600 hover:bg-orange-50 rounded">
-                                    <i class="fa-solid fa-pen-to-square text-[12px]"></i>
-                                </button>
-                                @endif
+                            {{-- Memunculkan tombol edit --}}
+                            @if($c->status == 'Menunggu') {{-- Hapus 'Revisi Delegasi' karena status ini sudah tidak relevan --}}
+                            <button @click="openEditModal({
+                                id: '{{ $c->id }}',
+                                nama: '{{ $c->pegawai->nama }}',
+                                nip: '{{ $c->pegawai->nip }}',
+                                jabatan: '{{ $c->pegawai->jabatan }}',
+                                jenis_cuti: '{{ $c->jenis_cuti }}',
+                                tanggal_mulai_raw: '{{ $c->tanggal_mulai->format('Y-m-d') }}',
+                                tanggal_selesai_raw: '{{ $c->tanggal_selesai->format('Y-m-d') }}',
+                                alasan_cuti: '{{ $c->keterangan }}',
+                                status: '{{ $c->status }}',
+                                jumlah_hari: '{{ $c->jumlah_hari }}'
+                                {{-- id_delegasi dan catatan_tolak_delegasi DIHAPUS --}}
+                            })" class="p-1 text-orange-600 hover:bg-orange-50 rounded">
+                                <i class="fa-solid fa-pen-to-square text-[12px]"></i>
+                            </button>
+                            @endif
                                     
-                                    <form action="{{ route('pegawai.cuti.destroy', $c->id) }}"
+                                    <form action="{{ route('atasan.cuti.destroy', $c->id) }}"
                                         method="POST"
                                         class="form-delete inline">
                                         @csrf
@@ -442,7 +393,6 @@
                     <th class="px-1 py-1 font-semibold text-left">Alasan</th>
                     <th class="px-1 py-1 text-center font-semibold">Status</th>
                     <th class="px-1 py-1 text-center font-semibold">Aksi</th>
-                    <th class="px-1 py-1 text-center font-semibold">Pengganti (Delegasi)</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -520,19 +470,13 @@
                         </button>
 
                             {{-- Tombol Hapus: Pastikan data-nama merujuk ke $r --}}
-                            <form action="{{ route('pegawai.cuti.destroy', $r->id) }}" method="POST" class="form-delete inline">
+                            <form action="{{ route('atasan.cuti.destroy', $r->id) }}" method="POST" class="form-delete inline">
                                 @csrf 
                                 @method('DELETE')
                                 <button type="submit" data-nama="{{ $r->pegawai->nama ?? 'Pengajuan' }}" class="p-1 text-red-600 hover:bg-red-50 rounded">
                                     <i class="fa-solid fa-trash text-[12px]"></i>
                                 </button>
                             </form>
-                        </td>
-
-                        {{-- PINDAHKAN DATA PENGGANTI KE PALING AKHIR AGAR SINKRON --}}
-                        <td class="px-1 py-2 border-l text-[10px] text-gray-700">
-                            <div class="font-bold text-sky-700">{{ $r->delegasi->nama ?? '-' }}</div>
-                            <div class="text-[9px] text-gray-400">{{ $r->delegasi->jabatan ?? '' }}</div>
                         </td>
                     </tr>
                 @empty
@@ -624,7 +568,7 @@
 
             {{-- ========== FORM CONTENT ========== --}}
             <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
-                <form action="{{ route('pegawai.cuti.store') }}" method="POST">
+               <form action="{{ route('atasan.cuti.store') }}" method="POST">
                     @csrf
 
                     {{-- WARNING PENDING (Full Width) --}}
@@ -898,38 +842,6 @@
                                     @input="alasanCutiTambah = $event.target.value.replace(/[^A-Za-z\s]/g, '')"></textarea>
                             </div>
 
-                            {{-- DELEGASI --}}
-                            <div class="space-y-1.5">
-                                <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
-                                    <i class="fa-solid fa-user-group text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Pegawai Pengganti <span class="text-red-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <select 
-                                        name="id_delegasi" 
-                                        class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
-                                               focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                        required>
-                                        <option value="" disabled selected>— Pilih pegawai pengganti —</option>
-                                        <template x-for="delegate in availableDelegates.filter(d => d.id != selectedCuti.rejectedDelegateId)" :key="delegate.id">
-                                            <option :value="delegate.id" x-text="delegate.nama + ' — ' + delegate.jabatan"></option>
-                                        </template>
-                                        <option x-show="availableDelegates.length === 0" value="" disabled>--- Pilih tanggal dulu / Tidak ada rekan tersedia ---</option>
-
-                                    </select>
-                                    <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                        <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
-                                    </div>
-                                </div>
-                                <p class="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1">
-                                    <i class="fa-solid fa-circle-info"></i>
-                                    Pegawai ini akan menggantikan tugas selama Anda cuti
-                                </p>
-                            </div>
-                            
-                            <input type="hidden" name="jumlah_hari" :value="jumlahHariTambah">
-                        </fieldset>
-                    </div>
 
                     {{-- RINGKASAN CUTI - MOBILE ONLY (ditampilkan di bawah form pada layar kecil) --}}
                     <div class="lg:hidden mt-4 bg-gradient-to-br from-slate-50 to-gray-50 rounded-xl border border-gray-100 p-4 space-y-3">
@@ -1117,23 +1029,6 @@
                 </div>
             </div>
 
-            {{-- DELEGASI --}}
-            <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl border border-violet-100 overflow-hidden">
-                <div class="px-4 py-2.5 bg-violet-100/50 border-b border-violet-100 flex items-center gap-2">
-                    <i class="fa-solid fa-user-group text-violet-600 text-sm"></i>
-                    <span class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">Pegawai Pengganti</span>
-                </div>
-                <div class="p-4 flex items-center gap-3">
-                    <div class="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-user-check text-violet-600"></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-bold text-violet-700" x-text="detailPending.pengganti_nama || '-'"></p>
-                        <p class="text-[10px] text-gray-400" x-text="detailPending.pengganti_jabatan || ''"></p>
-                    </div>
-                </div>
-            </div>
-
             {{-- ALASAN --}}
             <div class="space-y-2">
                 <div class="flex items-center gap-2">
@@ -1169,7 +1064,7 @@
             <button @click="showEditModal=false" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <form :action="'/pegawai/cuti/' + selectedCuti.id" method="POST">
+        <form :action="'/atasan/cuti/' + selectedCuti.id" method="POST">
             @csrf 
             @method('PUT')
 
@@ -1300,29 +1195,6 @@
                         }
                     "></div>
                 </div>
-
-                {{-- DELEGASI EDIT (NEW) --}}
-                <div class="mt-2">
-                    <label class="font-bold text-gray-500 block mb-0.5">Pegawai Pengganti:</label>
-                    <div class="relative">
-                        <select name="id_delegasi" 
-                                x-model="selectedCuti.id_delegasi"
-                                @change="isChanged = true"
-                                class="w-full bg-white border border-gray-300 rounded px-2 py-1 outline-none text-[10px] focus:ring-1 focus:ring-sky-400 appearance-none">
-                            <option value="" disabled>— Pilih Pegawai Pengganti —</option>
-                            <template x-for="delegate in availableDelegates" :key="delegate.id">
-                                <option :value="delegate.id" 
-                                        x-text="delegate.nama + ' — ' + delegate.jabatan"
-                                        :selected="selectedCuti.id_delegasi == delegate.id"></option>
-                            </template>
-                             <option x-show="availableDelegates.length === 0" value="" disabled>Tidak ada rekan tersedia pada tanggal ini</option>
-                        </select>
-                        <div class="absolute right-2 top-1.5 pointer-events-none text-gray-400">
-                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
-                        </div>
-                    </div>
-                </div>
-
 
                 <div>
                     <label class="font-bold text-gray-500 block mb-0.5">Alasan Cuti:</label>
@@ -1511,25 +1383,6 @@
                 </div>
             </div>
 
-            {{-- DELEGASI --}}
-            <template x-if="detailRiwayat.delegasi">
-                <div class="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl border border-violet-100 overflow-hidden">
-                    <div class="px-4 py-2.5 bg-violet-100/50 border-b border-violet-100 flex items-center gap-2">
-                        <i class="fa-solid fa-user-group text-violet-600 text-sm"></i>
-                        <span class="text-[10px] font-bold text-violet-600 uppercase tracking-wider">Pegawai Pengganti</span>
-                    </div>
-                    <div class="p-4 flex items-center gap-3">
-                        <div class="w-9 h-9 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i class="fa-solid fa-user-check text-violet-600"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-violet-700" x-text="detailRiwayat.pengganti_nama || '-'"></p>
-                            <p class="text-[10px] text-gray-400" x-text="detailRiwayat.pengganti_jabatan || ''"></p>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
             {{-- ALASAN --}}
             <div class="space-y-2">
                 <div class="flex items-center gap-2">
@@ -1551,101 +1404,68 @@
 </div>
 
 
-{{-- 5. MODAL DELETE FINAL (showDelete) --}}
+{{-- 5. SCRIPT NOTIFIKASI & DELETE FINAL --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.form-delete').forEach(form => {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
+    // 1. Script Notifikasi Berhasil
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{{ session('success') }}",
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            borderRadius: '15px'
+        });
+    @endif
 
-            const nama = form.querySelector('button').dataset.nama;
+    // 2. Script Notifikasi Error
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Perhatian',
+            html: "{!! session('error') !!}", 
+            confirmButtonColor: '#ef4444',
+            borderRadius: '15px'
+        });
+    @endif
+
+    // 3. Script Validasi Error dari Controller
+    @if($errors->any())
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal Update',
+            html: '{!! implode("<br>", $errors->all()) !!}',
+            confirmButtonColor: '#0288D1'
+        });
+    @endif
+
+    // 4. SCRIPT DELETE (Hanya menggunakan Event Delegation agar lebih ringan & akurat)
+    document.addEventListener('submit', function (e) {
+        if (e.target.classList.contains('form-delete')) {
+            e.preventDefault(); // Hentikan aksi default (reload halaman)
+            
+            const form = e.target;
+            const nama = form.querySelector('button').dataset.nama || 'Pengajuan ini';
 
             Swal.fire({
                 title: 'Yakin ingin menghapus?',
-                text: `Pengajuan cuti milik ${nama} akan dihapus permanen!`,
+                text: `Data cuti milik ${nama} akan dihapus secara permanen!`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
                 cancelButtonColor: '#6b7280',
                 confirmButtonText: 'Ya, Hapus',
-                cancelButtonText: 'Batal'
+                cancelButtonText: 'Batal',
+                borderRadius: '15px'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    form.submit();
+                    form.submit(); // Lanjutkan penghapusan jika klik Ya
                 }
             });
-        });
-    });
-});
-</script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-@if(session('success'))
-<script>
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil!',
-        text: "{{ session('success') }}",
-        showConfirmButton: false,
-        timer: 2500,
-        timerProgressBar: true,
-        borderRadius: '15px'
+        }
     });
 </script>
-@endif
-
-@if(session('error'))
-<script>
-    Swal.fire({
-        icon: 'error',
-        title: 'Perhatian',
-        html: "{!! session('error') !!}", 
-        confirmButtonColor: '#ef4444',
-        borderRadius: '15px'
-    });
-</script>
-@endif
-
-@if($errors->any())
-<script>
-    Swal.fire({
-        icon: 'error',
-        title: 'Gagal Update',
-        html: '{!! implode("<br>", $errors->all()) !!}',
-        confirmButtonColor: '#0288D1'
-    });
-</script>
-@endif
-
-<script>
-document.addEventListener('submit', function (e) {
-    // Cari apakah yang di-submit adalah form dengan class .form-delete
-    if (e.target.classList.contains('form-delete')) {
-        e.preventDefault(); // Stop submit otomatis
-        
-        const form = e.target;
-        // Ambil nama dari atribut data-nama pada button di dalam form tersebut
-        const nama = form.querySelector('button').getAttribute('data-nama') || 'Pengajuan';
-
-        Swal.fire({
-            title: 'Yakin ingin menghapus?',
-            text: `Pengajuan cuti milik ${nama} akan dihapus permanen!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Ya, Hapus',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                form.submit(); // Kirim form jika user setuju
-            }
-        });
-    }
-});
-</script>
-
 @endsection

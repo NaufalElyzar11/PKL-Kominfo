@@ -143,6 +143,16 @@
         }
     },
 
+    conflictData: [],
+
+    async cekBentrok() {
+        if (this.tanggalMulaiTambah && this.tanggalSelesaiTambah) {
+            const resp = await fetch(`{{ route('pegawai.cuti.check-conflict') }}?tanggal_mulai=${this.tanggalMulaiTambah}&tanggal_selesai=${this.tanggalSelesaiTambah}`);
+            this.conflictData = await resp.json();
+        } else {
+            this.conflictData = [];
+        }
+    },
 
     async hitungHariTambah() {
         if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) { 
@@ -165,6 +175,8 @@
 
         // Hitung hari kerja
         this.jumlahHariTambah = this.calculateWorkingDays(mulai, selesai);
+
+        this.cekBentrok();
         
         // Load Delegasi Tersedia
         this.loadDelegates(this.tanggalMulaiTambah, this.tanggalSelesaiTambah);
@@ -969,6 +981,24 @@
                         </div>
                     </div>
 
+                    {{-- WARNING ADA YANG CUTI --}}
+                    <template x-if="conflictData.length > 0">
+                        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4 animate-pulse">
+                            <div class="flex items-start gap-2">
+                                <i class="fa-solid fa-circle-exclamation text-amber-600 mt-0.5"></i>
+                                <div class="text-[10px] sm:text-xs text-amber-800">
+                                    <p class="font-bold">Peringatan Koordinasi:</p>
+                                    <p>Pada tanggal ini, rekan berikut juga sedang mengajukan/dalam masa cuti:</p>
+                                    <ul class="mt-1 list-disc list-inside font-semibold">
+                                    <template x-for="item in conflictData" :key="item.id">
+                                        <li x-text="item.pegawai.nama + ' (' + item.tgl_mulai_format + ' s/d ' + item.tgl_selesai_format + ') - ' + item.status"></li>
+                                    </template>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
                     {{-- ACTION BUTTONS --}}
                     <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-2 sm:gap-3 pt-4 mt-4 border-t border-gray-100">
                         <button type="button"
@@ -1634,7 +1664,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             Swal.fire({
                 title: 'Yakin ingin menghapus?',
-                text: `Pengajuan cuti milik ${nama} akan dihapus permanen!`,
+                text: `Data cuti milik ${nama} akan dihapus permanen!`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc2626',
@@ -1702,7 +1732,7 @@ document.addEventListener('submit', function (e) {
 
         Swal.fire({
             title: 'Yakin ingin menghapus?',
-            text: `Pengajuan cuti milik ${nama} akan dihapus permanen!`,
+            text: `Data cuti milik ${nama} akan dihapus permanen!`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc2626',

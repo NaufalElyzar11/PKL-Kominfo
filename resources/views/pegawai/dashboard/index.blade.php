@@ -82,17 +82,6 @@
                     </div>
 
                     <div id="notifikasi-list" class="flex-1 overflow-y-auto min-h-0 pr-1 space-y-3 custom-scrollbar">
-                        {{-- Notifikasi dari DB --}}
-                        @php 
-                            // Gabung notif unread ($notif) dengan 5 notif terakhir read untuk history? 
-                            // Untuk sekarang pakai $notif (unread) saja sesuai request, atau ambil latest mixed
-                            // User request: "menampilkan notifikasi... supaya terlihat"
-                            // Kita pakai logic: Tampilkan $notif (unread) dahulu. Jika kosong, tampilkan placeholder.
-                            // Agar lebih robust, kita ambil latest 5 notifications via Auth user langsung di View atau controller.
-                            // Di controller sudah ada $notif (unread only). Kita pakai itu dulu.
-                            // UPDATE: User ingin "tanpa klik ikon". 
-                        @endphp
-
                         @forelse($notif as $n)
                             <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow group relative">
                                 <form action="{{ route('pegawai.notif.read', $n->id) }}" method="POST" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -141,7 +130,6 @@
                         @endforelse
                     </div>
 
-                    {{-- Footer Notif --}}
                     @if(isset($notif) && $notif->count() > 0)
                     <div class="mt-3 text-center border-t border-gray-200/50 pt-2">
                         <button class="text-[10px] text-sky-600 hover:text-sky-700 font-semibold transition-colors">
@@ -158,7 +146,6 @@
 
             {{-- STATUS CUTI (3 SEJAJAR) --}}
             <div class="grid grid-cols-3 gap-2 sm:gap-4">
-
                 <div class="bg-yellow-100 rounded-xl p-2 sm:p-4 text-center h-24 sm:h-28 flex flex-col items-center justify-center">
                     <p class="text-[10px] sm:text-xs text-yellow-700">Menunggu</p>
                     <div class="flex items-center gap-1 sm:gap-2 justify-center mt-1 sm:mt-2">
@@ -188,7 +175,6 @@
                         </p>
                     </div>
                 </div>
-
             </div>
 
             {{-- JUMLAH PEGAWAI --}}
@@ -270,32 +256,64 @@
                                     <div class="text-[8px] text-blue-500 mt-1 leading-none italic font-bold">Oleh Admin</div>
                                 @endif
                             </td>
+                            
+                            {{-- KOLOM CATATAN YANG DIPERBAIKI --}}
                             <td class="border px-1.5 sm:px-2 py-2">
-                                @if(str_contains(strtolower($c->status), 'ditolak') || !empty($c->catatan_final))
-                                    <div class="flex flex-col gap-1.5">
-                                        @if(!empty($c->catatan_final))
-                                            <div class="bg-blue-50 p-1.5 rounded-md border border-blue-100 text-[10px]">
-                                                <span class="font-bold text-blue-700 block mb-0.5 uppercase tracking-wide text-[8px]">Sistem Admin:</span>
-                                                <span class="text-blue-900 italic font-medium leading-tight">"{{ $c->catatan_final }}"</span>
+                                @php
+                                    // 1. Ambil data dan bersihkan dari spasi kosong
+                                    $keteranganSistem = trim($c->catatan_final ?? '');
+                                    $catatanKadis     = trim($c->catatan_tolak_pejabat ?? '');
+                                    $catatanAtasan    = trim($c->catatan_tolak_atasan ?? '');
+                                    $catatanUmum      = trim($c->catatan_penolakan ?? '');
+
+                                    // 2. LOGIKA KETERANGAN SISTEM (Hanya true jika bukan '-', bukan kosong, dan tidak sama dengan catatan Kadis)
+                                    $showSistem = !empty($keteranganSistem) 
+                                                && $keteranganSistem !== '-' 
+                                                && $keteranganSistem !== $catatanKadis;
+
+                                    // 3. LOGIKA CATATAN PENOLAKAN
+                                    $showKadis  = !empty($catatanKadis) && $catatanKadis !== '-';
+                                    $showAtasan = !empty($catatanAtasan) && $catatanAtasan !== '-';
+                                    $showUmum   = !empty($catatanUmum) && $catatanUmum !== '-';
+                                @endphp
+
+                                {{-- Jika salah satu dari catatan di atas ada (true), tampilkan kotaknya --}}
+                                @if($showSistem || $showKadis || $showAtasan || $showUmum)
+                                    <div class="flex flex-col gap-2 min-w-[200px]">
+                                        
+                                        {{-- KETERANGAN SISTEM (Muncul eksklusif untuk Admin) --}}
+                                        @if($showSistem)
+                                            <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 shadow-sm">
+                                                <p class="text-[9px] text-blue-700 font-bold uppercase">Keterangan Sistem:</p>
+                                                <p class="text-[11px] text-blue-900 font-medium italic">"{{ $keteranganSistem }}"</p>
                                             </div>
                                         @endif
-                                        @if(!empty(trim($c->catatan_tolak_pejabat ?? '')))
-                                            <div class="bg-rose-50 p-1.5 rounded-md border border-rose-100 text-[10px]">
-                                                <span class="font-bold text-rose-700 block mb-0.5 uppercase tracking-wide text-[8px]">Kadis:</span>
-                                                <span class="text-rose-900 italic font-medium leading-tight">"{{ $c->catatan_tolak_pejabat }}"</span>
+
+                                        {{-- PRIORITAS 1: JIKA DITOLAK PEJABAT (KADIS) --}}
+                                        @if($showKadis)
+                                            <div class="bg-rose-50 p-2 rounded-lg border border-rose-200 shadow-sm">
+                                                <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Kadis:</p>
+                                                <p class="text-[11px] text-rose-900 font-medium italic">"{{ $catatanKadis }}"</p>
                                             </div>
-                                        @elseif(!empty(trim($c->catatan_tolak_atasan ?? '')))
-                                            <div class="bg-orange-50 p-1.5 rounded-md border border-orange-100 text-[10px]">
-                                                <span class="font-bold text-orange-700 block mb-0.5 uppercase tracking-wide text-[8px]">Atasan:</span>
-                                                <span class="text-orange-900 italic font-medium leading-tight">"{{ $c->catatan_tolak_atasan }}"</span>
+
+                                        {{-- PRIORITAS 2: JIKA DITOLAK ATASAN --}}
+                                        @elseif($showAtasan)
+                                            <div class="bg-orange-50 p-2 rounded-lg border border-orange-200 shadow-sm">
+                                                <p class="text-[9px] text-orange-700 font-bold uppercase">Catatan Atasan:</p>
+                                                <p class="text-[11px] text-orange-900 font-medium italic">"{{ $catatanAtasan }}"</p>
                                             </div>
-                                        @elseif(!empty(trim($c->catatan_penolakan ?? '')))
-                                            <div class="bg-gray-50 p-1.5 rounded-md border border-gray-200 text-[10px]">
-                                                <span class="text-gray-900 italic font-medium leading-tight">"{{ $c->catatan_penolakan }}"</span>
+
+                                        {{-- PRIORITAS 3: CATATAN UMUM --}}
+                                        @elseif($showUmum && !$showSistem)
+                                            <div class="bg-gray-50 p-2 rounded-lg border border-gray-200 shadow-sm">
+                                                <p class="text-[9px] text-gray-700 font-bold uppercase">Catatan Penolakan:</p>
+                                                <p class="text-[11px] text-gray-900 font-medium italic">"{{ $catatanUmum }}"</p>
                                             </div>
                                         @endif
+
                                     </div>
                                 @else
+                                    {{-- Jika disetujui normal tanpa catatan apa-apa --}}
                                     <span class="text-gray-400 italic text-[10px] pl-1">-</span>
                                 @endif
                             </td>
@@ -364,29 +382,41 @@
                         </div>
                     </div>
 
-                    {{-- Catatan (jika ada) --}}
-                    @if(str_contains(strtolower($c->status), 'ditolak') || !empty($c->catatan_final))
+                    {{-- CATATAN MOBILE --}}
+                    @php
+                        $keteranganSistem = trim($c->catatan_final ?? '');
+                        $catatanKadis     = trim($c->catatan_tolak_pejabat ?? '');
+                        $catatanAtasan    = trim($c->catatan_tolak_atasan ?? '');
+                        $catatanUmum      = trim($c->catatan_penolakan ?? '');
+
+                        $showSistem = !empty($keteranganSistem) && $keteranganSistem !== '-' && $keteranganSistem !== $catatanKadis;
+                        $showKadis  = !empty($catatanKadis) && $catatanKadis !== '-';
+                        $showAtasan = !empty($catatanAtasan) && $catatanAtasan !== '-';
+                        $showUmum   = !empty($catatanUmum) && $catatanUmum !== '-';
+                    @endphp
+
+                    @if($showSistem || $showKadis || $showAtasan || $showUmum)
                         <div class="flex flex-col gap-2 pt-2 border-t border-gray-100">
-                            @if(!empty($c->catatan_final))
+                            @if($showSistem)
                                 <div class="bg-blue-50 p-2 rounded-lg border border-blue-100 relative">
                                     <div class="absolute -top-2 left-3 bg-blue-100 px-2 py-0.5 rounded text-[8px] font-bold text-blue-700 uppercase tracking-wider">Sistem Admin</div>
-                                    <p class="text-xs text-blue-900 italic font-medium mt-1">"{{ $c->catatan_final }}"</p>
+                                    <p class="text-xs text-blue-900 italic font-medium mt-1">"{{ $keteranganSistem }}"</p>
                                 </div>
                             @endif
                             
-                            @if(!empty(trim($c->catatan_tolak_pejabat ?? '')))
+                            @if($showKadis)
                                 <div class="bg-rose-50 p-2 rounded-lg border border-rose-100 relative">
                                     <div class="absolute -top-2 left-3 bg-rose-100 px-2 py-0.5 rounded text-[8px] font-bold text-rose-700 uppercase tracking-wider">Kadis</div>
-                                    <p class="text-xs text-rose-900 italic font-medium mt-1">"{{ $c->catatan_tolak_pejabat }}"</p>
+                                    <p class="text-xs text-rose-900 italic font-medium mt-1">"{{ $catatanKadis }}"</p>
                                 </div>
-                            @elseif(!empty(trim($c->catatan_tolak_atasan ?? '')))
+                            @elseif($showAtasan)
                                 <div class="bg-orange-50 p-2 rounded-lg border border-orange-100 relative">
                                     <div class="absolute -top-2 left-3 bg-orange-100 px-2 py-0.5 rounded text-[8px] font-bold text-orange-700 uppercase tracking-wider">Atasan</div>
-                                    <p class="text-xs text-orange-900 italic font-medium mt-1">"{{ $c->catatan_tolak_atasan }}"</p>
+                                    <p class="text-xs text-orange-900 italic font-medium mt-1">"{{ $catatanAtasan }}"</p>
                                 </div>
-                            @elseif(!empty(trim($c->catatan_penolakan ?? '')))
+                            @elseif($showUmum && !$showSistem)
                                 <div class="bg-gray-50 p-2 rounded-lg border border-gray-200">
-                                    <p class="text-xs text-gray-900 italic font-medium">"{{ $c->catatan_penolakan }}"</p>
+                                    <p class="text-xs text-gray-900 italic font-medium">"{{ $catatanUmum }}"</p>
                                 </div>
                             @endif
                         </div>
@@ -408,7 +438,6 @@
         </h2>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            <!-- Kalender -->
             <div class="lg:col-span-2">
                 <div class="flex justify-between items-center mb-4 gap-2">
                     <button id="prevMonth" class="px-2 sm:px-4 py-1.5 sm:py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-xs sm:text-sm">
@@ -423,7 +452,6 @@
                 <div id="calendar" class="bg-gray-50 p-2 sm:p-4 rounded-lg border border-gray-200"></div>
             </div>
 
-            <!-- Legenda & Info -->
             <div class="flex flex-col gap-4">
                 <div class="bg-gray-50 p-3 sm:p-4 rounded-lg border border-gray-200">
                     <h4 class="font-bold text-gray-700 mb-3 text-sm sm:text-base">Keterangan</h4>
