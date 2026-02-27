@@ -368,7 +368,7 @@
             </div>
 
             {{-- FORM EXPORT EXCEL --}}
-            <form action="{{ route('pegawai.cuti.export-excel') }}" method="GET" class="w-full sm:w-auto">
+            <form action="{{ route('atasan.cuti.export-excel') }}" method="GET" class="w-full sm:w-auto">
                 {{-- Mengambil tahun dari dropdown filter yang ada di atas --}}
                 <input type="hidden" name="tahun" value="{{ request('tahun', date('Y')) }}">
                 

@@ -204,11 +204,15 @@ public function update(Request $request, $id)
         // Urutkan berdasarkan yang terbaru agar laporan rapi
         $cuti = $query->orderBy('created_at', 'desc')->get();
 
+        $tahun = $request->tahun ?? \Carbon\Carbon::now()->year;
+
         // Load view dengan data yang sudah menyertakan delegasi
-        $pdf = Pdf::loadView('admin.cuti.export_pdf', compact('cuti'))
+        $pdf = Pdf::loadView('admin.cuti.export_pdf', compact('cuti', 'tahun'))
                     ->setPaper('a4', 'portrait');
 
-        return $pdf->download('Laporan_Cuti_Pegawai_' . now()->format('Y') . '.pdf');
+        $namaFile = 'Laporan_Cuti_Pegawai_' . ($tahun == 'semua' ? 'Semua_Tahun' : $tahun) . '.pdf';
+
+        return $pdf->download($namaFile);
     }
 
     /**

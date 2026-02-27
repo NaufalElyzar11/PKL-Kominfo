@@ -102,7 +102,14 @@
                     <div class="line-double"></div>
                     <div class="line-single"></div>
 
-                    <div class="judul-laporan">REKAPITULASI DATA CUTI PEGAWAI</div>
+                    <div class="judul-laporan">
+                        REKAPITULASI DATA CUTI PEGAWAI 
+                        @if(isset($tahun) && strtolower($tahun) != 'semua')
+                            TAHUN {{ $tahun }}
+                        @elseif(isset($tahun) && strtolower($tahun) == 'semua')
+                            (SEMUA TAHUN)
+                        @endif
+                    </div>
                 </th>
             </tr>
             <tr class="data-table-header">

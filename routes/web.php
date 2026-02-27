@@ -93,12 +93,15 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
         // Langkah 1: Persetujuan Delegasi (AJAX/Post)
         Route::post('/{id}/approve-delegasi', [ApprovalController::class, 'approveDelegasi'])->name('approveDelegasi');
         Route::post('/{id}/tolak-delegasi', [ApprovalController::class, 'tolakDelegasi'])->name('tolakDelegasi');
+        
 
         // Langkah 2: Keputusan Akhir Atasan (Final)
         // Pastikan nama ujungnya adalah 'approve' agar sinkron dengan Blade
         Route::post('/{id}/approve', [ApprovalController::class, 'approve'])->name('approve'); 
         Route::post('/{id}/tolak', [ApprovalController::class, 'reject'])->name('reject');
     });
+
+    Route::get('/cuti/export-excel', [ApprovalController::class, 'exportExcel'])->name('cuti.export-excel');
 
     // Atasan mengajukan cuti sendiri (langsung ke pejabat)
     Route::get('/cuti', [ApprovalController::class, 'indexCuti'])->name('cuti.index');

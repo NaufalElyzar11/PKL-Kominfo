@@ -427,4 +427,30 @@ class ApprovalController extends Controller
         return redirect()->back()->with('success', 'Pengajuan cuti berhasil dihapus.');
     }
 
+/**
+     * 🔹 Export Excel Pengajuan Cuti Sendiri (Atasan)
+     */
+    public function exportExcel(Request $request)
+    {
+        $tahun = $request->tahun ?? date('Y');
+        $user = Auth::user();
+        
+        // AMBIL DATA PEGAWAI DARI USER YANG LOGIN
+        $pegawai = $user->pegawai;
+
+        // JIKA TIDAK ADA DATA PEGAWAI, KEMBALIKAN ERROR
+        if (!$pegawai) {
+            return back()->with('error', 'Data pegawai tidak ditemukan.');
+        }
+
+        // Nama file dinamis sesuai tahun
+        $namaFile = 'Riwayat_Cuti_Atasan_' . ($tahun == 'semua' ? 'Semua_Tahun' : $tahun) . '.xlsx';
+
+        // PENTING: KIRIM ID PEGAWAI ($pegawai->id), BUKAN ID USER ($user->id)
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\CutiExport($pegawai->id, $tahun), 
+            $namaFile
+        );
+    }
+
 }
