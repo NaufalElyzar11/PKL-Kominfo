@@ -1,61 +1,63 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📅 SIAPCUTI - Sistem Informasi Manajemen Cuti Pegawai
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+![Laravel](https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Alpine.js](https://img.shields.io/badge/Alpine.js-2D3441?style=for-the-badge&logo=alpinedotjs&logoColor=white)
 
-## About Laravel
+SIAPCUTI adalah aplikasi berbasis web untuk digitalisasi dan tata kelola pengajuan cuti pegawai secara terintegrasi pada **Dinas Komunikasi dan Informatika (Diskominfo) Kota Banjarbaru**. 
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Sistem ini dirancang sebagai lapisan **validasi internal (filter operasional)** sebelum data cuti diinput ke dalam sistem kepegawaian terpusat pemerintah (BAGAWI), guna memastikan keseimbangan beban kerja dan keakuratan kuota cuti pegawai.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✨ Fitur Utama
 
-## Learning Laravel
+- 📝 **Pengajuan Cuti Online (Paperless):** Pegawai dapat mengajukan cuti, memilih rentang tanggal, dan menunjuk pegawai delegasi pengganti secara mandiri.
+- 🚦 **Validasi Pintar (Smart Validation):** - Terintegrasi dengan **Day Off API** untuk otomatis mengabaikan hari libur nasional dan akhir pekan (Sabtu-Minggu) dalam perhitungan jumlah hari cuti.
+  - Pencegahan *Double Booking* (Bentrok jadwal) pengajuan cuti di tanggal yang sama.
+- ⚡ **Approval Berjenjang:** Alur persetujuan terstruktur dari **Atasan Langsung** hingga persetujuan final oleh **Pejabat / Kepala Dinas**.
+- 📊 **Monitoring & Rekapitulasi Otomatis:** Laporan riwayat dan sisa kuota cuti yang dihitung secara *real-time*. Mendukung *Export* laporan ke format **PDF (DomPDF)** dan **Excel (Maatwebsite)**.
+- 🔔 **Notifikasi Real-Time:** Memberikan informasi langsung kepada user mengenai status pengajuan (Menunggu, Revisi Delegasi, Disetujui, Ditolak).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## 👥 Hak Akses (Role)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Sistem ini memiliki 4 level pengguna (Multi-Role):
+1. **Pegawai**: Mengajukan cuti, mengecek sisa kuota, dan melihat riwayat persetujuan pribadi.
+2. **Atasan Langsung**: Memantau ketersediaan staf di unit kerjanya, menyetujui delegasi tugas, dan memberikan persetujuan tahap pertama (Tahap 1).
+3. **Pejabat (Kadis)**: Memonitor rekapitulasi cuti dinas dan memberikan persetujuan final (Tahap 2).
+4. **Admin**: Mengelola master data pegawai, unit kerja, pengaturan kuota awal, dan mengunduh laporan rekapitulasi bulanan/tahunan.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🛠️ Teknologi yang Digunakan
 
-### Premium Partners
+- **Backend:** PHP 8.x, Laravel Framework
+- **Frontend:** HTML5, CSS3, Tailwind CSS, Alpine.js
+- **Database:** MySQL
+- **Libraries/Packages:**
+  - `barryvdh/laravel-dompdf` (Laporan PDF)
+  - `maatwebsite/excel` (Laporan Excel)
+  - `sweetalert2` (Pop-up Notifications)
+  - `flatpickr` (Datepicker Interaktif)
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🚀 Panduan Instalasi (Local Development)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Ikuti langkah-langkah di bawah ini untuk menjalankan proyek ini di *local environment* Anda.
 
-## Code of Conduct
+### Persyaratan Sistem
+- PHP >= 8.2
+- Composer
+- Node.js & NPM
+- MySQL Server (Laragon / XAMPP)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Langkah Instalasi
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. **Clone Repositori**
+   ```bash
+   git clone [https://github.com/username-anda/siapcuti.git](https://github.com/username-anda/siapcuti.git)
+   cd siapcuti
