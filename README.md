@@ -59,5 +59,5 @@ Ikuti langkah-langkah di bawah ini untuk menjalankan proyek ini di *local enviro
 
 1. **Clone Repositori**
    ```bash
-   git clone [[https://github.com/username-anda/siapcuti.git](https://github.com/username-anda/siapcuti.git)](https://github.com/NaufalElyzar11/PKL-Kominfo/tree/main)
+   git clone https://github.com/NaufalElyzar11/PKL-Kominfo/tree/main
    cd siapcuti
