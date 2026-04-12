@@ -530,15 +530,6 @@
                         " class="p-1 text-sky-600 hover:bg-sky-100 rounded">
                             <i class="fa-solid fa-eye text-[12px]"></i>
                         </button>
-
-                            {{-- Tombol Hapus: Pastikan data-nama merujuk ke $r --}}
-                            <form action="{{ route('pegawai.cuti.destroy', $r->id) }}" method="POST" class="form-delete inline">
-                                @csrf 
-                                @method('DELETE')
-                                <button type="submit" data-nama="{{ $r->pegawai->nama ?? 'Pengajuan' }}" class="p-1 text-red-600 hover:bg-red-50 rounded">
-                                    <i class="fa-solid fa-trash text-[12px]"></i>
-                                </button>
-                            </form>
                         </td>
 
                         {{-- PINDAHKAN DATA PENGGANTI KE PALING AKHIR AGAR SINKRON --}}
