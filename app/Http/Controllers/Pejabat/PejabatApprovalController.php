@@ -136,6 +136,66 @@ class PejabatApprovalController extends Controller
             return back()->withErrors(['error' => 'Hanya pengajuan yang sudah disetujui atau ditolak yang dapat di-reset.']);
         }
 
+        // Validasi tambahan jika status sebelumnya adalah Ditolak
+        // Ada 2 lapisan validasi yang harus lolos sebelum reset diizinkan:
+        if ($cuti->status === 'Ditolak') {
+            $userId = $cuti->user_id;
+
+            // ─── LAPISAN 1: CEK TUMPANG TINDIH TANGGAL ───────────────────────────
+            // Pastikan tidak ada cuti lain milik pegawai yang AKTIF
+            // pada rentang tanggal yang sama dengan pengajuan yang akan di-reset ini.
+            // Ini mencegah exploit: ditolak → ajukan cuti baru di tanggal sama → reset ditolak
+            // → pegawai punya 2 cuti aktif di tanggal yang sama sekaligus.
+            $hasDateOverlap = \App\Models\Cuti::where('user_id', $userId)
+                ->where('id', '!=', $cuti->id) // Abaikan record ini sendiri
+                ->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Atasan', 'Menunggu', 'Revisi Delegasi'])
+                ->where(function ($q) use ($cuti) {
+                    // Rumus irisan tanggal: (StartA <= EndB) AND (EndA >= StartB)
+                    $q->where('tanggal_mulai', '<=', $cuti->tanggal_selesai)
+                      ->where('tanggal_selesai', '>=', $cuti->tanggal_mulai);
+                })
+                ->exists();
+
+            if ($hasDateOverlap) {
+                return back()->withErrors(['error' => 'Reset tidak dapat dilakukan! Pegawai sudah memiliki pengajuan cuti aktif lain yang tanggalnya bertabrakan dengan pengajuan ini (' . $cuti->tanggal_mulai->format('d/m/Y') . ' s/d ' . $cuti->tanggal_selesai->format('d/m/Y') . '). Cuti yang aktif harus diselesaikan atau dibatalkan terlebih dahulu.']);
+            }
+
+            // ─── LAPISAN 2: CEK SISA KUOTA CUTI ─────────────────────────────────
+            // Jika tidak ada tumpang tindih tanggal, pastikan sisa jatah cuti pegawai
+            // masih mencukupi untuk durasi pengajuan yang akan di-reaktivasi ini.
+            $user = \App\Models\User::with('pegawai')->find($userId);
+            $pegawai = $user ? $user->pegawai : null;
+
+            if ($pegawai) {
+                $tahunIni = (int) date('Y');
+                $tahunLalu = $tahunIni - 1;
+                $jatahDasar = 12;
+
+                $pakaiTahunLalu = \App\Models\Cuti::where('user_id', $userId)
+                    ->where('tahun', $tahunLalu)
+                    ->whereIn('status', ['Disetujui', 'disetujui'])
+                    ->sum('jumlah_hari');
+
+                if ($pakaiTahunLalu == 0) {
+                    $pakaiTahunLalu = (int) ($pegawai->sisa_cuti ?? 0);
+                }
+
+                $jatahAkumulasi = ($pakaiTahunLalu > 0 && $pakaiTahunLalu <= 6) ? ($jatahDasar - $pakaiTahunLalu) : 0;
+                $totalHak = $jatahDasar + $jatahAkumulasi;
+
+                $terpakai = \App\Models\Cuti::where('user_id', $userId)
+                    ->where('tahun', $tahunIni)
+                    ->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Atasan', 'Menunggu', 'Revisi Delegasi'])
+                    ->sum('jumlah_hari');
+
+                $sisaCuti = max(0, $totalHak - $terpakai);
+
+                if ($sisaCuti < $cuti->jumlah_hari) {
+                    return back()->withErrors(['error' => 'Reset tidak dapat dilakukan! Sisa jatah cuti pegawai tidak mencukupi (Sisa: ' . $sisaCuti . ' hari, Pengajuan ini: ' . $cuti->jumlah_hari . ' hari). Pegawai mungkin sudah mengambil cuti lain setelah pengajuan ini ditolak.']);
+                }
+            }
+        }
+
         // Simpan alasan reset dan kembalikan status ke 'Disetujui Atasan'
         // Bersihkan catatan pejabat karena reset
         $cuti->update([
