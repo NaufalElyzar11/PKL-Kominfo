@@ -632,13 +632,17 @@ x-data="{
 <div x-show="showCutiModal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4" x-cloak>
     <div class="fixed inset-0 bg-black/50" @click="showCutiModal = false"></div>
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative z-10 border border-primary/20 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center gap-3 mb-4">
+        <div class="flex items-center gap-3 mb-4 border-b pb-4">
             <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <span class="material-symbols-outlined text-primary text-2xl">beach_access</span>
             </div>
-            <div>
+            <div class="flex-1">
                 <h3 class="text-lg font-bold text-gray-900">Ajukan Cuti</h3>
                 <p class="text-xs text-gray-500">Pengajuan Anda akan langsung diteruskan ke Kadis</p>
+            </div>
+            <div class="text-right bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                <p class="text-[10px] text-blue-600 font-bold uppercase">Sisa Cuti Anda</p>
+                <p class="text-lg font-black text-blue-700">{{ $sisaCuti ?? 0 }} <span class="text-xs font-medium text-blue-500">Hari</span></p>
             </div>
         </div>
         

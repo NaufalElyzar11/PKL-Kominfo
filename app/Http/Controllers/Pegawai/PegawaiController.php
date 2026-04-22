@@ -76,6 +76,15 @@ class PegawaiController extends Controller
                                  ->whereDate('tanggal_selesai', '>=', now())
                                  ->count();
 
+        // Data Cuti untuk Kalender (Rekan 1 Bidang + Sendiri)
+        $unitKerja = trim($pegawai->unit_kerja);
+        $cutiKalender = Cuti::with('pegawai:id,nama')
+            ->whereHas('pegawai', function($q) use ($unitKerja) {
+                $q->where('unit_kerja', $unitKerja);
+            })
+            ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
+            ->get(['id', 'id_pegawai', 'tanggal_mulai', 'tanggal_selesai', 'status']);
+
         return view('pegawai.dashboard.index', [
             'notif'             => $notif,
             'cutiPending'       => $cutiPending,
@@ -83,6 +92,7 @@ class PegawaiController extends Controller
             'cutiDitolak'       => $cutiDitolak,
             'cutiTerpakai'      => $cutiTerpakai,
             'latestCuti'        => $latestCuti,
+            'cutiKalender'      => $cutiKalender,
             'totalCuti'         => $hakCuti,        // Kirim jatah akumulasi (Misal 19)
             'sisaCuti'          => $sisaCutiFinal,  // Kirim sisa yang sudah dipotong (Misal 16)
             'totalPegawai'      => $totalPegawai,

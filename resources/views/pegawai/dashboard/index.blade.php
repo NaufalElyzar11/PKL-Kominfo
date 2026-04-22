@@ -539,7 +539,7 @@ if (chartElement) {
 // ===================== KALENDER =====================
 let currentDate = new Date();
 let holidays = [];
-let userCuti = [];
+let kalenderCuti = {};
 
 // ===================== AMBIL HARI LIBUR (DAYOFF API) =====================
 async function fetchHolidays(year, month = null) {
@@ -571,15 +571,22 @@ async function fetchHolidays(year, month = null) {
 
 // ===================== DATA CUTI USER =====================
 function loadUserCuti() {
-    const cutiData = @json($latestCuti ?? []);
-    userCuti = [];
+    const cutiData = @json($cutiKalender ?? []);
+    kalenderCuti = {};
 
     cutiData.forEach(c => {
         const start = new Date(c.tanggal_mulai);
         const end = new Date(c.tanggal_selesai);
+        const nama = c.pegawai ? c.pegawai.nama : 'Pegawai';
 
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            userCuti.push(d.toISOString().split('T')[0]);
+            const dateStr = d.toISOString().split('T')[0];
+            if (!kalenderCuti[dateStr]) {
+                kalenderCuti[dateStr] = [];
+            }
+            if (!kalenderCuti[dateStr].includes(nama)) {
+                kalenderCuti[dateStr].push(nama);
+            }
         }
     });
 }
@@ -628,7 +635,8 @@ function renderCalendar() {
 
         const holiday = holidays.find(h => h.date === dateStr);
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-        const isCuti = userCuti.includes(dateStr);
+        const orgCuti = kalenderCuti[dateStr] || [];
+        const isCuti = orgCuti.length > 0;
 
         if (holiday) {
             bgColor = 'bg-red-200';
@@ -640,6 +648,7 @@ function renderCalendar() {
         } else if (isCuti) {
             bgColor = 'bg-yellow-200';
             borderColor = 'border-yellow-400';
+            title = `Cuti: ${orgCuti.join(', ')}`;
         }
 
         html += `

@@ -66,8 +66,8 @@
                                 <span>Ajukan Cuti Sekarang</span>
                                 <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
                             </a>
-                            <a href="#panduan" class="h-12 px-8 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-base backdrop-blur-sm transition-all flex items-center justify-center">
-                                Pelajari Panduan
+                            <a href="https://drive.google.com/file/d/1ukij2OKYGyZgjoIWVScXNgiu8fivNOTV/view?usp=sharing" target="_blank" class="h-12 px-8 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-base backdrop-blur-sm transition-all flex items-center justify-center">
+                                Lihat Manual Book
                             </a>
                         </div>
                     </div>

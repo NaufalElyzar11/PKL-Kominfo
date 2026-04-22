@@ -130,6 +130,18 @@ class PegawaiController extends Controller
             }
         }
 
+        // No extra bracket
+
+        // Cek duplikasi password (karena frontend AJAX bisa ter-bypass sebelum selesai loading)
+        $users = User::all();
+        foreach ($users as $user) {
+            if (Hash::check($validated['password'], $user->password)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Password sudah digunakan. Silakan gunakan kombinasi password lain.');
+            }
+        }
+
         $roleForDatabase = $validated['role'];
 
         DB::beginTransaction();
@@ -249,6 +261,20 @@ public function update(Request $request, $id)
     public function destroy($id)
     {
         $pegawai = Pegawai::with('user')->findOrFail($id);
+
+        // Cek apakah atasan punya bawahan yang sedang mengajukan cuti (Menunggu)
+        if ($pegawai->user && $pegawai->user->role === 'atasan') {
+            $adaAntrianCuti = \App\Models\Cuti::where('status', 'Menunggu')
+                ->whereHas('pegawai', function($query) use ($pegawai) {
+                    $query->where('id_atasan_langsung', $pegawai->id)
+                          ->orWhere('atasan', $pegawai->nama);
+                })->exists();
+
+            if ($adaAntrianCuti) {
+                return redirect()->route('admin.pegawai.index')->with('error', 'Atasan tidak bisa dihapus, karena atasan ini masih memiliki antrian persetujuan cuti pegawainya.');
+            }
+        }
+
         if ($pegawai->user) {
             $pegawai->user->delete();
         }

@@ -61,8 +61,10 @@ class ApprovalController extends Controller
                 })
                 ->get();
         }
+        
+        $sisaCuti = $this->hitungSisaCuti($user->id);
 
-        return view('atasan.dashboard', compact('stats', 'pengajuan', 'riwayat', 'rekanSebidang', 'pegawai'));
+        return view('atasan.dashboard', compact('stats', 'pengajuan', 'riwayat', 'rekanSebidang', 'pegawai', 'sisaCuti'));
     }
 
     /**
@@ -107,6 +109,7 @@ class ApprovalController extends Controller
             'cutiDisetujui' => (clone $globalStats)->where('status', 'Disetujui')->count(),
             'cutiDitolak' => (clone $globalStats)->where('status', 'Ditolak')->count(),
             'hasPendingCuti' => Cuti::where('user_id', $user->id)->whereIn('status', ['Menunggu', 'Disetujui Atasan'])->exists(),
+            'sisaCuti' => $this->hitungSisaCuti($user->id),
         ]);
     }
 

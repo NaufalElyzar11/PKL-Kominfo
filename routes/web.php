@@ -86,6 +86,7 @@ Route::middleware(['auth'])->group(function () {
 // --- ATASAN LANGSUNG (Approval Tahap 1) ---
 Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->group(function () {
     
+    Route::get('/', function() { return redirect()->route('atasan.dashboard'); });
     // Halaman Utama Dashboard Atasan
     Route::get('/dashboard', [ApprovalController::class, 'dashboard'])->name('dashboard');
 
@@ -118,6 +119,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
 
     // --- ADMIN ---
     Route::prefix('admin')->as('admin.')->middleware('role:admin')->group(function () {
+        Route::get('/', function() { return redirect()->route('admin.dashboard'); });
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
         Route::resource('pegawai', AdminPegawaiController::class);
 
@@ -145,6 +147,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
 
     // --- PEGAWAI ---
     Route::prefix('pegawai')->as('pegawai.')->middleware('role:pegawai')->group(function () {
+        Route::get('/', function() { return redirect()->route('pegawai.dashboard'); });
         Route::get('/dashboard', [PegawaiDashboard::class, 'index'])->name('dashboard');
         Route::get('/cuti/export-excel', [PegawaiCutiController::class, 'exportExcel'])->name('cuti.export-excel');
         Route::resource('cuti', PegawaiCutiController::class)->except(['show']);
@@ -162,6 +165,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
 
     // --- SUPER ADMIN ---
     Route::prefix('super')->as('super.')->middleware('role:super_admin')->group(function () {
+        Route::get('/', function() { return redirect()->route('super.dashboard'); });
         Route::get('/dashboard', [SuperAdminDashboard::class, 'index'])->name('dashboard');
         Route::prefix('profile')->as('profile.')->group(function () {
             Route::get('/', [SuperProfileController::class, 'index'])->name('index');
@@ -181,6 +185,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
 Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')->group(function () {
 
     // Dashboard
+    Route::get('/', function() { return redirect()->route('pejabat.dashboard'); });
     Route::get('/dashboard', [PejabatApprovalController::class, 'dashboard'])->name('dashboard');
 
     // Approve cuti

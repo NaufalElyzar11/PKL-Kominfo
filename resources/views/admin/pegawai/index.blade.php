@@ -913,6 +913,7 @@ get filteredAtasan() {
                                             <input :type="showPassword ? 'text' : 'password'"
                                                 name="password"
                                                 x-model="password"
+                                                @input="isCheckingPassword = true; passwordError = false"
                                                 @input.debounce.800ms="verifyPassword()"
                                                 required
                                                 class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs
