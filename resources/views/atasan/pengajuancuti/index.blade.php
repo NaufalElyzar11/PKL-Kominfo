@@ -368,16 +368,31 @@
             </div>
 
             {{-- FORM EXPORT EXCEL --}}
-            <form action="{{ route('atasan.cuti.export-excel') }}" method="GET" class="w-full sm:w-auto">
-                {{-- Mengambil tahun dari dropdown filter yang ada di atas --}}
-                <input type="hidden" name="tahun" value="{{ request('tahun', date('Y')) }}">
-                
-                <button type="submit" 
-                    class="w-full sm:w-auto px-4 py-2 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 font-bold">
+            @if($riwayat->isEmpty())
+                {{-- Jika riwayat kosong, tampilkan tombol abu-abu dengan peringatan --}}
+                <button type="button" 
+                    onclick="Swal.fire({ 
+                        icon: 'warning', 
+                        title: 'Data Kosong', 
+                        text: 'Tidak ada riwayat cuti yang bisa diexport!', 
+                        confirmButtonColor: '#0288D1',
+                        borderRadius: '15px' 
+                    })"
+                    class="w-full sm:w-auto px-4 py-2 text-[11px] bg-gray-400 text-white rounded-lg flex items-center justify-center gap-2 shadow-sm cursor-not-allowed font-bold">
                     <i class="fa-solid fa-file-excel text-xs"></i> 
-                    <span>Export Laporan ({{ request('tahun') == 'semua' ? 'Semua Tahun' : request('tahun', date('Y')) }})</span>
+                    <span>Export Laporan</span>
                 </button>
-            </form>
+            @else
+                {{-- Jika ada data, tampilkan tombol export aktif --}}
+                <form action="{{ route('atasan.cuti.export-excel') }}" method="GET" class="w-full sm:w-auto">
+                    <input type="hidden" name="tahun" value="{{ request('tahun', date('Y')) }}">
+                    <button type="submit" 
+                        class="w-full sm:w-auto px-4 py-2 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 font-bold">
+                        <i class="fa-solid fa-file-excel text-xs"></i> 
+                        <span>Export Laporan ({{ request('tahun') == 'semua' ? 'Semua Tahun' : request('tahun', date('Y')) }})</span>
+                    </button>
+                </form>
+            @endif
         </div>
     <div class="overflow-x-auto rounded border border-gray-300 shadow-sm">
         <table class="min-w-full divide-y divide-gray-200 text-[11px]">
@@ -468,15 +483,6 @@
                         " class="p-1 text-sky-600 hover:bg-sky-100 rounded">
                             <i class="fa-solid fa-eye text-[12px]"></i>
                         </button>
-
-                            {{-- Tombol Hapus: Pastikan data-nama merujuk ke $r --}}
-                            <form action="{{ route('atasan.cuti.destroy', $r->id) }}" method="POST" class="form-delete inline">
-                                @csrf 
-                                @method('DELETE')
-                                <button type="submit" data-nama="{{ $r->pegawai->nama ?? 'Pengajuan' }}" class="p-1 text-red-600 hover:bg-red-50 rounded">
-                                    <i class="fa-solid fa-trash text-[12px]"></i>
-                                </button>
-                            </form>
                         </td>
                     </tr>
                 @empty

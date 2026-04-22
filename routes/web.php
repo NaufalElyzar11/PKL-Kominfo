@@ -63,7 +63,7 @@ Route::prefix('forgot-password')->name('password.')->group(function () {
     Route::post('/reset', [ForgotPasswordWaController::class, 'resetPassword'])->name('update');
 });
 
-// Logika Redirect Dashboard (Satu blok saja agar tidak bentrok)
+// Logika Redirect Dashboard bedasarkan Role
 Route::get('/dashboard', function () {
     if (!Auth::check()) return redirect()->route('login');
     

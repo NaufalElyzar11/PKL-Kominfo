@@ -19,7 +19,7 @@
                 <select name="status" class="px-2 py-1 border border-gray-300 rounded w-32 text-[10px] focus:ring-1 focus:ring-blue-400 outline-none">
                     <option value="">Semua Status</option>
                     <option value="menunggu" {{ request('status') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
-                    <option value="Disetujui Atasan" {{ request('status') == 'Disetujui Atasan' ? 'selected' : '' }}>Disetujui</option>
+                    <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                     <option value="Ditolak" {{ request('status') == 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
                 </select>
 
@@ -40,12 +40,29 @@
                 @endif
                 </div>
 
-                {{-- Tombol Export PDF di ujung kanan --}}
-                <a href="{{ route('admin.cuti.export-pdf', request()->query()) }}" 
-                    class="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-sm text-[10px] font-bold">
-                    <i class="fa-solid fa-file-pdf"></i>
-                    Export PDF
-                </a>
+                {{-- Tombol Export PDF di ujung kanan (SUDAH DIPERBAIKI) --}}
+                @if($cuti->isEmpty())
+                    {{-- Jika data kosong, tampilkan button abu-abu yang memicu SweetAlert --}}
+                    <button type="button" 
+                        onclick="Swal.fire({ 
+                            icon: 'warning', 
+                            title: 'Data Kosong', 
+                            text: 'Tidak ada data pengajuan cuti yang bisa diexport untuk filter ini!', 
+                            confirmButtonColor: '#0288D1',
+                            borderRadius: '15px' 
+                        })"
+                        class="flex items-center gap-2 px-3 py-1.5 bg-gray-400 text-white rounded-lg cursor-not-allowed shadow-sm text-[10px] font-bold">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        Export PDF
+                    </button>
+                @else
+                    {{-- Jika ada data, tampilkan link download seperti biasa --}}
+                    <a href="{{ route('admin.cuti.export-pdf', request()->query()) }}" 
+                        class="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-sm text-[10px] font-bold">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        Export PDF
+                    </a>
+                @endif
             </form>
 
             {{-- Tabel cuti (compact) --}}

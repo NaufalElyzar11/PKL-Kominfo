@@ -161,12 +161,11 @@ public function update(Request $request, $id)
         return view('admin.cuti.show', compact('cuti'));
     }
 
-    public function exportPdf(Request $request)
+public function exportPdf(Request $request)
     {
-        // PERBAIKAN: Tambahkan 'delegasi' ke dalam eager loading agar data pengganti ikut diambil
         $query = Cuti::with(['pegawai', 'atasanLangsung', 'pejabatPemberiCuti', 'delegasi']);
 
-        // 1. Search (Gunakan kolom di tabel cuti agar sinkron dengan index)
+        // 1. Logic Filter Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -175,7 +174,7 @@ public function update(Request $request, $id)
             });
         }
 
-        // 2. Filter Status (Gunakan whereIn agar lebih fleksibel terhadap variasi status)
+        // 2. Logic Filter Status
         if ($request->filled('status')) {
             $status = $request->status;
             if ($status === 'disetujui') {
@@ -185,7 +184,7 @@ public function update(Request $request, $id)
             }
         }
 
-        // 3. Filter Tanggal & Default limit to current year
+        // 3. Logic Filter Tanggal
         $hasDateFilter = false;
         if ($request->filled('tanggal_dari')) {
             $query->whereDate('tanggal_mulai', '>=', $request->tanggal_dari);
@@ -196,17 +195,20 @@ public function update(Request $request, $id)
             $hasDateFilter = true;
         }
 
-        // 4. Default: Filter berdasarkan tahun ini saja JIKA tidak ada filter tanggal spesifik
         if (!$hasDateFilter) {
             $query->whereYear('tanggal_mulai', Carbon::now()->year);
         }
 
-        // Urutkan berdasarkan yang terbaru agar laporan rapi
+        // Ambil data hasil filter
         $cuti = $query->orderBy('created_at', 'desc')->get();
+
+        // VALIDASI: Jika hasil filter ternyata kosong
+        if ($cuti->isEmpty()) {
+            return back()->with('error', 'Gagal export PDF! Tidak ada data pengajuan cuti yang ditemukan untuk kriteria filter tersebut.');
+        }
 
         $tahun = $request->tahun ?? \Carbon\Carbon::now()->year;
 
-        // Load view dengan data yang sudah menyertakan delegasi
         $pdf = Pdf::loadView('admin.cuti.export_pdf', compact('cuti', 'tahun'))
                     ->setPaper('a4', 'portrait');
 
