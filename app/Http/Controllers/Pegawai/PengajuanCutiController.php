@@ -83,7 +83,9 @@ class PengajuanCutiController extends Controller
             'cutiDitolak' => (clone $globalStats)->where('status', 'Ditolak')->count(),
             'sisaCuti' => $this->hitungSisaCuti($user->id),
             'warningMessage' => $warningMessage,
-            'hasPendingCuti' => Cuti::where('user_id', $user->id)->where('status', 'Menunggu')->exists(),
+            'hasPendingCuti' => Cuti::where('user_id', $user->id)
+                        ->whereNotIn('status', ['Disetujui', 'Ditolak', 'disetujui', 'ditolak'])
+                        ->exists(),
             'cutiIsPaginator' => $cuti instanceof \Illuminate\Pagination\LengthAwarePaginator,
             'riwayatIsPaginator' => $riwayat instanceof \Illuminate\Pagination\LengthAwarePaginator,
         ]);
@@ -101,11 +103,11 @@ class PengajuanCutiController extends Controller
 
         // 1. PENGAMAN: Cek pengajuan pending milik sendiri
         $hasPending = Cuti::where('user_id', $user->id)
-                        ->whereIn('status', ['Menunggu', 'Revisi Delegasi'])
+                        ->whereNotIn('status', ['Disetujui', 'Ditolak', 'disetujui', 'ditolak'])
                         ->exists();
         
         if ($hasPending) {
-            return back()->with('error', 'Gagal! Anda masih memiliki pengajuan cuti yang sedang diproses.');
+            return back()->with('error', 'Gagal! Pengajuan sebelumnya masih dalam tahap regulasi (Tahap Atasan/Pejabat). Harap tunggu Keputusan Akhir.');
         }
 
         // 2. VALIDASI FORM

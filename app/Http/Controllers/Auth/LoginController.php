@@ -30,7 +30,11 @@ class LoginController extends Controller
         // 2. CEK: Apakah user ini sudah diblokir
         if (RateLimiter::tooManyAttempts($throttleKey, 4)) {
             $seconds = RateLimiter::availableIn($throttleKey);
-            return back()->withInput()->with('error', "Login Gagal. Terlalu banyak percobaan. Coba lagi dalam $seconds detik.");
+            
+            // Kita tambahkan ID 'countdown' agar bisa diakses JavaScript
+            return back()->withInput()->with('error', 
+                "Login Gagal. Terlalu banyak percobaan. Sistem mengunci akses Anda sementara. Silakan coba lagi dalam <span id='countdown' class='font-black underline'>$seconds</span> detik."
+            );
         }
 
         $identifier = $request->login_identifier;

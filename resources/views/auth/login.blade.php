@@ -93,7 +93,7 @@
                     <span class="material-symbols-outlined text-red-600 mt-0.5">error</span>
                     <div class="text-sm text-red-700">
                         <p class="font-bold">Login Gagal</p>
-                        <p>{{ session('error') ?? $errors->first() }}</p>
+                        <p>{!! session('error') ?? $errors->first() !!}</p>
                     </div>
                 </div>
             @endif
@@ -184,5 +184,47 @@
 </div>
 <!-- Alpine.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.1/cdn.min.js" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const countdownElement = document.getElementById('countdown');
+        // Kita targetkan tombol "Masuk" kamu
+        const loginBtn = document.querySelector('button[type="submit"]');
+
+        if (countdownElement) {
+            let seconds = parseInt(countdownElement.innerText);
+            
+            // --- Gimmick Keamanan: Kunci Tombol ---
+            if (loginBtn) {
+                loginBtn.disabled = true;
+                // Kita ubah warnanya jadi abu-abu agar terlihat benar-benar terkunci
+                loginBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-slate-500');
+                loginBtn.classList.remove('bg-primary', 'hover:bg-blue-600');
+                loginBtn.innerHTML = `
+                    <span class="material-symbols-outlined text-[20px] mr-2">lock</span>
+                    Akses Terkunci
+                `;
+            }
+
+            // Jalankan Timer Real-time
+            const timer = setInterval(function() {
+                seconds--;
+                countdownElement.innerText = seconds;
+
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    // Kembalikan tombol ke keadaan semula saat waktu habis
+                    if (loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-slate-500');
+                        loginBtn.classList.add('bg-primary', 'hover:bg-blue-600');
+                        loginBtn.innerHTML = 'Masuk';
+                    }
+                    // Refresh otomatis untuk membersihkan pesan error
+                    window.location.reload(); 
+                }
+            }, 1000);
+        }
+    });
+</script>
 </body>
 </html>

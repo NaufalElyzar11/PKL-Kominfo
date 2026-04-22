@@ -108,7 +108,9 @@ class ApprovalController extends Controller
             'cutiPending' => (clone $globalStats)->whereIn('status', ['Menunggu', 'Disetujui Atasan'])->count(),
             'cutiDisetujui' => (clone $globalStats)->where('status', 'Disetujui')->count(),
             'cutiDitolak' => (clone $globalStats)->where('status', 'Ditolak')->count(),
-            'hasPendingCuti' => Cuti::where('user_id', $user->id)->whereIn('status', ['Menunggu', 'Disetujui Atasan'])->exists(),
+            'hasPendingCuti' => Cuti::where('user_id', $user->id)
+                                            ->whereNotIn('status', ['Disetujui', 'Ditolak'])
+                                            ->exists(),
             'sisaCuti' => $this->hitungSisaCuti($user->id),
         ]);
     }
@@ -254,7 +256,15 @@ class ApprovalController extends Controller
     public function storeCuti(Request $request)
     {
         $user = Auth::user();
-        $pegawai = $user->pegawai;
+
+        $masihProses = Cuti::where('user_id', $user->id)
+            ->whereNotIn('status', ['Disetujui', 'Ditolak'])
+            ->exists();
+
+        if ($masihProses) {
+            return back()->with('error', 'Gagal! Anda masih memiliki pengajuan yang sedang diproses (Tahap Atasan/Pejabat). Tunggu keputusan final untuk mengajukan kembali.');
+        }
+            $pegawai = $user->pegawai;
 
         if (!$pegawai) {
             return back()->with('error', 'Data pegawai belum ditemukan. Hubungi admin.');

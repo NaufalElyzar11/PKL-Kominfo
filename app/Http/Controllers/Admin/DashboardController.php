@@ -5,40 +5,49 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Cuti;
 use App\Models\Pegawai;
+use Illuminate\Http\Request; // WAJIB tambahkan ini
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request) // Tambahkan parameter Request
     {
-        // 1. Total pegawai
+        // 1. Ambil input filter dari user (default ke bulan & tahun sekarang jika kosong)
+        $bulan = $request->get('bulan', date('m'));
+        $tahun = $request->get('tahun', date('Y'));
+
+        // 2. Total pegawai
         $totalPegawai = Pegawai::count();
 
-        // 2. Total semua cuti
+        // 3. Total semua cuti
         $totalCuti = Cuti::count();
 
-        // 3. Total cuti berdasarkan status
+        // 4. Total cuti berdasarkan status
         $cutiDisetujui = Cuti::whereIn('status', ['Disetujui Atasan', 'disetujui'])->count();
         $cutiDitolak   = Cuti::where('status', 'ditolak')->count();
         $cutiPending   = Cuti::where('status', 'menunggu')->count();
 
-        // 4. Statistik cuti berdasarkan unit kerja (INI YANG SAYA PERBAIKI)
-        // Jalurnya: Cuti -> User -> Pegawai
+        // 5. Statistik cuti berdasarkan unit kerja (DENGAN FILTER BULANAN)
         $cutiPerUnitKerja = Cuti::join('users', 'cuti.user_id', '=', 'users.id')
             ->join('pegawai', 'users.id_pegawai', '=', 'pegawai.id')
+            // --- TAMBAHKAN FILTER DI SINI ---
+            ->whereMonth('cuti.tanggal_mulai', $bulan)
+            ->whereYear('cuti.tanggal_mulai', $tahun)
+            // --------------------------------
             ->selectRaw('pegawai.unit_kerja, COUNT(cuti.id) as total')
             ->groupBy('pegawai.unit_kerja')
             ->get();
 
-        // 5. Data cuti terbaru
+        // 6. Data cuti terbaru
         $cutiTerbaru = Cuti::with(['pegawai'])
             ->orderByDesc('created_at')
             ->paginate(10, ['*'], 'cuti_page');
 
-        // 6. Data pegawai terbaru
+        // 7. Data pegawai terbaru
         $pegawaiTerbaru = Pegawai::with('user.roles') 
             ->orderByDesc('created_at')
             ->paginate(10, ['*'], 'pegawai_page');
 
+        // Sertakan $bulan dan $tahun agar dropdown di Blade tetap terpilih (selected)
         return view('admin.dashboard.index', compact(
             'totalPegawai',
             'totalCuti',
@@ -47,7 +56,9 @@ class DashboardController extends Controller
             'cutiPending',
             'cutiPerUnitKerja',
             'cutiTerbaru',
-            'pegawaiTerbaru'
+            'pegawaiTerbaru',
+            'bulan', 
+            'tahun'
         ));
     }
 }

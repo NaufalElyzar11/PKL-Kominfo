@@ -53,16 +53,35 @@
         </div>
     </div>
 
-    {{-- 📊 Statistik Unit Kerja (New Feature) --}}
+    {{-- 📊 Statistik Unit Kerja (DENGAN FILTER BARU) --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {{-- Statistik Cuti Per Unit Kerja --}}
         <div class="md:col-span-1 bg-white p-4 rounded-xl shadow-lg border border-gray-200 h-full">
             <h2 class="text-base font-bold text-sky-700 mb-3 border-b pb-2 flex justify-between items-center">
                 <span>Statistik per Unit</span>
-                <i class="fa-solid fa-chart-pie text-gray-400"></i>
+                
+                {{-- 🆕 FILTER AREA: Dropdown Bulan & Tahun --}}
+                <form method="GET" action="{{ route('admin.dashboard') }}" class="flex gap-1">
+                    <select name="bulan" onchange="this.form.submit()" 
+                        class="text-[9px] border-gray-200 rounded py-0.5 focus:ring-sky-500 outline-none cursor-pointer">
+                        @for ($m=1; $m<=12; $m++)
+                            <option value="{{ sprintf('%02d', $m) }}" {{ ($bulan ?? date('m')) == sprintf('%02d', $m) ? 'selected' : '' }}>
+                                {{ \Carbon\Carbon::create()->month($m)->translatedFormat('M') }}
+                            </option>
+                        @endfor
+                    </select>
+                    
+                    <select name="tahun" onchange="this.form.submit()" 
+                        class="text-[9px] border-gray-200 rounded py-0.5 focus:ring-sky-500 outline-none cursor-pointer">
+                        @for ($y=date('Y'); $y>=date('Y')-1; $y--)
+                            <option value="{{ $y }}" {{ ($tahun ?? date('Y')) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        @endfor
+                    </select>
+                </form>
             </h2>
             
+            {{-- List Data (Otomatis Terfilter via Controller) --}}
             <div class="space-y-3 overflow-y-auto max-h-80 pr-1">
                 @forelse($cutiPerUnitKerja as $stat)
                     <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-gray-100 transition">
@@ -71,7 +90,7 @@
                                 {{ substr($stat->unit_kerja, 0, 1) }}
                             </div>
                             <span class="text-xs font-semibold text-gray-700 truncate" title="{{ $stat->unit_kerja }}">
-                                {{ Str::limit($stat->unit_kerja, 20) }}
+                                {{ $stat->unit_kerja }}
                             </span>
                         </div>
                         <span class="px-2 py-1 bg-sky-600 text-white text-xs font-bold rounded-md shadow-sm">
@@ -79,8 +98,8 @@
                         </span>
                     </div>
                 @empty
-                    <div class="text-center py-8 text-gray-400 text-xs italic">
-                        Belum ada data cuti.
+                    <div class="text-center py-8 text-gray-400 text-[10px] italic">
+                        Tidak ada data cuti di bulan/tahun ini.
                     </div>
                 @endforelse
             </div>

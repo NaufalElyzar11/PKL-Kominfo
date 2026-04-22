@@ -47,7 +47,7 @@
     showAddModal: false, 
     jenisCutiTambah: '',   {{-- WAJIB ADA --}}
     alasanCutiTambah: '',
-    tab: 'menunggu',
+    tab: '{{ request('tab', 'menunggu') }}',
     showModal: false, 
     showEditModal: false, 
     showDetailPending: false, 
@@ -277,9 +277,14 @@
                         <option value="2026" {{ request('tahun') == '2026' ? 'selected' : '' }}>2026</option>
                     </select>
                 </form>
-                <button @click="showModal = true" class="text-white bg-green-600 hover:bg-green-700 text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow-sm transition">
-                    <i class="fa-solid fa-plus-circle text-[10px]"></i>
-                    <span>Ajukan Cuti</span>
+                {{-- Tombol otomatis terkunci jika hasPendingCuti bernilai true --}}
+                <button @click="showModal = true" 
+                    :disabled="hasPendingCuti"
+                    :class="hasPendingCuti ? 'bg-gray-400 cursor-not-allowed opacity-80' : 'bg-green-600 hover:bg-green-700'"
+                    class="text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow-sm transition">
+                    
+                    <i class="fa-solid" :class="hasPendingCuti ? 'fa-lock' : 'fa-plus-circle'"></i>
+                    <span x-text="hasPendingCuti ? 'Proses Terkunci' : 'Ajukan Cuti'"></span>
                 </button>
             </div>
         </div>
@@ -629,16 +634,19 @@
             <div class="p-4 sm:p-6 max-h-[85vh] lg:max-h-[80vh] overflow-y-auto">
                 <form action="{{ route('pegawai.cuti.store') }}" method="POST">
                     @csrf
-
-                    {{-- WARNING PENDING (Full Width) --}}
+                    
+                    {{-- Pesan dipertegas untuk tahap regulasi pejabat --}}
                     <div x-show="hasPendingCuti" x-transition
-                         class="flex items-start gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl mb-4">
-                        <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <i class="fa-solid fa-clock text-amber-600"></i>
+                        class="flex items-start gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl mb-4 shadow-sm">
+                        <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-user-shield text-amber-600 text-lg"></i>
                         </div>
                         <div class="text-[11px] sm:text-xs">
-                            <p class="font-bold text-amber-800">Pengajuan Pending</p>
-                            <p class="text-amber-700">Ada pengajuan yang masih menunggu persetujuan. Harap tunggu hingga selesai diproses.</p>
+                            <p class="font-bold text-amber-800 uppercase tracking-tight">Tahap Regulasi Berjalan</p>
+                            <p class="text-amber-700 leading-relaxed">
+                                Sistem mendeteksi pengajuan Anda masih diproses (**Atasan/Pejabat**). 
+                                Sesuai aturan, pengajuan baru hanya dapat dilakukan setelah ada **Keputusan Akhir** (Disetujui/Ditolak) dari Pejabat berwenang.
+                            </p>
                         </div>
                     </div>
 

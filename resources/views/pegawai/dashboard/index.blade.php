@@ -130,13 +130,13 @@
                         @endforelse
                     </div>
 
-                    @if(isset($notif) && $notif->count() > 0)
+                    {{-- Tombol dirubah menjadi tag <a> dan diarahkan ke rute pengajuan cuti --}}
                     <div class="mt-3 text-center border-t border-gray-200/50 pt-2">
-                        <button class="text-[10px] text-sky-600 hover:text-sky-700 font-semibold transition-colors">
+                        <a href="{{ route('pegawai.cuti.index') }}?tab=riwayat" 
+                        class="text-[10px] text-sky-600 hover:text-sky-700 font-semibold transition-colors inline-block">
                             Lihat Semua Riwayat
-                        </button>
+                        </a>
                     </div>
-                    @endif
                 </div>
             </div>
         </div>
