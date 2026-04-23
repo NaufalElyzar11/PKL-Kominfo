@@ -204,7 +204,7 @@
                 </label>
                 <input type="text" name="telepon" value="{{ old('telepon', $pegawai->telepon ?? '') }}"  x-model="currTelepon"
                     inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    minlength="12" maxlength="13"
+                    minlength="10" maxlength="15"
                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all outline-none">
                 <x-input-error :messages="$errors->get('telepon')" />
             </div>
