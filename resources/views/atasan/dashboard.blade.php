@@ -43,7 +43,10 @@ x-data="{
     showCutiModal: false,
     selectedCuti: null,
     delegasiStatus: 'pending',
-    
+    sisaCuti: @js($sisaCuti ?? 0),
+    cutiTerpakai: @js($cutiTerpakai ?? 0),
+    hakCutiTotal: @js($hakCutiTotal ?? 12),
+
     openReview(data) {
         this.selectedCuti = data;
         this.delegasiStatus = data.status_delegasi || 'pending';
@@ -80,12 +83,45 @@ x-data="{
     }
 }">
 
-
     {{-- Page Heading --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div class="flex flex-col gap-1">
             <h1 class="text-[#0d141b] text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Dashboard Atasan</h1>
             <p class="text-[#4c739a] text-base font-normal">Tinjau dan kelola pengajuan cuti pegawai Anda.</p>
+        </div>
+    </div>
+
+    {{-- 🌟 STATISTIK SISA CUTI PRIBADI (ATASAN) --}}
+    <div class="bg-white p-4 sm:p-6 rounded-2xl shadow border border-[#e7edf3] mb-2">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            {{-- Sisi Kiri: Ikon & Label --}}
+            <div class="flex items-center gap-4 border-r border-gray-100 pr-6">
+                <div class="w-12 h-12 bg-sky-100 rounded-xl flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-2xl">pie_chart</span>
+                </div>
+                <div>
+                    <h2 class="text-xs font-bold text-[#4c739a] uppercase tracking-wider">Statistik Sisa Cuti Anda</h2>
+                    <p class="text-3xl font-black text-[#0d141b] leading-none mt-1">
+                        {{ $sisaCuti }} <span class="text-xs font-medium text-[#4c739a]">Hari</span>
+                    </p>
+                </div>
+            </div>
+
+            {{-- Sisi Kanan: Progress Bar --}}
+            <div class="flex-1 w-full">
+                @php
+                    $persen = ($hakCutiTotal > 0) ? ($cutiTerpakai / $hakCutiTotal) * 100 : 0;
+                @endphp
+                <div class="flex justify-between text-[10px] items-baseline mb-2 uppercase font-bold text-[#4c739a]">
+                    <span>Terpakai ({{ $cutiTerpakai }} Hari)</span>
+                    <span>Total Hak: {{ $hakCutiTotal }} Hari</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden border border-gray-50 shadow-inner">
+                    <div class="h-full bg-gradient-to-r from-sky-400 to-blue-500 rounded-full transition-all duration-1000 ease-out" 
+                         style="width: {{ $persen }}%">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -626,100 +662,6 @@ x-data="{
             </div>
         </form>
     </div>
-</div>
-
-{{-- Modal Ajukan Cuti untuk Atasan --}}
-<div x-show="showCutiModal" class="fixed inset-0 z-[10000] flex items-center justify-center p-4" x-cloak>
-    <div class="fixed inset-0 bg-black/50" @click="showCutiModal = false"></div>
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 relative z-10 border border-primary/20 max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center gap-3 mb-4 border-b pb-4">
-            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <span class="material-symbols-outlined text-primary text-2xl">beach_access</span>
-            </div>
-            <div class="flex-1">
-                <h3 class="text-lg font-bold text-gray-900">Ajukan Cuti</h3>
-                <p class="text-xs text-gray-500">Pengajuan Anda akan langsung diteruskan ke Kadis</p>
-            </div>
-            <div class="text-right bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
-                <p class="text-[10px] text-blue-600 font-bold uppercase">Sisa Cuti Anda</p>
-                <p class="text-lg font-black text-blue-700">{{ $sisaCuti ?? 0 }} <span class="text-xs font-medium text-blue-500">Hari</span></p>
-            </div>
-        </div>
-        
-        <form action="{{ route('atasan.cuti.store') }}" method="POST" class="space-y-4">
-            @csrf
-
-            {{-- Pegawai Pengganti --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Pegawai Pengganti (Delegasi) <span class="text-red-500">*</span></label>
-                <select name="id_delegasi" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
-                    <option value="">-- Pilih Pegawai Pengganti --</option>
-                    @foreach($rekanSebidang ?? [] as $rekan)
-                        <option value="{{ $rekan->id }}">{{ $rekan->nama }} - {{ $rekan->jabatan }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Jenis Cuti --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Cuti</label>
-                <select name="jenis_cuti" required class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
-                    <option value="Tahunan" selected>Cuti Tahunan</option>
-                </select>
-            </div>
-
-            {{-- Tanggal --}}
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal_mulai" required 
-                        min="{{ date('Y-m-d', strtotime('+3 days')) }}"
-                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai <span class="text-red-500">*</span></label>
-                    <input type="date" name="tanggal_selesai" required 
-                        min="{{ date('Y-m-d', strtotime('+3 days')) }}"
-                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm">
-                </div>
-            </div>
-
-            {{-- Alamat Selama Cuti --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Selama Cuti <span class="text-red-500">*</span></label>
-                <input type="text" name="alamat" required maxlength="255" 
-                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm"
-                    placeholder="Contoh: Jl. Merdeka No. 123, Jakarta">
-            </div>
-
-            {{-- Keterangan --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Alasan Cuti <span class="text-red-500">*</span></label>
-                <textarea name="keterangan" rows="3" required maxlength="500"
-                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-primary focus:border-primary p-2.5 text-sm"
-                    placeholder="Contoh: Keperluan keluarga, acara pernikahan, dll..."></textarea>
-            </div>
-
-            {{-- Info Box --}}
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800">
-                <p class="font-semibold mb-1">ℹ️ Informasi:</p>
-                <p>Pengajuan cuti Anda akan langsung masuk ke halaman Kadis untuk approval final karena Anda adalah Atasan.</p>
-            </div>
-
-            {{-- Actions --}}
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" @click="showCutiModal = false" 
-                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800">
-                    Batal
-                </button>
-                <button type="submit" 
-                    class="px-5 py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 shadow-md">
-                    Kirim Pengajuan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 </div>
 
 @push('scripts')

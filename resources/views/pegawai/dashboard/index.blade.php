@@ -252,9 +252,6 @@
                                 <span class="inline-flex px-2 py-1 border rounded-lg text-[9px] font-bold uppercase tracking-wider {{ $badgeClass }}">
                                     {{ ucfirst($c->status) }}
                                 </span>
-                                @if($c->status == 'Disetujui' && $c->catatan_final == 'Disetujui Admin atas izin pejabat')
-                                    <div class="text-[8px] text-blue-500 mt-1 leading-none italic font-bold">Oleh Admin</div>
-                                @endif
                             </td>
                             
                             {{-- KOLOM CATATAN YANG DIPERBAIKI --}}
@@ -280,19 +277,11 @@
                                 {{-- Jika salah satu dari catatan di atas ada (true), tampilkan kotaknya --}}
                                 @if($showSistem || $showKadis || $showAtasan || $showUmum)
                                     <div class="flex flex-col gap-2 min-w-[200px]">
-                                        
-                                        {{-- KETERANGAN SISTEM (Muncul eksklusif untuk Admin) --}}
-                                        @if($showSistem)
-                                            <div class="bg-blue-50 p-2 rounded-lg border border-blue-200 shadow-sm">
-                                                <p class="text-[9px] text-blue-700 font-bold uppercase">Keterangan Sistem:</p>
-                                                <p class="text-[11px] text-blue-900 font-medium italic">"{{ $keteranganSistem }}"</p>
-                                            </div>
-                                        @endif
 
                                         {{-- PRIORITAS 1: JIKA DITOLAK PEJABAT (KADIS) --}}
                                         @if($showKadis)
                                             <div class="bg-rose-50 p-2 rounded-lg border border-rose-200 shadow-sm">
-                                                <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Kadis:</p>
+                                                <p class="text-[9px] text-rose-700 font-bold uppercase">Catatan Pejabat:</p>
                                                 <p class="text-[11px] text-rose-900 font-medium italic">"{{ $catatanKadis }}"</p>
                                             </div>
 
@@ -347,9 +336,6 @@
                         <span class="inline-flex px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider {{ $badgeClass }} shadow-sm">
                             {{ ucfirst($c->status) }}
                         </span>
-                        @if($c->status == 'Disetujui' && $c->catatan_final == 'Disetujui Admin atas izin pejabat')
-                            <div class="text-[8px] text-blue-500 mt-1 leading-none italic font-bold">Oleh Admin</div>
-                        @endif
                     </div>
 
                     {{-- Header Card --}}
@@ -384,12 +370,10 @@
 
                     {{-- CATATAN MOBILE --}}
                     @php
-                        $keteranganSistem = trim($c->catatan_final ?? '');
-                        $catatanKadis     = trim($c->catatan_tolak_pejabat ?? '');
-                        $catatanAtasan    = trim($c->catatan_tolak_atasan ?? '');
-                        $catatanUmum      = trim($c->catatan_penolakan ?? '');
+                        $catatanKadis  = trim($c->catatan_tolak_pejabat ?? '');
+                        $catatanAtasan = trim($c->catatan_tolak_atasan ?? '');
+                        $catatanUmum   = trim($c->catatan_penolakan ?? '');
 
-                        $showSistem = !empty($keteranganSistem) && $keteranganSistem !== '-' && $keteranganSistem !== $catatanKadis;
                         $showKadis  = !empty($catatanKadis) && $catatanKadis !== '-';
                         $showAtasan = !empty($catatanAtasan) && $catatanAtasan !== '-';
                         $showUmum   = !empty($catatanUmum) && $catatanUmum !== '-';
@@ -397,12 +381,12 @@
 
                     @if($showSistem || $showKadis || $showAtasan || $showUmum)
                         <div class="flex flex-col gap-2 pt-2 border-t border-gray-100">
-                            @if($showSistem)
-                                <div class="bg-blue-50 p-2 rounded-lg border border-blue-100 relative">
-                                    <div class="absolute -top-2 left-3 bg-blue-100 px-2 py-0.5 rounded text-[8px] font-bold text-blue-700 uppercase tracking-wider">Sistem Admin</div>
-                                    <p class="text-xs text-blue-900 italic font-medium mt-1">"{{ $keteranganSistem }}"</p>
-                                </div>
-                            @endif
+                        @if($showSistem)
+                            <div class="bg-blue-50 p-2 rounded-lg border border-blue-100 relative">
+                                <div class="absolute -top-2 left-3 bg-blue-100 px-2 py-0.5 rounded text-[8px] font-bold text-blue-700 uppercase tracking-wider">Sistem Admin</div>
+                                <p class="text-xs text-blue-900 italic font-medium mt-1">"{{ $keteranganSistem }}"</p>
+                            </div>
+                        @endif
                             
                             @if($showKadis)
                                 <div class="bg-rose-50 p-2 rounded-lg border border-rose-100 relative">
@@ -545,7 +529,7 @@ let kalenderCuti = {};
 async function fetchHolidays(year, month = null) {
     try {
         let url = 'https://dayoffapi.vercel.app/api';
-
+ 
         if (year && month) {
             url += `?year=${year}&month=${month}`;
         } else if (year) {

@@ -19,6 +19,7 @@ class ApprovalController extends Controller
         $atasanName = $user->name;
         $pegawai = $user->pegawai;
 
+        // 1. STATISTIK UNTUK BAWAHAN (Konfirmasi, Disetujui, Ditolak)
         $stats = [
             'menunggu' => Cuti::whereHas('pegawai', function($q) use ($atasanName) {
                 $q->where('atasan', $atasanName);
@@ -33,7 +34,7 @@ class ApprovalController extends Controller
             })->where('status', 'Ditolak')->count(),
         ];
 
-        // PERBAIKAN: Tambahkan 'delegasi' di dalam with()
+        // 2. DATA TABEL (Pengajuan & Riwayat Bawahan)
         $pengajuan = Cuti::with(['pegawai', 'delegasi'])
             ->whereHas('pegawai', function($query) use ($atasanName) {
                 $query->where('atasan', $atasanName);
@@ -42,7 +43,6 @@ class ApprovalController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'pengajuan_page');
 
-        // PERBAIKAN: Tambahkan 'delegasi' juga di riwayat
         $riwayat = Cuti::with(['pegawai', 'delegasi'])
             ->whereHas('pegawai', function($query) use ($atasanName) {
                 $query->where('atasan', $atasanName);
@@ -51,7 +51,7 @@ class ApprovalController extends Controller
             ->orderBy('updated_at', 'desc')
             ->paginate(10, ['*'], 'riwayat_page');
 
-        // Ambil rekan sebidang untuk delegasi (pegawai di bawah atasan ini)
+        // 3. FUNGSI DELEGASI (REKAN SEBIDANG) - JANGAN DIHAPUS
         $rekanSebidang = collect();
         if ($pegawai && $pegawai->unit_kerja) {
             $rekanSebidang = \App\Models\Pegawai::where('unit_kerja', 'LIKE', trim($pegawai->unit_kerja))
@@ -61,10 +61,33 @@ class ApprovalController extends Controller
                 })
                 ->get();
         }
+
+        // 4. STATISTIK SISA CUTI PRIBADI (UNTUK PROGRESS BAR ATASAN)
+        $tahunIni = (int) date('Y');
+        $tahunLalu = $tahunIni - 1;
+        $jatahDasar = 12;
+
+        $pakaiTahunLalu = Cuti::where('user_id', $user->id)
+            ->where('tahun', $tahunLalu)
+            ->whereIn('status', ['Disetujui', 'disetujui'])
+            ->sum('jumlah_hari');
         
+        if ($pakaiTahunLalu == 0) $pakaiTahunLalu = (int) ($pegawai->sisa_cuti ?? 0);
+        $jatahAkumulasi = ($pakaiTahunLalu > 0 && $pakaiTahunLalu <= 6) ? ($jatahDasar - $pakaiTahunLalu) : 0;
+        
+        $hakCutiTotal = $jatahDasar + $jatahAkumulasi; 
+        $cutiTerpakai = Cuti::where('user_id', $user->id)
+            ->where('tahun', $tahunIni)
+            ->whereIn('status', ['Disetujui', 'disetujui', 'Disetujui Atasan', 'Menunggu'])
+            ->sum('jumlah_hari');
+
         $sisaCuti = $this->hitungSisaCuti($user->id);
 
-        return view('atasan.dashboard', compact('stats', 'pengajuan', 'riwayat', 'rekanSebidang', 'pegawai', 'sisaCuti'));
+        // Kirim semua variabel ke Blade
+        return view('atasan.dashboard', compact(
+            'stats', 'pengajuan', 'riwayat', 'rekanSebidang', 
+            'pegawai', 'sisaCuti', 'cutiTerpakai', 'hakCutiTotal'
+        ));
     }
 
     /**

@@ -249,22 +249,23 @@ public function exportPdf(Request $request)
     {
         // 1. Cek Konfirmasi
         if (!$request->pejabat_confirmed) {
-            return back()->with('error', 'Gagal! Anda harus memberikan konfirmasi izin dari Pejabat (Kadis/Sekre) terlebih dahulu.');
+            return back()->with('error', 'Gagal! Anda harus memberikan konfirmasi izin dari Pejabat terlebih dahulu.');
         }
 
         $cuti = Cuti::findOrFail($id);
         
-        // 2. Update Status & Tambah Keterangan Audit
+        // 2. Update Status (Hapus tulisan "Disetujui Admin")
         $cuti->update([
             'status' => 'Disetujui',
-            'catatan_final' => 'Disetujui Admin atas izin pejabat' // <--- KUNCI AGAR DI BLADE MUNCUL
+            'catatan_final' => null, // Biarkan null agar tidak muncul label "Sistem" di Blade
+            'status_pejabat' => 'disetujui' // Pastikan status pejabat juga terisi
         ]);
 
-        // 3. Kirim Notifikasi ke Pegawai
+        // 3. Kirim Notifikasi (Hapus tulisan "Sistem")
         Notification::create([
             'user_id' => $cuti->user_id,
-            'title'   => 'Cuti Disetujui (Sistem)',
-            'message' => 'Pengajuan cuti Anda telah disetujui oleh Admin berdasarkan arahan/izin pejabat berwenang.',
+            'title'   => 'Cuti Disetujui', // Sebelumnya 'Cuti Disetujui (Sistem)'
+            'message' => 'Selamat! Pengajuan cuti Anda telah disetujui sepenuhnya oleh pejabat berwenang.',
             'is_read' => false,
         ]);
 
@@ -277,7 +278,7 @@ public function exportPdf(Request $request)
     public function reject(Request $request, $id)
     {
         if (!$request->pejabat_confirmed) {
-            return back()->with('error', 'Gagal! Anda harus mengonfirmasi bahwa pimpinan sudah menginstruksikan penolakan ini.');
+            return back()->with('error', 'Gagal! Anda harus mengonfirmasi instruksi pimpinan.');
         }
 
         $request->validate([
@@ -286,18 +287,20 @@ public function exportPdf(Request $request)
 
         $cuti = Cuti::findOrFail($id);
 
-        // Update Status & Tambah Jejak Audit Penolakan
+        // 2. Update Status
         $cuti->update([
             'status' => 'Ditolak',
-            'catatan_penolakan' => $request->catatan_penolakan,
-            'catatan_final' => 'Ditolak Admin atas izin pejabat' // Jejak audit
+            // Masukkan alasan ke kolom Pejabat langsung, bukan 'catatan_final'
+            'catatan_tolak_pejabat' => $request->catatan_penolakan, 
+            'catatan_final' => null, // Kosongkan agar label "Sistem" hilang
+            'status_pejabat' => 'ditolak'
         ]);
 
-        // Kirim Notifikasi Penolakan
+        // 3. Kirim Notifikasi (Sesuai gaya bahasa Pejabat)
         Notification::create([
             'user_id' => $cuti->user_id,
-            'title'   => 'Cuti Ditolak (Sistem)',
-            'message' => 'Pengajuan cuti Anda ditolak oleh Admin atas izin pejabat. Alasan: ' . $request->catatan_penolakan,
+            'title'   => 'Cuti Ditolak Pejabat', 
+            'message' => 'Pengajuan cuti Anda ditolak oleh pejabat berwenang. Alasan: ' . $request->catatan_penolakan,
             'is_read' => false,
         ]);
 

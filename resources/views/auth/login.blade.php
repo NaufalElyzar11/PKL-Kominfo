@@ -151,12 +151,13 @@
                             :type="show ? 'text' : 'password'"
                             placeholder="Masukkan kata sandi" 
                             required>
-                        
+                                            
                         <div class="absolute inset-y-0 right-0 flex items-center pr-4 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                             @click="show = !show">
-                            <span class="material-symbols-outlined text-[20px]" x-text="show ? 'visibility_off' : 'visibility'">
-                                visibility
-                            </span>
+                        @click="show = !show">
+
+                        <span x-show="!show" class="material-symbols-outlined text-[20px]">visibility</span>
+                        <span x-show="show" class="material-symbols-outlined text-[20px]">visibility_off</span>
+
                         </div>
                     </div>
                     <div class="flex justify-end">
