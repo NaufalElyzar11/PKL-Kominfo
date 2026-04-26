@@ -455,7 +455,7 @@ class PengajuanCutiController extends Controller
                     $q->where('id_pegawai', $candidate->id) 
                     ->orWhere('id_delegasi', $candidate->id);
                 })
-                ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis', 'Menunggu'])
+                ->whereIn('status', ['Disetujui', 'Disetujui Atasan', 'Disetujui Kadis', 'Menunggu', 'Revisi Delegasi'])
                 ->where(function ($query) use ($request) {
                     // Logika Overlap Tanggal
                     $query->where('tanggal_mulai', '<=', $request->tanggal_selesai)
