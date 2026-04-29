@@ -27,7 +27,7 @@ use App\Http\Controllers\Pejabat\PejabatApprovalController;
 // 1. GUEST & AUTH CORE
 // ------------------------------------------------------------------
 
-// MODIFIKASI: Gunakan rute dinamis untuk '/' (Langkah sebelumnya)
+// MODIFIKASI: Gunakan rute dinamis untuk '/'
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
@@ -220,4 +220,4 @@ Route::middleware(['auth', 'role:pejabat'])->prefix('pejabat')->name('pejabat.')
 
     Route::post('/admin/pegawai/check-unique', [App\Http\Controllers\Admin\PegawaiController::class, 'checkUnique'])->name('admin.pegawai.checkUnique');
 
-}); // <--- Penutup Grup Utama Pejabat (PASTIKAN TIDAK ADA LAGI }); DI BAWAH INI)
+});
