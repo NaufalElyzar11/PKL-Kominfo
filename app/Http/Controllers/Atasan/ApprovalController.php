@@ -169,14 +169,50 @@ class ApprovalController extends Controller
         $cuti = Cuti::findOrFail($id);
         
         // Pastikan delegasi sudah disetujui jika ingin lanjut ke persetujuan cuti
-        if ($cuti->status_delegasi !== 'disetujui') {
+        // Khusus Alasan Penting: lewati cek status_delegasi (karena delegasi opsional)
+        if ($cuti->jenis_cuti !== 'Alasan Penting' && $cuti->status_delegasi !== 'disetujui') {
             return back()->with('error', 'Silakan setujui delegasi terlebih dahulu.');
         }
 
         $cuti->update([
-            'status' => 'Disetujui Atasan',
+            'status'        => 'Disetujui Atasan',
             'status_atasan' => 'disetujui'
         ]);
+
+        // 🚨 FITUR DELEGASI DARURAT:
+        // Jika pengajuan ini adalah Cuti Alasan Penting dan ada delegasi_darurat,
+        // perbarui id_delegasi pada cuti orang lain (A) yang menunjuk pemohon (B) sebagai delegasi.
+        if ($cuti->jenis_cuti === 'Alasan Penting' && $cuti->id_delegasi_darurat) {
+            $cutiYangDiDelegasikan = Cuti::where('id_delegasi', $cuti->id_pegawai)
+                ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
+                ->where(function($q) use ($cuti) {
+                    $q->where('tanggal_mulai', '<=', $cuti->tanggal_selesai)
+                      ->where('tanggal_selesai', '>=', $cuti->tanggal_mulai);
+                })->first();
+
+            if ($cutiYangDiDelegasikan) {
+                $cutiYangDiDelegasikan->update(['id_delegasi' => $cuti->id_delegasi_darurat]);
+
+                // Notifikasi ke A (pemilik cuti yang delegasinya diganti)
+                Notification::create([
+                    'user_id' => $cutiYangDiDelegasikan->user_id,
+                    'title'   => 'Delegasi Anda Diganti',
+                    'message' => "Delegasi Anda ({$cuti->nama}) mengajukan Cuti Alasan Penting. Delegasi baru telah ditunjuk sebagai penggantinya.",
+                    'is_read' => false,
+                ]);
+
+                // Notifikasi ke delegasi darurat (penggantinya)
+                $delegasiDarurat = \App\Models\Pegawai::with('user')->find($cuti->id_delegasi_darurat);
+                if ($delegasiDarurat?->user) {
+                    Notification::create([
+                        'user_id' => $delegasiDarurat->user->id,
+                        'title'   => 'Delegasi Darurat Disetujui',
+                        'message' => "Atasan menyetujui penunjukan Anda sebagai delegasi pengganti untuk cuti {$cutiYangDiDelegasikan->nama}.",
+                        'is_read' => false,
+                    ]);
+                }
+            }
+        }
 
         // Notify User (Pemohon)
         Notification::create([
@@ -186,13 +222,9 @@ class ApprovalController extends Controller
             'is_read' => false,
         ]);
 
-        // ==================================================================================
-        // 🔔 NOTIFIKASI UNTUK SEMUA PEJABAT (Authorize Role: Pejabat)
-        // ==================================================================================
+        // Notifikasi untuk semua Pejabat
         try {
-            // Ambil semua user dengan role 'pejabat'
             $pejabatUsers = \App\Models\User::where('role', 'pejabat')->get();
-
             foreach ($pejabatUsers as $pejabat) {
                 \App\Models\Notification::create([
                     'user_id' => $pejabat->id,

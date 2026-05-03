@@ -153,6 +153,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
         Route::resource('cuti', PegawaiCutiController::class)->except(['show']);
         Route::get('/cuti/check-conflict', [PegawaiCutiController::class, 'checkConflict'])->name('cuti.check-conflict');
         Route::get('/cuti/available-delegates', [PegawaiCutiController::class, 'getAvailableDelegates'])->name('cuti.available-delegates');
+        Route::get('/cuti/check-delegasi-konflik', [PegawaiCutiController::class, 'checkDelegasiKonflik'])->name('cuti.check-delegasi-konflik');
         Route::post('/cuti/ajax-store', [PegawaiCutiController::class, 'ajaxStore'])->name('cuti.ajax-store');
 
         Route::prefix('profile')->as('profile.')->group(function () {

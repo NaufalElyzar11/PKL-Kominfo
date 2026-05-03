@@ -42,6 +42,7 @@ class Cuti extends Model
         'catatan_tolak_delegasi',
         'catatan_tolak_atasan',
         'catatan_tolak_pejabat',
+        'id_delegasi_darurat',
         ];
 
     protected $casts = [
@@ -59,6 +60,12 @@ class Cuti extends Model
     {
         // Parameter 'id_delegasi' penting karena nama kolom Anda custom
         return $this->belongsTo(Pegawai::class, 'id_delegasi');
+    }
+
+    // Delegasi darurat: pengganti sementara ketika delegasi asli mengajukan Cuti Alasan Penting
+    public function delegasiDarurat()
+    {
+        return $this->belongsTo(Pegawai::class, 'id_delegasi_darurat');
     }
 
     public function user()

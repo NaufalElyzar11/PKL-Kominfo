@@ -46,6 +46,7 @@
 <div x-data="{
     showAddModal: false, 
     jenisCutiTambah: '',   {{-- WAJIB ADA --}}
+    jenisCutiPilihan: '',  {{-- state tombol tombol luar --}}
     alasanCutiTambah: '',
     tab: '{{ request('tab', 'menunggu') }}',
     showModal: false, 
@@ -65,6 +66,9 @@
     holidays: [],
     holidaysLoaded: false,
     availableDelegates: [], // List delegasi tersedia
+    // Delegasi Darurat (ketika user sedang jadi delegasi & pilih Alasan Penting)
+    delegasiKonflikInfo: null, // { konflik, nama_pemohon, tanggal_mulai, tanggal_selesai }
+    availableDelegatesDarurat: [],
 
 
     // FORM TAMBAH
@@ -168,18 +172,37 @@
             return; 
         }
 
-        // Pastikan holidays sudah di-load
-        if (!this.holidaysLoaded) {
-            await this.loadHolidays();
-        }
+        if (!this.holidaysLoaded) await this.loadHolidays();
 
-        // Hitung hari kerja
         this.jumlahHariTambah = this.calculateWorkingDays(mulai, selesai);
-
         this.cekBentrok();
-        
-        // Load Delegasi Tersedia
         this.loadDelegates(this.tanggalMulaiTambah, this.tanggalSelesaiTambah);
+
+        // Jika Alasan Penting: cek apakah sedang jadi delegasi orang lain
+        if (this.jenisCutiTambah === 'Alasan Penting') {
+            await this.cekDelegasiKonflik();
+        } else {
+            this.delegasiKonflikInfo = null;
+            this.availableDelegatesDarurat = [];
+        }
+    },
+
+    async cekDelegasiKonflik() {
+        if (!this.tanggalMulaiTambah || !this.tanggalSelesaiTambah) return;
+        try {
+            const resp = await fetch(`{{ route('pegawai.cuti.check-delegasi-konflik') }}?tanggal_mulai=${this.tanggalMulaiTambah}&tanggal_selesai=${this.tanggalSelesaiTambah}`);
+            const data = await resp.json();
+            this.delegasiKonflikInfo = data.konflik ? data : null;
+            if (data.konflik) {
+                // Load daftar delegasi darurat (sama dengan list delegasi biasa)
+                await this.loadDelegates(this.tanggalMulaiTambah, this.tanggalSelesaiTambah);
+                this.availableDelegatesDarurat = this.availableDelegates;
+            } else {
+                this.availableDelegatesDarurat = [];
+            }
+        } catch (e) {
+            this.delegasiKonflikInfo = null;
+        }
     },
 
 
@@ -277,14 +300,14 @@
                         <option value="2026" {{ request('tahun') == '2026' ? 'selected' : '' }}>2026</option>
                     </select>
                 </form>
-                {{-- Tombol otomatis terkunci jika hasPendingCuti bernilai true --}}
+                {{-- Tombol ajukan cuti: hanya terkunci untuk Tahunan jika ada pending. Alasan Penting selalu bisa diklik --}}
                 <button @click="showModal = true" 
-                    :disabled="hasPendingCuti"
-                    :class="hasPendingCuti ? 'bg-gray-400 cursor-not-allowed opacity-80' : 'bg-green-600 hover:bg-green-700'"
+                    :disabled="jenisCutiPilihan !== 'Alasan Penting' && hasPendingCuti"
+                    :class="(jenisCutiPilihan !== 'Alasan Penting' && hasPendingCuti) ? 'bg-gray-400 cursor-not-allowed opacity-80' : 'bg-green-600 hover:bg-green-700'"
                     class="text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 shadow-sm transition">
                     
-                    <i class="fa-solid" :class="hasPendingCuti ? 'fa-lock' : 'fa-plus-circle'"></i>
-                    <span x-text="hasPendingCuti ? 'Proses Terkunci' : 'Ajukan Cuti'"></span>
+                    <i class="fa-solid" :class="(jenisCutiPilihan !== 'Alasan Penting' && hasPendingCuti) ? 'fa-lock' : 'fa-plus-circle'"></i>
+                    <span x-text="(jenisCutiPilihan !== 'Alasan Penting' && hasPendingCuti) ? 'Proses Terkunci' : 'Ajukan Cuti'"></span>
                 </button>
             </div>
         </div>
@@ -772,9 +795,15 @@
                             </label>
                             <div class="relative">
                                 <select name="jenis_cuti" 
-                                        x-model="jenisCutiTambah" 
-                                        {{-- LOGIKA BARU: Jika pilih Tahunan, set alasan otomatis --}}
-                                        @change="if(jenisCutiTambah === 'Tahunan') { alasanCutiTambah = 'Hak ASN' } else { alasanCutiTambah = '' }"
+                                    x-model="jenisCutiTambah" 
+                                    {{-- LOGIKA BARU: Jika pilih Tahunan, set alasan otomatis --}}
+                                    @change="
+                                        jenisCutiPilihan = jenisCutiTambah;
+                                        if(jenisCutiTambah === 'Tahunan') { alasanCutiTambah = 'Hak ASN' } else { alasanCutiTambah = '' };
+                                        delegasiKonflikInfo = null;
+                                        availableDelegatesDarurat = [];
+                                        if(tanggalMulaiTambah && tanggalSelesaiTambah && jenisCutiTambah === 'Alasan Penting') { cekDelegasiKonflik(); }
+                                    "
                                         class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[12px] sm:text-sm font-medium text-gray-700 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 transition-all appearance-none"
                                         required>
                                     <option value="" disabled selected>— Pilih jenis cuti —</option>
@@ -816,7 +845,7 @@
                                             name="tanggal_selesai"
                                             x-model="tanggalSelesaiTambah"
                                             x-ref="tambahSelesai"
-                                            :disabled="!tanggalMulaiTambah" {{-- <-- INI PERUBAHANNYA: Kunci jika mulai kosong --}}
+                                            :disabled="!tanggalMulaiTambah"
                                             :class="!tanggalMulaiTambah ? 'bg-gray-100 cursor-not-allowed opacity-60' : 'bg-white cursor-pointer'"
                                             placeholder="Tanggal Selesai"
                                             class="flatpickr w-full pl-9 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
@@ -832,13 +861,11 @@
                             {{-- Watcher untuk re-init Flatpickr --}}
                             <div x-effect="
                                 if(holidaysLoaded) {
-                                    // Konfigurasi dasar untuk disable (Weekend + Libur Nasional)
                                     const disabledDates = [
                                         function(date) { 
-                                            // Return true untuk Sabtu (6) dan Minggu (0)
                                             return (date.getDay() === 0 || date.getDay() === 6); 
                                         },
-                                        ...holidays.map(h => h.date) // Array string tanggal 'YYYY-MM-DD'
+                                        ...holidays.map(h => h.date)
                                     ];
 
                                     const commonConfig = {
@@ -846,7 +873,6 @@
                                         dateFormat: 'Y-m-d',
                                         disable: disabledDates,
                                         onDayCreate: (dObj, dStr, fp, dayElem) => {
-                                            // Menyamakan zona waktu agar pembandingan tanggal akurat
                                             const dateStr = dayElem.dateObj.toLocaleDateString('en-CA'); 
                                             const holiday = holidays.find(h => h.date === dateStr);
                                             if (holiday) {
@@ -856,14 +882,13 @@
                                         }
                                     };
 
-                                    // Init Kalender MULAI
                                     if($refs.tambahMulai) {
                                         flatpickr($refs.tambahMulai, {
                                             ...commonConfig,
                                             minDate: 'today',
                                             onChange: (selectedDates, dateStr) => {
                                                 tanggalMulaiTambah = dateStr;
-                                                tanggalSelesaiTambah = ''; // Reset selesai jika mulai berubah
+                                                tanggalSelesaiTambah = ''; 
                                                 hitungHariTambah();
                                                 
                                                 if ($refs.tambahSelesai._flatpickr) {
@@ -873,7 +898,6 @@
                                         });
                                     }
 
-                                    // Init Kalender SELESAI
                                     if($refs.tambahSelesai) {
                                         flatpickr($refs.tambahSelesai, {
                                             ...commonConfig,
@@ -896,11 +920,8 @@
                                 <textarea 
                                     name="keterangan" 
                                     rows="2" 
-                                    {{-- 1. Tambahkan x-model agar bisa diisi otomatis oleh Select --}}
                                     x-model="alasanCutiTambah"
-                                    {{-- 2. Kunci input jika jenis cuti adalah Tahunan --}}
                                     :readonly="jenisCutiTambah === 'Tahunan'"
-                                    {{-- 3. Beri warna abu-abu jika terkunci (readonly) --}}
                                     :class="jenisCutiTambah === 'Tahunan' ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white'"
                                     class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-[11px] sm:text-xs
                                         focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200 resize-none" 
@@ -909,24 +930,27 @@
                                     @input="alasanCutiTambah = $event.target.value.replace(/[^A-Za-z\s]/g, '')"></textarea>
                             </div>
 
-                            {{-- DELEGASI --}}
+                            {{-- DELEGASI — wajib untuk Tahunan, opsional untuk Alasan Penting --}}
                             <div class="space-y-1.5">
                                 <label class="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-gray-600">
                                     <i class="fa-solid fa-user-group text-sky-500 text-[10px] sm:text-xs"></i>
-                                    Pegawai Pengganti <span class="text-red-500">*</span>
+                                    Pegawai Pengganti
+                                    <span x-show="jenisCutiTambah === 'Tahunan'" class="text-red-500">*</span>
+                                    <span x-show="jenisCutiTambah === 'Alasan Penting'" class="text-gray-400 text-[9px]">(opsional)</span>
                                 </label>
                                 <div class="relative">
                                     <select 
                                         name="id_delegasi" 
                                         class="w-full px-3 py-2.5 sm:py-3 rounded-xl border border-gray-200 bg-white text-[11px] sm:text-xs appearance-none
                                                focus:border-sky-400 focus:ring-2 focus:ring-sky-100 outline-none transition-all duration-200"
-                                        required>
-                                        <option value="" disabled selected>— Pilih pegawai pengganti —</option>
+                                        :required="jenisCutiTambah === 'Tahunan'">
+                                        <option value=""
+                                            x-text="jenisCutiTambah === 'Tahunan' ? '— Pilih pegawai pengganti —' : '— Pilih (opsional) —'"
+                                        ></option>
                                         <template x-for="delegate in availableDelegates.filter(d => d.id != selectedCuti.rejectedDelegateId)" :key="delegate.id">
                                             <option :value="delegate.id" x-text="delegate.nama + ' — ' + delegate.jabatan"></option>
                                         </template>
                                         <option x-show="availableDelegates.length === 0" value="" disabled>--- Pilih tanggal dulu / Tidak ada rekan tersedia ---</option>
-
                                     </select>
                                     <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                         <i class="fa-solid fa-chevron-down text-gray-400 text-[10px]"></i>
@@ -934,9 +958,45 @@
                                 </div>
                                 <p class="text-[9px] sm:text-[10px] text-gray-400 flex items-center gap-1">
                                     <i class="fa-solid fa-circle-info"></i>
-                                    Pegawai ini akan menggantikan tugas selama Anda cuti
+                                    <span x-show="jenisCutiTambah === 'Tahunan'">Pegawai ini akan menggantikan tugas selama Anda cuti</span>
+                                    <span x-show="jenisCutiTambah === 'Alasan Penting'">Opsional: isi jika ingin menunjuk pengganti tugas</span>
                                 </p>
                             </div>
+
+                            {{-- DELEGASI DARURAT (muncul hanya jika Alasan Penting & sedang jadi delegasi orang lain) --}}
+                            <template x-if="jenisCutiTambah === 'Alasan Penting' && delegasiKonflikInfo">
+                                <div class="space-y-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                                    <div class="flex items-start gap-2">
+                                        <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
+                                        <div class="text-[10px] sm:text-xs text-amber-800">
+                                            <p class="font-bold">Anda Sedang Menjadi Delegasi!</p>
+                                            <p>Anda terdaftar sebagai pengganti untuk <strong x-text="delegasiKonflikInfo.nama_pemohon"></strong>
+                                               (<span x-text="delegasiKonflikInfo.tanggal_mulai"></span> s/d <span x-text="delegasiKonflikInfo.tanggal_selesai"></span>).</p>
+                                            <p class="mt-1">Pilih pengganti Anda selama masa delegasi tersebut:</p>
+                                        </div>
+                                    </div>
+                                    <div class="relative">
+                                        <select 
+                                            name="id_delegasi_darurat" 
+                                            required
+                                            class="w-full px-3 py-2.5 rounded-xl border border-amber-300 bg-white text-[11px] sm:text-xs appearance-none
+                                                   focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none transition-all">
+                                            <option value="">— Pilih pengganti delegasi darurat —</option>
+                                            <template x-for="delegate in availableDelegatesDarurat" :key="delegate.id">
+                                                <option :value="delegate.id" x-text="delegate.nama + ' — ' + delegate.jabatan"></option>
+                                            </template>
+                                            <option x-show="availableDelegatesDarurat.length === 0" disabled>Tidak ada rekan tersedia</option>
+                                        </select>
+                                        <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <i class="fa-solid fa-chevron-down text-amber-500 text-[10px]"></i>
+                                        </div>
+                                    </div>
+                                    <p class="text-[9px] text-amber-600">
+                                        <i class="fa-solid fa-circle-info mr-1"></i>
+                                        Pengajuan ini memerlukan persetujuan 2 tahap (Atasan → Pejabat)
+                                    </p>
+                                </div>
+                            </template>
                             
                             <input type="hidden" name="jumlah_hari" :value="jumlahHariTambah">
                         </fieldset>
@@ -1007,9 +1067,9 @@
                             Batal
                         </button>
                         <button type="submit"
-                                :disabled="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0"
+                                :disabled="jumlahHariTambah === 0 || (jenisCutiTambah === 'Tahunan' && jumlahHariTambah > sisaCutiTersedia)"
                                 class="w-full sm:w-auto px-6 py-2.5 sm:py-3 rounded-xl text-[11px] sm:text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-lg"
-                                :class="hasPendingCuti || jumlahHariTambah > sisaCutiTersedia || jumlahHariTambah === 0 
+                                :class="jumlahHariTambah === 0 || (jenisCutiTambah === 'Tahunan' && jumlahHariTambah > sisaCutiTersedia)
                                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none' 
                                     : 'bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-600 hover:to-blue-700 hover:shadow-sky-200'">
                             <i class="fa-solid fa-paper-plane"></i>
