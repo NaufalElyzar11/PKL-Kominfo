@@ -214,7 +214,6 @@ class ApprovalController extends Controller
 
         // 🚨 FITUR DELEGASI DARURAT:
         // Jika pengajuan ini adalah Cuti Alasan Penting dan ada delegasi_darurat,
-        // perbarui id_delegasi pada cuti orang lain (A) yang menunjuk pemohon (B) sebagai delegasi.
         if ($cuti->jenis_cuti === 'Alasan Penting' && $cuti->id_delegasi_darurat) {
             $cutiYangDiDelegasikan = Cuti::where('id_delegasi', $cuti->id_pegawai)
                 ->whereIn('status', ['Menunggu', 'Disetujui', 'Disetujui Atasan', 'Revisi Delegasi'])
