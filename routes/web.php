@@ -93,6 +93,7 @@ Route::prefix('atasan')->as('atasan.')->middleware(['auth', 'role:atasan'])->gro
     Route::prefix('approval')->as('approval.')->group(function () {
         // Langkah 1: Persetujuan Delegasi (AJAX/Post)
         Route::post('/{id}/approve-delegasi', [ApprovalController::class, 'approveDelegasi'])->name('approveDelegasi');
+        Route::post('/{id}/approve-delegasi-darurat', [ApprovalController::class, 'approveDelegasiDarurat'])->name('approveDelegasiDarurat');
         Route::post('/{id}/tolak-delegasi', [ApprovalController::class, 'tolakDelegasi'])->name('tolakDelegasi');
         
 

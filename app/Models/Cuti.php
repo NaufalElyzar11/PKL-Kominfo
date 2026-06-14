@@ -43,6 +43,7 @@ class Cuti extends Model
         'catatan_tolak_atasan',
         'catatan_tolak_pejabat',
         'id_delegasi_darurat',
+        'status_delegasi_darurat',
         ];
 
     protected $casts = [

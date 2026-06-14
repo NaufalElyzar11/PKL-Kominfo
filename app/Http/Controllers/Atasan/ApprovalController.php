@@ -35,7 +35,7 @@ class ApprovalController extends Controller
         ];
 
         // 2. DATA TABEL (Pengajuan & Riwayat Bawahan)
-        $pengajuan = Cuti::with(['pegawai', 'delegasi'])
+        $pengajuan = Cuti::with(['pegawai', 'delegasi', 'delegasiDarurat'])
             ->whereHas('pegawai', function($query) use ($atasanName) {
                 $query->where('atasan', $atasanName);
             })
@@ -43,7 +43,7 @@ class ApprovalController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10, ['*'], 'pengajuan_page');
 
-        $riwayat = Cuti::with(['pegawai', 'delegasi'])
+        $riwayat = Cuti::with(['pegawai', 'delegasi', 'delegasiDarurat'])
             ->whereHas('pegawai', function($query) use ($atasanName) {
                 $query->where('atasan', $atasanName);
             })
@@ -162,6 +162,34 @@ class ApprovalController extends Controller
     }
 
     /**
+     * 🔹 1b. Setujui Delegasi Darurat (khusus Cuti Alasan Penting)
+     */
+    public function approveDelegasiDarurat($id)
+    {
+        $cuti = Cuti::with('delegasiDarurat')->findOrFail($id);
+
+        if (!$cuti->id_delegasi_darurat) {
+            return response()->json(['message' => 'Tidak ada delegasi darurat.'], 422);
+        }
+
+        $cuti->update(['status_delegasi_darurat' => 'disetujui']);
+
+        if (request()->wantsJson()) {
+            return response()->json(['message' => 'Success']);
+        }
+
+        // Notifikasi ke pemohon
+        Notification::create([
+            'user_id' => $cuti->user_id,
+            'title'   => 'Delegasi Darurat Disetujui',
+            'message' => 'Delegasi darurat Anda (' . ($cuti->delegasiDarurat->nama ?? 'Rekan') . ') telah disetujui oleh atasan.',
+            'is_read' => false,
+        ]);
+
+        return back()->with('success', 'Delegasi darurat berhasil disetujui.');
+    }
+
+    /**
      * 🔹 2. Setujui Pengajuan Cuti (Aksi Langkah 2 di Modal)
      */
     public function approve($id)
@@ -172,6 +200,11 @@ class ApprovalController extends Controller
         // Khusus Alasan Penting: lewati cek status_delegasi (karena delegasi opsional)
         if ($cuti->jenis_cuti !== 'Alasan Penting' && $cuti->status_delegasi !== 'disetujui') {
             return back()->with('error', 'Silakan setujui delegasi terlebih dahulu.');
+        }
+
+        // Khusus Alasan Penting dengan delegasi darurat: darurat juga harus disetujui dulu
+        if ($cuti->jenis_cuti === 'Alasan Penting' && $cuti->id_delegasi_darurat && $cuti->status_delegasi_darurat !== 'disetujui') {
+            return back()->with('error', 'Silakan setujui delegasi darurat terlebih dahulu.');
         }
 
         $cuti->update([

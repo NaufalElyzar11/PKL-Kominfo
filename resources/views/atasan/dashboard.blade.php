@@ -43,6 +43,7 @@ x-data="{
     showCutiModal: false,
     selectedCuti: null,
     delegasiStatus: 'pending',
+    delegasiDaruratStatus: 'pending',
     sisaCuti: @js($sisaCuti ?? 0),
     cutiTerpakai: @js($cutiTerpakai ?? 0),
     hakCutiTotal: @js($hakCutiTotal ?? 12),
@@ -50,8 +51,10 @@ x-data="{
     openReview(data) {
         this.selectedCuti = data;
         this.delegasiStatus = data.status_delegasi || 'pending';
+        // Jika tidak ada delegasi darurat, langsung anggap "selesai"
+        this.delegasiDaruratStatus = data.id_delegasi_darurat ? (data.status_delegasi_darurat || 'pending') : 'tidak_ada';
         this.showReviewModal = true;
-    }, // <--- TAMBAHKAN KOMA DI SINI
+    },
 
     async submitApproveDelegasi() {
         try {
@@ -60,9 +63,9 @@ x-data="{
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json' // Tambahkan ini agar Laravel mengirim respon JSON
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify({}) // Fetch POST biasanya butuh body (walaupun kosong)
+                body: JSON.stringify({})
             });
             
             if (response.ok) {
@@ -79,6 +82,35 @@ x-data="{
             }
         } catch (error) {
             Swal.fire('Error', 'Gagal memproses delegasi.', 'error');
+        }
+    },
+
+    async submitApproveDelegasiDarurat() {
+        try {
+            const response = await fetch(`/atasan/approval/${this.selectedCuti.id}/approve-delegasi-darurat`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+            
+            if (response.ok) {
+                this.delegasiDaruratStatus = 'disetujui';
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Delegasi darurat telah disetujui.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            } else {
+                throw new Error('Gagal memproses');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Gagal memproses delegasi darurat.', 'error');
         }
     }
 }">
@@ -592,10 +624,59 @@ x-data="{
                             </div>
                         </div>
 
-                        {{-- STEP 2: KEPUTUSAN FINAL CUTI --}}
-                        <div class="space-y-4" :class="delegasiStatus !== 'disetujui' && 'opacity-40 grayscale pointer-events-none'">
+                        {{-- STEP 2: DELEGASI DARURAT (hanya tampil jika ada id_delegasi_darurat) --}}
+                        <template x-if="selectedCuti.id_delegasi_darurat">
+                            <div class="p-4 rounded-xl border-2 transition-all"
+                                :class="delegasiDaruratStatus === 'disetujui' ? 'bg-emerald-50 border-emerald-200' : (delegasiStatus !== 'disetujui' ? 'opacity-40 grayscale pointer-events-none bg-gray-50 border-gray-200' : 'bg-orange-50 border-orange-200')">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="w-6 h-6 rounded-full bg-orange-500 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                                    <h4 class="font-bold text-gray-700 text-sm">Persetujuan Delegasi Darurat</h4>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 font-bold">Alasan Penting</span>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center">
+                                            <span class="material-symbols-outlined text-orange-500">emergency</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Delegasi Pengganti Darurat</p>
+                                            <p class="text-sm font-bold text-gray-800" 
+                                               x-text="selectedCuti.delegasi_darurat ? selectedCuti.delegasi_darurat.nama : 'Memuat...'"></p>
+                                            <p class="text-[10px] text-orange-500 font-medium"
+                                               x-text="selectedCuti.delegasi_darurat ? selectedCuti.delegasi_darurat.jabatan : ''"></p>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Tombol Aksi Delegasi Darurat --}}
+                                    <div class="flex gap-2" x-show="delegasiDaruratStatus === 'pending' && delegasiStatus === 'disetujui'">
+                                        <button @click="submitApproveDelegasiDarurat()" 
+                                                class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-all">
+                                            Setujui
+                                        </button>
+                                        <button @click="showTolakDelegasi = true" 
+                                                class="px-4 py-2 bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold hover:bg-rose-600 hover:text-white transition-all">
+                                            Tolak
+                                        </button>
+                                    </div>
+                                    
+                                    <div x-show="delegasiDaruratStatus === 'disetujui'" class="flex items-center gap-1 text-emerald-600 font-bold text-xs">
+                                        <span class="material-symbols-outlined text-sm">check_circle</span> Terverifikasi
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- STEP 3 (atau 2 jika tidak ada darurat): KEPUTUSAN FINAL CUTI --}}
+                        {{-- Aktif jika: (tidak ada darurat DAN delegasi biasa disetujui) ATAU (ada darurat DAN keduanya disetujui) --}}
+                        <div class="space-y-4" 
+                             :class="(
+                                (selectedCuti.id_delegasi_darurat && (delegasiStatus !== 'disetujui' || delegasiDaruratStatus !== 'disetujui')) ||
+                                (!selectedCuti.id_delegasi_darurat && delegasiStatus !== 'disetujui' && selectedCuti.jenis_cuti === 'Tahunan')
+                             ) ? 'opacity-40 grayscale pointer-events-none' : ''">
                             <div class="flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-bold">2</span>
+                                <span class="w-6 h-6 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-bold"
+                                      x-text="selectedCuti.id_delegasi_darurat ? '3' : '2'"></span>
                                 <h4 class="font-bold text-gray-700 text-sm">Keputusan Akhir Atasan</h4>
                             </div>
 
