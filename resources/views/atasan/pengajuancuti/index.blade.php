@@ -655,7 +655,7 @@
                                             <p class="text-[11px] sm:text-xs font-medium text-gray-600">Hari kerja yang diajukan</p>
                                         </div>
                                     </div>
-                                    <div class="text-right">
+                                    <div class="text-right flex-shrink-0 whitespace-nowrap">
                                         <span class="text-2xl font-black text-sky-600" x-text="jumlahHariTambah">0</span>
                                         <span class="text-[10px] sm:text-xs text-gray-400 ml-1">hari</span>
                                     </div>
@@ -678,7 +678,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="text-right">
+                                    <div class="text-right flex-shrink-0 whitespace-nowrap">
                                         <span class="text-2xl font-black" 
                                               :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-600'"
                                               x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)">12</span>

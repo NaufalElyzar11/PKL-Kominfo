@@ -51,7 +51,6 @@ x-data="{
     openReview(data) {
         this.selectedCuti = data;
         this.delegasiStatus = data.status_delegasi || 'pending';
-        // Jika tidak ada delegasi darurat, langsung anggap "selesai"
         this.delegasiDaruratStatus = data.id_delegasi_darurat ? (data.status_delegasi_darurat || 'pending') : 'tidak_ada';
         this.showReviewModal = true;
     },
@@ -568,7 +567,7 @@ x-data="{
                     <div class="bg-gradient-to-r from-primary to-blue-600 px-6 py-4 flex justify-between items-center text-white">
                         <div>
                             <h3 class="font-black text-lg">Tinjau Pengajuan Cuti</h3>
-                            <p class="text-xs opacity-80" x-text="'NIP: ' + selectedCuti.pegawai.nip"></p>
+                            <p class="text-xs opacity-80" x-text="'NIP: ' + (selectedCuti?.pegawai?.nip || '')"></p>
                         </div>
                         <button @click="showReviewModal = false" class="hover:rotate-90 transition-transform">
                             <span class="material-symbols-outlined">close</span>
@@ -600,10 +599,10 @@ x-data="{
                                 {{-- Menampilkan Jabatan & Unit Kerja --}}
                                 <div class="flex flex-col mt-0.5" x-show="selectedCuti.delegasi">
                                     <p class="text-[10px] text-primary font-medium" 
-                                    x-text="selectedCuti.delegasi.jabatan">
+                                    x-text="selectedCuti.delegasi ? selectedCuti.delegasi.jabatan : ''">
                                     </p>
                                     <p class="text-[10px] text-gray-500 italic" 
-                                    x-text="selectedCuti.delegasi.unit_kerja">
+                                    x-text="selectedCuti.delegasi ? selectedCuti.delegasi.unit_kerja : ''">
                                     </p>
                                 </div>
                             </div>
@@ -681,7 +680,7 @@ x-data="{
                             </div>
 
                             <div class="flex gap-3">
-                                <form :action="'{{ url('atasan/approval') }}/' + selectedCuti.id + '/approve'" method="POST" class="flex-1">
+                                <form :action="selectedCuti ? '{{ url('atasan/approval') }}/' + selectedCuti.id + '/approve' : '#'" method="POST" class="flex-1">
                                     @csrf
                                     <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-100 transition-all flex items-center justify-center gap-2">
                                         <span class="material-symbols-outlined text-sm">check</span> Setujui Cuti
@@ -704,7 +703,7 @@ x-data="{
         <h3 class="text-lg font-bold text-gray-900 mb-2">Alasan Tolak Delegasi</h3>
         <p class="text-xs text-gray-500 mb-4">Berikan alasan mengapa orang yang ditunjuk tidak cocok sebagai delegasi.</p>
         
-        <form :action="'{{ url('atasan/approval') }}/' + selectedCuti.id + '/tolak-delegasi'" method="POST">
+        <form :action="selectedCuti ? '{{ url('atasan/approval') }}/' + selectedCuti.id + '/tolak-delegasi' : '#'" method="POST">
             @csrf
             <textarea name="catatan_tolak_delegasi" rows="3" required
                 oninput="this.value = this.value.replace(/[^A-Za-z\s]/g, '')"
@@ -726,7 +725,7 @@ x-data="{
         <h3 class="text-lg font-bold text-gray-900 mb-2">Alasan Penolakan Cuti</h3>
         <p class="text-xs text-gray-500 mb-4">Jelaskan alasan pengajuan cuti pegawai ini ditolak secara final.</p>
         
-        <form :action="'{{ url('atasan/approval') }}/' + selectedCuti.id + '/tolak'" method="POST">
+        <form :action="selectedCuti ? '{{ url('atasan/approval') }}/' + selectedCuti.id + '/tolak' : '#'" method="POST">
             @csrf
             <textarea 
                 name="catatan_tolak_atasan" 
