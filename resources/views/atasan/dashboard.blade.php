@@ -260,8 +260,8 @@ x-data="{
                             {{-- 5. TANGGAL --}}
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex flex-col text-xs font-medium">
-                                    <span class="text-[#0d141b]">{{ \Carbon\Carbon::parse($c->tanggal_mulai)->format('d M Y') }}</span>
-                                    <span class="text-[#9aaabb]">s.d. {{ \Carbon\Carbon::parse($c->tanggal_selesai)->format('d M Y') }}</span>
+                                    <span class="text-[#0d141b]">{{ \Carbon\Carbon::parse($c->tanggal_mulai)->translatedFormat('d M Y') }}</span>
+                                    <span class="text-[#9aaabb]">s.d. {{ \Carbon\Carbon::parse($c->tanggal_selesai)->translatedFormat('d M Y') }}</span>
                                 </div>
                             </td>
                             
@@ -428,7 +428,7 @@ x-data="{
                             <td class="px-4 py-3 font-medium">{{ $r->pegawai->nama ?? '-' }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">{{ $r->jenis_cuti }}</td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                {{ optional($r->tanggal_mulai)->format('d M Y') }} s.d. {{ optional($r->tanggal_selesai)->format('d M Y') }}
+                                {{ optional($r->tanggal_mulai)->translatedFormat('d M Y') }} s.d. {{ optional($r->tanggal_selesai)->translatedFormat('d M Y') }}
                             </td>
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 @if($r->status == 'Disetujui' || $r->status == 'Disetujui Atasan')

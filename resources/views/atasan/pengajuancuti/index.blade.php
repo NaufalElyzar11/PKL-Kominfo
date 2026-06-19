@@ -432,7 +432,7 @@
                         <td class="px-1 py-2 text-center">{{ $nipR }}</td>
                         <td class="px-1 py-2 text-center">{{ $r->jenis_cuti }}</td>
                         <td class="px-1 py-2 text-center leading-tight">
-                            {{ optional($r->tanggal_mulai)->format('d/m/Y') }} <br> s/d {{ optional($r->tanggal_selesai)->format('d/m/Y') }}
+                           {{ $r->tanggal_mulai ? $r->tanggal_mulai->translatedFormat('d M Y') : '-' }} <br> s/d {{ $r->tanggal_selesai ? $r->tanggal_selesai->translatedFormat('d M Y') : '-' }}
                         </td>
                         <td class="px-1 py-2 text-center font-bold">{{ $r->jumlah_hari }}</td>
                         <td class="px-1 py-2 text-center font-bold">
@@ -465,8 +465,8 @@
                                 pengganti_jabatan: {{ Js::from($r->delegasi->jabatan ?? '') }},
                                 jenis_cuti: {{ Js::from($r->jenis_cuti ?? '') }},
                                 status: {{ Js::from($r->status ?? '') }},
-                                tanggal_mulai: {{ Js::from($r->tanggal_mulai ? $r->tanggal_mulai->format('d/m/Y') : '-') }},
-                                tanggal_selesai: {{ Js::from($r->tanggal_selesai ? $r->tanggal_selesai->format('d/m/Y') : '-') }},
+                                tanggal_mulai: {{ Js::from($r->tanggal_mulai ? $r->tanggal_mulai->translatedFormat('d M Y') : '-') }},
+                                tanggal_selesai: {{ Js::from($r->tanggal_selesai ? $r->tanggal_selesai->translatedFormat('d M Y') : '-') }},
                                 jumlah_hari: {{ Js::from($r->jumlah_hari ?? 0) }},
                                 sisa_cuti: {{ Js::from($sisa_final ?? 0) }},
                                 atasan: {{ Js::from($r->atasanLangsung->nama_atasan ?? $r->atasan_nama ?? '-') }},
@@ -655,7 +655,7 @@
                                             <p class="text-[11px] sm:text-xs font-medium text-gray-600">Hari kerja yang diajukan</p>
                                         </div>
                                     </div>
-                                    <div class="text-right flex-shrink-0 whitespace-nowrap">
+                                    <div class="text-right">
                                         <span class="text-2xl font-black text-sky-600" x-text="jumlahHariTambah">0</span>
                                         <span class="text-[10px] sm:text-xs text-gray-400 ml-1">hari</span>
                                     </div>
@@ -678,7 +678,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div class="text-right flex-shrink-0 whitespace-nowrap">
+                                    <div class="text-right">
                                         <span class="text-2xl font-black" 
                                               :class="(sisaCutiTersedia - jumlahHariTambah) < 0 ? 'text-red-600' : 'text-emerald-600'"
                                               x-text="Math.max(0, sisaCutiTersedia - jumlahHariTambah)">12</span>

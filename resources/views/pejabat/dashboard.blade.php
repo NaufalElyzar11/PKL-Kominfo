@@ -141,8 +141,8 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
                                 <div class="flex flex-col text-xs font-medium">
-                                    <span class="text-[#0d141b]">{{ optional($c->tanggal_mulai)->format('d M Y') }}</span>
-                                    <span class="text-[#9aaabb]">s.d. {{ optional($c->tanggal_selesai)->format('d M Y') }}</span>
+                                    <span class="text-[#0d141b]">{{ optional($c->tanggal_mulai)->translatedFormat('d M Y') }}</span>
+                                    <span class="text-[#9aaabb]">s.d. {{ optional($c->tanggal_selesai)->translatedFormat('d M Y') }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-center whitespace-nowrap">
@@ -166,8 +166,8 @@
                                                     nip: '{{ $c->pegawai->nip ?? '-' }}',
                                                     jabatan: '{{ $jabatan }}',
                                                     jenis_cuti: '{{ $c->jenis_cuti }}',
-                                                    tanggal_mulai: '{{ optional($c->tanggal_mulai)->format('d M Y') }}',
-                                                    tanggal_selesai: '{{ optional($c->tanggal_selesai)->format('d M Y') }}',
+                                                    tanggal_mulai: '{{ optional($c->tanggal_mulai)->translatedFormat('d M Y') }}',
+                                                    tanggal_selesai: '{{ optional($c->tanggal_selesai)->translatedFormat('d M Y') }}',
                                                     jumlah_hari: '{{ $c->jumlah_hari }}',
                                                     alasan_cuti: @js($c->alasan_cuti ?? '-'),
                                                     pengganti_nama: '{{ $c->delegasi->nama ?? '-' }}',
@@ -269,8 +269,8 @@
                                         nip: '{{ $c->pegawai->nip ?? '-' }}',
                                         jabatan: '{{ $jabatan }}',
                                         jenis_cuti: '{{ $c->jenis_cuti }}',
-                                        tanggal_mulai: '{{ optional($c->tanggal_mulai)->format('d M Y') }}',
-                                        tanggal_selesai: '{{ optional($c->tanggal_selesai)->format('d M Y') }}',
+                                        tanggal_mulai: '{{ optional($c->tanggal_mulai)->translatedFormat('d M Y') }}',
+                                        tanggal_selesai: '{{ optional($c->tanggal_selesai)->translatedFormat('d M Y') }}',
                                         jumlah_hari: '{{ $c->jumlah_hari }}',
                                         alasan_cuti: @js($c->alasan_cuti ?? '-'),
                                         pengganti_nama: '{{ $c->delegasi->nama ?? '-' }}',
@@ -595,7 +595,7 @@
                             <td class="px-4 py-3 font-medium">{{ $r->pegawai->nama ?? '-' }}</td>
                             <td class="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{{ $r->jenis_cuti }}</td>
                             <td class="px-4 py-3 whitespace-nowrap hidden lg:table-cell">
-                                {{ optional($r->tanggal_mulai)->format('d M Y') }} s.d. {{ optional($r->tanggal_selesai)->format('d M Y') }}
+                                {{ optional($r->tanggal_mulai)->translatedFormat('d M Y') }} s.d. {{ optional($r->tanggal_selesai)->translatedFormat('d M Y') }}
                             </td>
                             <td class="px-4 py-3 text-center whitespace-nowrap">
                                 @if($r->status == 'Disetujui' || $r->status == 'Disetujui Atasan')
